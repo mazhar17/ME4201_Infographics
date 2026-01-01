@@ -206,6 +206,8 @@
             display: none;
             z-index: 100;
             max-width: 200px;
+            /* Ensure text wraps if needed so width calculation is stable */
+            white-space: normal; 
         }
 
         /* --- RIGHT COLUMN: ANALYSIS --- */
@@ -552,6 +554,7 @@
         // --- DOM ELEMENTS ---
         const mapSvg = document.getElementById('game-map');
         const tooltip = document.getElementById('tooltip');
+        const mapContainer = document.getElementById('map-container');
         const canvas = document.getElementById('radarChart');
         const ctx = canvas.getContext('2d');
 
@@ -806,22 +809,41 @@
 
         // --- MAP TOOLTIPS ---
         document.querySelectorAll('.site-marker').forEach(marker => {
+            const siteId = marker.id.split('-')[1];
+
             marker.addEventListener('mouseenter', (e) => {
-                const siteId = marker.id.split('-')[1];
                 const data = sites[siteId];
                 tooltip.innerHTML = `<strong>${data.name}</strong><br><span style="font-size:0.75em">${data.features.join(", ")}</span>`;
                 tooltip.style.display = 'block';
-                tooltip.style.left = (e.pageX + 10) + 'px';
-                tooltip.style.top = (e.pageY - 30) + 'px';
+                updateTooltip(e, siteId);
             });
+            
             marker.addEventListener('mousemove', (e) => {
-                tooltip.style.left = (e.pageX + 10) + 'px';
-                tooltip.style.top = (e.pageY - 30) + 'px';
+                updateTooltip(e, siteId);
             });
+            
             marker.addEventListener('mouseleave', () => {
                 tooltip.style.display = 'none';
             });
         });
+
+        function updateTooltip(e, id) {
+            // Get container position to calculate relative mouse position
+            const rect = mapContainer.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            // Logic: A on right of cursor, others (B-E) on left
+            if (id === 'A') {
+                tooltip.style.left = (mouseX + 15) + 'px';
+                tooltip.style.top = (mouseY - 20) + 'px';
+            } else {
+                // To position on left, subtract tooltip width
+                const w = tooltip.offsetWidth;
+                tooltip.style.left = (mouseX - w - 15) + 'px';
+                tooltip.style.top = (mouseY - 20) + 'px';
+            }
+        }
 
         // --- INIT ---
         // Draw empty chart on load
