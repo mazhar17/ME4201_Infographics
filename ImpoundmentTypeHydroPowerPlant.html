@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impoundment Hydroelectric Power Plant - Interactive</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM (Production versions for stability) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Custom Tailwind Configuration for Animations -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    keyframes: {
+                        dash: {
+                            '0%': { strokeDashoffset: '100' },
+                            '100%': { strokeDashoffset: '0' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // --- Imports mapped to Global Variables ---
+        const { useState, useEffect } = React;
+
+        // --- Internal Icon Components (Replacing External Library) ---
+        // These inline SVGs ensure 100% reliability without CDN version conflicts.
+        
+        const IconWrapper = ({ children, size = 24, className = "" }) => (
+            <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width={size} 
+                height={size} 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className={className}
+            >
+                {children}
+            </svg>
+        );
+
+        const Info = (props) => (
+            <IconWrapper {...props}>
+                <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+            </IconWrapper>
+        );
+
+        const Zap = (props) => (
+            <IconWrapper {...props}>
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </IconWrapper>
+        );
+
+        const Activity = (props) => (
+            <IconWrapper {...props}>
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </IconWrapper>
+        );
+
+        const Settings = (props) => (
+            <IconWrapper {...props}>
+                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.35a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>
+            </IconWrapper>
+        );
+
+        const Droplets = (props) => (
+            <IconWrapper {...props}>
+                <path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.8-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.35"/>
+            </IconWrapper>
+        );
+
+        const Play = (props) => (
+            <IconWrapper {...props}>
+                <polygon points="5 3 19 12 5 21 5 3"/>
+            </IconWrapper>
+        );
+
+        const RotateCw = (props) => (
+            <IconWrapper {...props}>
+                <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
+            </IconWrapper>
+        );
+
+        const CheckCircle = (props) => (
+            <IconWrapper {...props}>
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+            </IconWrapper>
+        );
+
+        const HelpCircle = (props) => (
+            <IconWrapper {...props}>
+                <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>
+            </IconWrapper>
+        );
+
+        const XCircle = (props) => (
+            <IconWrapper {...props}>
+                <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+            </IconWrapper>
+        );
+
+        const Maximize2 = (props) => (
+            <IconWrapper {...props}>
+                <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
+            </IconWrapper>
+        );
+
+        // --- Data & Content ---
+
+        const COMPONENTS = [
+            {
+                id: 'reservoir',
+                name: 'Reservoir',
+                role: 'Energy Storage',
+                description: 'Large body of water stored behind the dam. Regulates flow to meet load demand and enables seasonal energy management.',
+                type: 'potential',
+                specs: 'High Potential Energy (PE = mgh)'
+            },
+            {
+                id: 'dam',
+                name: 'Dam Structure',
+                role: 'Containment & Head Creation',
+                description: 'Massive barrier (gravity or arch) that holds back water to create the necessary hydraulic head for power generation.',
+                type: 'structural',
+                specs: 'Concrete / Earth-fill'
+            },
+            {
+                id: 'intake',
+                name: 'Intake Structure',
+                role: 'Flow Control',
+                description: 'Gated entry point that directs water into the penstock. Features trash racks to screen debris and control gates to regulate flow.',
+                type: 'hydraulic',
+                specs: 'Trash Racks & Gates'
+            },
+            {
+                id: 'spillway',
+                name: 'Spillway',
+                role: 'Safety Valve',
+                description: 'Safety structure designed to release excess water during floods to prevent the dam from overtopping. Operates independently of the turbine system.',
+                type: 'safety',
+                specs: 'Flood Discharge'
+            },
+            {
+                id: 'penstock',
+                name: 'Penstock',
+                role: 'Conduit',
+                description: 'Pressurized pipeline delivering water from the intake to the turbine. Designed to minimize friction losses and withstand high pressure.',
+                type: 'kinetic',
+                specs: 'Converts PE → Kinetic Energy'
+            },
+            {
+                id: 'turbine',
+                name: 'Hydraulic Turbine',
+                role: 'Prime Mover',
+                description: 'Runner blades capture the kinetic energy of water and convert it into rotational mechanical energy.',
+                type: 'mechanical',
+                specs: 'Francis / Kaplan / Pelton'
+            },
+            {
+                id: 'generator',
+                name: 'Generator',
+                role: 'Energy Converter',
+                description: 'Coupled to the turbine shaft. A rotor spins inside a magnetic stator to induce electrical current via electromagnetic induction.',
+                type: 'electrical',
+                specs: 'Mechanical → Electrical'
+            },
+            {
+                id: 'powerhouse',
+                name: 'Powerhouse',
+                role: 'Superstructure',
+                description: 'The industrial building housing the turbines, generators, and control systems. protects critical electromechanical equipment.',
+                type: 'structural',
+                specs: 'Plant Enclosure'
+            },
+            {
+                id: 'draft_tube',
+                name: 'Draft Tube',
+                role: 'Pressure Recovery',
+                description: 'Diverging pipe at the turbine exit. It decelerates water to recover static pressure, increasing overall turbine efficiency.',
+                type: 'hydraulic',
+                specs: 'Diffuser Action'
+            },
+            {
+                id: 'tailrace',
+                name: 'Tailrace',
+                role: 'Discharge Channel',
+                description: 'Channel that returns utilized water back to the river downstream, ensuring environmental flow continuity.',
+                type: 'hydraulic',
+                specs: 'River Return'
+            },
+            {
+                id: 'transformer',
+                name: 'Step-Up Transformer',
+                role: 'Voltage Regulation',
+                description: 'Increases the voltage of the generated electricity to high levels suitable for efficient long-distance transmission.',
+                type: 'electrical',
+                specs: 'Low V → High V'
+            },
+            {
+                id: 'transmission',
+                name: 'Transmission Lines',
+                role: 'Grid Delivery',
+                description: 'High-voltage lines that transport electrical power from the plant to the grid and load centers.',
+                type: 'electrical',
+                specs: 'Grid Interconnection'
+            }
+        ];
+
+        const FLOW_STAGES = [
+            { id: 'potential', label: 'Potential Energy', color: 'bg-blue-600', activeIds: ['reservoir', 'intake'] },
+            { id: 'kinetic', label: 'Kinetic Energy', color: 'bg-cyan-500', activeIds: ['penstock'] },
+            { id: 'mechanical', label: 'Mechanical Energy', color: 'bg-orange-500', activeIds: ['turbine'] },
+            { id: 'electrical', label: 'Electrical Energy', color: 'bg-yellow-500', activeIds: ['generator', 'transformer', 'transmission'] }
+        ];
+
+        // --- Main Component ---
+
+        function HydroPlantInteractive() {
+            const [activeId, setActiveId] = useState(null);
+            const [flowMode, setFlowMode] = useState(false);
+            const [flowStep, setFlowStep] = useState(0);
+            const [quizMode, setQuizMode] = useState(false);
+            const [quizTarget, setQuizTarget] = useState(null);
+            const [quizScore, setQuizScore] = useState({ correct: 0, attempts: 0 });
+            const [showSpillway, setShowSpillway] = useState(false);
+
+            // Auto-play flow sequence
+            useEffect(() => {
+                let interval;
+                if (flowMode) {
+                    interval = setInterval(() => {
+                        setFlowStep((prev) => (prev + 1) % 5);
+                    }, 2500);
+                } else {
+                    setFlowStep(0);
+                }
+                return () => clearInterval(interval);
+            }, [flowMode]);
+
+            // Quiz Logic
+            const startQuiz = () => {
+                setQuizMode(true);
+                setFlowMode(false);
+                setActiveId(null);
+                setQuizScore({ correct: 0, attempts: 0 });
+                nextQuizQuestion();
+            };
+
+            const nextQuizQuestion = () => {
+                const randomComp = COMPONENTS[Math.floor(Math.random() * COMPONENTS.length)];
+                setQuizTarget(randomComp);
+            };
+
+            const handleComponentClick = (id) => {
+                if (quizMode) {
+                    const isCorrect = id === quizTarget?.id;
+                    setQuizScore(prev => ({ 
+                        correct: prev.correct + (isCorrect ? 1 : 0), 
+                        attempts: prev.attempts + 1 
+                    }));
+                    if (isCorrect) {
+                        setTimeout(nextQuizQuestion, 500);
+                    }
+                } else {
+                    setActiveId(id === activeId ? null : id);
+                }
+            };
+
+            // Helper to determine fill color based on state
+            const getFill = (id, baseColor) => {
+                // Flow Mode Logic
+                if (flowMode && flowStep > 0) {
+                    const currentStage = FLOW_STAGES[flowStep - 1];
+                    if (currentStage?.activeIds.includes(id)) return '#fbbf24'; // Highlight active stage
+                }
+                
+                // Selection/Quiz Logic
+                if (activeId === id) return '#fbbf24'; // Selected (Yellow)
+                if (quizMode && id === quizTarget?.id && quizScore.attempts > 0) return '#fbbf24'; // Reveal answer
+                
+                return baseColor;
+            };
+
+            const activeComponent = COMPONENTS.find(c => c.id === activeId);
+
+            return (
+                <div className="w-full min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col items-center p-2 md:p-4">
+                
+                    {/* Header */}
+                    <div className="w-full max-w-6xl mb-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div>
+                            <h1 className="text-3xl font-bold text-slate-900 uppercase tracking-tight">Impoundment Hydroelectric Plant</h1>
+                            <p className="text-slate-500 text-sm">Interactive Component Analysis & Energy Flow Simulation</p>
+                        </div>
+                        
+                        <div className="flex gap-3">
+                            <button 
+                                onClick={() => { setFlowMode(!flowMode); setQuizMode(false); }}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-sm text-sm font-bold transition-colors ${flowMode ? 'bg-blue-600 text-white' : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'}`}
+                            >
+                                {flowMode ? <RotateCw className="animate-spin" size={16}/> : <Play size={16}/>}
+                                {flowMode ? 'Simulating Flow...' : 'Simulate Energy Flow'}
+                            </button>
+                            
+                            <button 
+                                onClick={() => setShowSpillway(!showSpillway)}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-sm text-sm font-bold transition-colors ${showSpillway ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'}`}
+                            >
+                                <Droplets size={16}/> Spillway Test
+                            </button>
+
+                            <button 
+                                onClick={quizMode ? () => setQuizMode(false) : startQuiz}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-sm text-sm font-bold transition-colors ${quizMode ? 'bg-purple-600 text-white' : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'}`}
+                            >
+                                <HelpCircle size={16}/> {quizMode ? 'Exit Quiz' : 'Start Quiz'}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Main Layout */}
+                    <div className="flex flex-col lg:flex-row gap-6 w-full max-w-7xl h-[500px] lg:h-[600px]">
+                        
+                        {/* Left: Diagram Area */}
+                        <div className="flex-1 bg-white rounded-lg shadow-sm border border-slate-200 relative overflow-hidden group">
+                            
+                            {/* SVG Diagram */}
+                            <svg viewBox="0 100 1000 500" className="w-full h-full select-none cursor-pointer">
+                                <defs>
+                                    <pattern id="waterPattern" patternUnits="userSpaceOnUse" width="20" height="20">
+                                        <path d="M0 10 Q5 5 10 10 T20 10" fill="none" stroke="#60a5fa" strokeWidth="1" opacity="0.3"/>
+                                    </pattern>
+                                    <linearGradient id="groundGrad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#e2e8f0"/>
+                                        <stop offset="100%" stopColor="#cbd5e1"/>
+                                    </linearGradient>
+                                </defs>
+
+                                {/* Sky Background */}
+                                <rect width="1000" height="600" fill="#f8fafc" />
+
+                                {/* Ground/Terrain - Background Layer */}
+                                <path d="M0,200 L300,200 L400,600 L1000,600 L1000,600 L0,600 Z" fill="url(#groundGrad)" />
+
+                                {/* Component: RESERVOIR */}
+                                <g onClick={() => handleComponentClick('reservoir')} className="transition-opacity hover:opacity-90">
+                                    <rect x="0" y="220" width="300" height="380" fill="#3b82f6" fillOpacity="0.2" />
+                                    <rect x="0" y="220" width="300" height="380" fill="url(#waterPattern)" />
+                                    <line x1="0" y1="220" x2="300" y2="220" stroke="#2563eb" strokeWidth="2" strokeDasharray="4 2"/>
+                                    {/* Flow Animation Overlay */}
+                                    {(flowMode && flowStep === 1) && (
+                                        <rect x="0" y="220" width="300" height="380" fill="#fbbf24" fillOpacity="0.3" className="animate-pulse" />
+                                    )}
+                                    {/* Text Label */}
+                                    <text x="150" y="300" textAnchor="middle" className="text-sm font-bold fill-blue-800 pointer-events-none opacity-50">RESERVOIR</text>
+                                </g>
+
+                                {/* Component: DAM */}
+                                <g onClick={() => handleComponentClick('dam')} className="cursor-pointer hover:brightness-110 transition-all">
+                                    <path d="M300,200 L340,200 L450,600 L300,600 Z" fill={getFill('dam', '#64748b')} stroke="#475569" strokeWidth="2" />
+                                </g>
+
+                                {/* Component: SPILLWAY */}
+                                <g onClick={() => handleComponentClick('spillway')}>
+                                    <path d="M280,220 Q320,230 400,450 L420,450 Q340,230 300,220 Z" fill={getFill('spillway', '#94a3b8')} opacity="0.8"/>
+                                    {showSpillway && (
+                                        <path d="M280,220 Q320,230 400,450" fill="none" stroke="#3b82f6" strokeWidth="8" strokeDasharray="10 5" className="animate-[dash_1s_linear_infinite]">
+                                            <animate attributeName="stroke-dashoffset" from="100" to="0" dur="1s" repeatCount="indefinite" />
+                                        </path>
+                                    )}
+                                </g>
+
+                                {/* Component: INTAKE */}
+                                <g onClick={() => handleComponentClick('intake')}>
+                                    <rect x="300" y="350" width="20" height="80" fill={getFill('intake', '#334155')} />
+                                    <line x1="300" y1="350" x2="300" y2="430" stroke="#000" strokeWidth="1" strokeDasharray="2 2" />
+                                </g>
+
+                                {/* Component: PENSTOCK */}
+                                <g onClick={() => handleComponentClick('penstock')}>
+                                    <path d="M320,380 L550,500" fill="none" stroke={getFill('penstock', '#475569')} strokeWidth="24" />
+                                    {/* Flow Animation */}
+                                    {(flowMode && flowStep >= 2) && (
+                                        <circle r="4" fill="#60a5fa">
+                                            <animateMotion path="M320,380 L550,500" dur="1s" repeatCount="indefinite" />
+                                        </circle>
+                                    )}
+                                    <path d="M320,380 L550,500" fill="none" stroke="#cbd5e1" strokeWidth="20" /> {/* Inner Pipe */}
+                                </g>
+
+                                {/* Component: POWERHOUSE (Structure) */}
+                                <g onClick={() => handleComponentClick('powerhouse')}>
+                                    <rect x="520" y="420" width="160" height="180" fill="none" stroke={getFill('powerhouse', '#334155')} strokeWidth="2" strokeDasharray="4 4" />
+                                </g>
+
+                                {/* Component: TURBINE */}
+                                <g onClick={() => handleComponentClick('turbine')} transform="translate(550, 500)">
+                                    <circle r="30" fill={getFill('turbine', '#94a3b8')} stroke="#475569" strokeWidth="2" />
+                                    <path d="M-25,0 L25,0 M0,-25 L0,25" stroke="#475569" strokeWidth="4" 
+                                        className={(flowMode && flowStep >= 3) ? 'origin-center animate-spin' : ''} 
+                                        style={{ transformBox: 'fill-box' }}/>
+                                </g>
+
+                                {/* Component: GENERATOR */}
+                                <g onClick={() => handleComponentClick('generator')}>
+                                    <rect x="535" y="440" width="30" height="40" fill={getFill('generator', '#e2e8f0')} stroke="#475569" strokeWidth="2" />
+                                    <path d="M550,480 L550,500" stroke="#334155" strokeWidth="4" /> {/* Shaft */}
+                                    <text x="550" y="465" textAnchor="middle" fontSize="10" fontWeight="bold">GEN</text>
+                                    {(flowMode && flowStep >= 4) && (
+                                        <circle cx="550" cy="460" r="25" fill="none" stroke="#fbbf24" strokeWidth="2" className="animate-ping" opacity="0.5"/>
+                                    )}
+                                </g>
+
+                                {/* Component: DRAFT TUBE */}
+                                <g onClick={() => handleComponentClick('draft_tube')}>
+                                    {/* Diverging Elbow Shape: Narrow at top (30px), Wider at bottom (40px) */}
+                                    <path 
+                                        d="M535,530 L565,530 Q565,550 620,560 L620,600 C550,600 535,580 535,530 Z" 
+                                        fill={getFill('draft_tube', '#cbd5e1')} 
+                                        stroke="#475569" 
+                                        strokeWidth="2" 
+                                    />
+                                </g>
+
+                                {/* Component: TAILRACE */}
+                                <g onClick={() => handleComponentClick('tailrace')}>
+                                    <rect x="620" y="560" width="380" height="40" fill={getFill('tailrace', '#bfdbfe')} />
+                                    <path d="M620,560 L1000,560" stroke="#3b82f6" strokeWidth="2" />
+                                    <text x="800" y="585" textAnchor="middle" fontSize="10" className="fill-blue-800">TAILRACE</text>
+                                </g>
+
+                                {/* Component: TRANSFORMER */}
+                                <g onClick={() => handleComponentClick('transformer')}>
+                                    <path d="M630,480 L660,480 L660,460 L680,460 L680,480 L710,480 L710,520 L630,520 Z" fill={getFill('transformer', '#64748b')} />
+                                    <line x1="565" y1="460" x2="630" y2="490" stroke="#000" strokeWidth="1" />
+                                </g>
+
+                                {/* Component: TRANSMISSION LINES */}
+                                <g onClick={() => handleComponentClick('transmission')}>
+                                    <polyline points="670,460 670,400 900,350 1000,350" fill="none" stroke={getFill('transmission', '#1e293b')} strokeWidth="2" />
+                                    <circle cx="670" cy="400" r="2" fill="#000" />
+                                    <circle cx="900" cy="350" r="2" fill="#000" />
+                                    {/* Energy Dots */}
+                                    {(flowMode && flowStep >= 4) && (
+                                        <circle r="3" fill="#fbbf24">
+                                            <animateMotion path="M670,460 L670,400 L900,350 L1000,350" dur="1s" repeatCount="indefinite" />
+                                        </circle>
+                                    )}
+                                </g>
+
+                                {/* Labels (Static) */}
+                                <text x="320" y="215" className="text-xs font-bold fill-slate-700 pointer-events-none">DAM CREST</text>
+
+                            </svg>
+
+                            {/* Quiz Overlay Prompt */}
+                            {quizMode && quizTarget && (
+                                <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white/95 border-2 border-purple-500 shadow-xl px-8 py-4 rounded-lg text-center z-20 animate-in fade-in slide-in-from-top-4">
+                                    <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-1">Locate Component</h3>
+                                    <div className="text-2xl font-black text-purple-700">{quizTarget.name}</div>
+                                    <div className="text-xs text-slate-400 mt-2">Score: {quizScore.correct} / {quizScore.attempts}</div>
+                                </div>
+                            )}
+                            
+                            {/* Flow Phase Indicator */}
+                            {flowMode && flowStep > 0 && (
+                                <div className="absolute bottom-4 left-4 flex flex-col gap-2 pointer-events-none">
+                                    {FLOW_STAGES.map((stage, idx) => (
+                                        <div key={stage.id} className={`flex items-center gap-2 transition-opacity duration-300 ${idx + 1 === flowStep ? 'opacity-100' : 'opacity-40'}`}>
+                                            <div className={`w-3 h-3 rounded-full ${stage.color}`}></div>
+                                            <span className="text-xs font-bold bg-white/80 px-2 py-0.5 rounded-sm">{stage.label}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                        </div>
+
+                        {/* Right: Info Panel */}
+                        <div className="w-full lg:w-96 flex flex-col gap-4">
+                        
+                            {/* Active Component Details */}
+                            <div className={`flex-1 bg-white border border-slate-200 p-6 rounded-lg shadow-sm transition-all duration-300 ${activeComponent ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-50'}`}>
+                                {activeComponent ? (
+                                    <>
+                                        <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-4">
+                                            <h2 className="text-xl font-bold text-slate-800">{activeComponent.name}</h2>
+                                            <div className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${
+                                                activeComponent.type === 'electrical' ? 'bg-yellow-100 text-yellow-700' :
+                                                activeComponent.type === 'mechanical' ? 'bg-orange-100 text-orange-700' :
+                                                activeComponent.type === 'kinetic' ? 'bg-cyan-100 text-cyan-700' :
+                                                'bg-blue-100 text-blue-700'
+                                            }`}>
+                                                {activeComponent.type}
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="space-y-6">
+                                            <div>
+                                                <h3 className="text-xs font-bold text-slate-400 uppercase mb-2">Function</h3>
+                                                <p className="text-sm leading-relaxed text-slate-600">{activeComponent.description}</p>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="bg-slate-50 p-3 rounded border border-slate-100">
+                                                    <div className="flex items-center gap-2 mb-1 text-slate-800 font-bold text-xs">
+                                                        <Settings size={14}/> Role
+                                                    </div>
+                                                    <div className="text-xs text-slate-500">{activeComponent.role}</div>
+                                                </div>
+                                                <div className="bg-slate-50 p-3 rounded border border-slate-100">
+                                                    <div className="flex items-center gap-2 mb-1 text-slate-800 font-bold text-xs">
+                                                        <Activity size={14}/> Specs
+                                                    </div>
+                                                    <div className="text-xs text-slate-500">{activeComponent.specs}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="h-full flex flex-col items-center justify-center text-slate-300 text-center">
+                                        <Info size={48} className="mb-4 opacity-50"/>
+                                        <p className="text-sm font-medium">Select a component on the diagram<br/>to view engineering specifications.</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Quick Legend */}
+                            <div className="bg-slate-900 text-white p-6 rounded-lg shadow-sm">
+                                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">System Legend</h3>
+                                <div className="space-y-3 text-xs">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-1 bg-blue-500 rounded"></div>
+                                        <span>Hydraulic Circuit</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-1 bg-slate-500 rounded"></div>
+                                        <span>Civil Structure</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-1 bg-yellow-500 rounded"></div>
+                                        <span>Electrical Output</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <span className="w-8 h-8 flex items-center justify-center border border-slate-600 rounded-full text-[10px]">Tap</span>
+                                        <span>Interactive Zone</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<HydroPlantInteractive />);
+    </script>
+</body>
+</html>

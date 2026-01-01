@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capacity Factor Explorer | Power Plant Engineering</title>
+    <style>
+        :root {
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-light: #64748b;
+            --primary: #4f46e5;     /* Indigo */
+            --highlight: #f59e0b;   /* Amber */
+            --unused: #e2e8f0;      /* Light Grey */
+            --border: #cbd5e1;
+            
+            /* Status Colors */
+            --status-low: #ef4444;
+            --status-mid: #f59e0b;
+            --status-high: #10b981;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
+        }
+
+        h1 { margin: 0; font-size: 1.6rem; color: var(--text-main); }
+        .subtitle { color: var(--text-light); font-size: 0.95rem; }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+            height: calc(100vh - 120px);
+            min-height: 600px;
+        }
+
+        /* --- VISUALIZATION PANEL (LEFT) --- */
+        .viz-panel {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .viz-header {
+            font-weight: 600;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Chart 1: The Capacity Bar */
+        .capacity-viz-container {
+            flex: 1;
+            position: relative;
+            display: flex;
+            gap: 40px;
+            align-items: flex-end;
+            padding: 0 20px;
+        }
+
+        /* SVG Styles */
+        svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .bar-bg { fill: var(--unused); stroke: var(--border); stroke-width: 1; rx: 4; }
+        .bar-fill { transition: height 0.3s ease, fill 0.3s ease; rx: 4; }
+        .grid-line { stroke: #fff; stroke-width: 1; stroke-dasharray: 4; opacity: 0.5; }
+        
+        .label-text { font-size: 14px; fill: var(--text-main); font-weight: bold; text-anchor: middle; }
+        .sub-text { font-size: 11px; fill: var(--text-light); text-anchor: middle; }
+        
+        .annotation-line { stroke: var(--text-light); stroke-width: 1; stroke-dasharray: 4; }
+        
+        /* Chart 2: Timeline (Year View) */
+        .timeline-container {
+            height: 140px; 
+            border-top: 1px solid var(--border);
+            padding-top: 15px;
+        }
+        
+        .pixel { stroke: none; shape-rendering: crispEdges; }
+
+        /* LCOE Curve */
+        .lcoe-path { fill: none; stroke: var(--primary); stroke-width: 2; }
+        .lcoe-dot { fill: var(--highlight); stroke: #fff; stroke-width: 2; r: 5; transition: cx 0.3s, cy 0.3s; }
+        .lcoe-axis { stroke: var(--text-light); stroke-width: 1; opacity: 0.5; }
+
+        /* --- CONTROLS PANEL (RIGHT) --- */
+        .controls-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto; 
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+
+        /* Main Metric */
+        .cf-display {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .cf-value {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1;
+            transition: color 0.3s;
+        }
+        .cf-label {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-light);
+            margin-top: 5px;
+        }
+
+        /* Sliders */
+        .input-group { margin-bottom: 20px; }
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .value-display { color: var(--primary); font-family: monospace; font-size: 1rem; }
+        
+        input[type=range] {
+            width: 100%;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        /* Presets */
+        .preset-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        button.preset-btn {
+            padding: 10px;
+            border: 1px solid var(--border);
+            background: #f8fafc;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+        }
+        
+        button.preset-btn:hover { background: #e2e8f0; }
+        button.preset-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .btn-title { font-weight: bold; font-size: 0.85rem; display: block; }
+        .btn-sub { font-size: 0.75rem; opacity: 0.8; }
+
+        /* Stats Table */
+        .stat-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+        .stat-table td { padding: 6px 0; border-bottom: 1px solid #f1f5f9; }
+        .stat-val { text-align: right; font-weight: 600; font-family: monospace; }
+
+        /* LCOE Section */
+        .lcoe-viz-container {
+            height: 100px;
+            margin-top: 10px;
+            position: relative;
+        }
+        .lcoe-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* Tooltip */
+        .tooltip {
+            border-bottom: 1px dotted var(--text-light);
+            cursor: help;
+            position: relative;
+        }
+        .tooltip:hover::after {
+            content: attr(data-tip);
+            position: absolute;
+            right: 0;
+            bottom: 100%;
+            background: #334155;
+            color: #fff;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            width: 220px;
+            z-index: 10;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .legend {
+            display: flex;
+            gap: 15px;
+            margin-top: 5px;
+            font-size: 0.75rem;
+        }
+        .legend-item { display: flex; align-items: center; gap: 4px; }
+        .l-box { width: 10px; height: 10px; border-radius: 2px; }
+
+        @media (max-width: 900px) {
+            .container { grid-template-columns: 1fr; height: auto; }
+            .viz-panel { height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div>
+            <h1>Capacity Factor Explorer</h1>
+            <div class="subtitle">Understand Plant Utilization and Economics</div>
+        </div>
+        <div style="text-align:right; color:var(--text-light); font-size:0.9rem;">
+            Capacity Factor = Actual Generation / Max Possible Generation
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <!-- LEFT: VISUALIZATION -->
+        <div class="viz-panel">
+            
+            <!-- VIZ 1: The Capacity Bar -->
+            <div class="viz-header">
+                <span>Power Output Visualization</span>
+                <div class="legend">
+                    <div class="legend-item"><div class="l-box" style="background:var(--unused)"></div> Unused Capacity</div>
+                    <div class="legend-item"><div class="l-box" style="background:var(--primary)" id="legend-fill"></div> Actual Generation</div>
+                </div>
+            </div>
+            
+            <div class="capacity-viz-container" id="main-viz">
+                <!-- SVG injected via JS -->
+            </div>
+
+            <!-- VIZ 2: Timeline -->
+            <div class="viz-header" style="margin-top: 10px; border:none;">
+                <span>Yearly Utilization Pattern (8760 Hours)</span>
+                <span style="font-size:0.8rem; color:var(--text-light)">Each pixel ≈ 1 day</span>
+            </div>
+            <div class="timeline-container" id="timeline-viz">
+                <!-- SVG injected via JS -->
+            </div>
+        </div>
+
+        <!-- RIGHT: CONTROLS & STATS -->
+        <div class="controls-panel">
+            
+            <!-- Metric Card -->
+            <div class="card">
+                <div class="cf-display">
+                    <div class="cf-value" id="disp-cf">0%</div>
+                    <div class="cf-label">Capacity Factor</div>
+                </div>
+                
+                <table class="stat-table">
+                    <tr>
+                        <td>Rated Capacity <span class="tooltip" data-tip="The maximum power output the plant can produce under ideal conditions.">?</span></td>
+                        <td class="stat-val" id="disp-rated">0 MW</td>
+                    </tr>
+                    <tr>
+                        <td>Max Possible Energy <span class="tooltip" data-tip="Rated Capacity × 8760 hours/year.">?</span></td>
+                        <td class="stat-val" id="disp-emax">0 GWh/yr</td>
+                    </tr>
+                    <tr>
+                        <td>Actual Energy <span class="tooltip" data-tip="The actual electrical energy produced over a year.">?</span></td>
+                        <td class="stat-val" id="disp-eactual">0 GWh/yr</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Sliders -->
+            <div class="card">
+                <div class="input-group">
+                    <div class="label-row">
+                        <label>Installed Capacity ($P_{rated}$)</label>
+                        <span class="value-display" id="val-cap">100 MW</span>
+                    </div>
+                    <input type="range" id="slider-cap" min="10" max="1000" step="10" value="100">
+                </div>
+
+                <div class="input-group">
+                    <div class="label-row">
+                        <label>Avg. Power Output ($P_{avg}$)</label>
+                        <span class="value-display" id="val-avg">60 MW</span>
+                    </div>
+                    <input type="range" id="slider-avg" min="0" max="100" step="1" value="60">
+                </div>
+
+                <div style="background:#eff6ff; padding:10px; border-radius:6px; font-size:0.8rem; color:#1e40af; border-left:3px solid var(--primary);">
+                    <strong>Note:</strong> Higher Capacity Factor generally lowers the Levelized Cost of Electricity (LCOE) by spreading fixed capital costs over more units of energy.
+                </div>
+            </div>
+
+            <!-- Economic Impact (LCOE) -->
+            <div class="card">
+                <div class="viz-header" style="border:none; padding:0; margin-bottom:5px;">Estimated LCOE</div>
+                <div style="display:flex; align-items:baseline; justify-content:space-between;">
+                    <span class="lcoe-value" id="disp-lcoe">৳0.00</span>
+                    <span style="color:var(--text-light); font-size:0.9rem;">/ kWh</span>
+                </div>
+                
+                <div class="lcoe-viz-container" id="lcoe-viz">
+                    <!-- SVG LCOE Curve -->
+                </div>
+                <div style="font-size:0.75rem; color:var(--text-light); text-align:center; margin-top:5px;">
+                    Low CF = High Cost (Underutilized Asset)
+                </div>
+            </div>
+
+            <!-- Comparison Toggle -->
+            <div class="card">
+                <div class="viz-header" style="border:none; padding:0; margin-bottom:10px;">Typical Plant Profiles</div>
+                <div class="preset-grid">
+                    <button class="preset-btn" onclick="setPreset('coal')">
+                        <span class="btn-title">Coal / Nuclear</span>
+                        <span class="btn-sub">Baseload (~85%)</span>
+                    </button>
+                    <button class="preset-btn" onclick="setPreset('gas')">
+                        <span class="btn-title">Combined Cycle</span>
+                        <span class="btn-sub">Dispatchable (~60%)</span>
+                    </button>
+                    <button class="preset-btn" onclick="setPreset('wind')">
+                        <span class="btn-title">Wind Farm</span>
+                        <span class="btn-sub">Intermittent (~35%)</span>
+                    </button>
+                    <button class="preset-btn" onclick="setPreset('solar')">
+                        <span class="btn-title">Solar PV</span>
+                        <span class="btn-sub">Daylight Only (~20%)</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- DATA & STATE ---
+        const state = {
+            ratedCapacity: 100, // MW
+            averageOutput: 60,  // MW
+            type: 'gas',        // visual pattern style
+            // Default Economics (Gas)
+            capex: 1000,        // USD/kW
+            fixedOM: 20,        // USD/kW-yr
+            varCost: 50         // USD/MWh (Fuel)
+        };
+        
+        // Currency Conversion (USD to BDT)
+        const USD_TO_BDT = 120;
+
+        const presets = {
+            coal: { cf: 85, type: 'baseload', capex: 3500, fixedOM: 40, varCost: 30 },
+            gas: { cf: 60, type: 'gas', capex: 1000, fixedOM: 20, varCost: 50 },
+            wind: { cf: 35, type: 'intermittent', capex: 1500, fixedOM: 40, varCost: 0 },
+            solar: { cf: 20, type: 'cyclic', capex: 1200, fixedOM: 25, varCost: 0 }
+        };
+
+        // --- DOM ELEMENTS ---
+        const sliderCap = document.getElementById('slider-cap');
+        const sliderAvg = document.getElementById('slider-avg');
+        const valCap = document.getElementById('val-cap');
+        const valAvg = document.getElementById('val-avg');
+        
+        const dispCF = document.getElementById('disp-cf');
+        const dispRated = document.getElementById('disp-rated');
+        const dispEmax = document.getElementById('disp-emax');
+        const dispEactual = document.getElementById('disp-eactual');
+        const dispLCOE = document.getElementById('disp-lcoe');
+        
+        const mainViz = document.getElementById('main-viz');
+        const timelineViz = document.getElementById('timeline-viz');
+        const lcoeViz = document.getElementById('lcoe-viz');
+        const legendFill = document.getElementById('legend-fill');
+
+        // --- CORE LOGIC ---
+        function init() {
+            // Attach listeners
+            sliderCap.addEventListener('input', handleCapChange);
+            sliderAvg.addEventListener('input', handleAvgChange);
+            
+            // Initial Render
+            updateAll();
+            
+            // Handle Resize
+            window.addEventListener('resize', () => {
+                updateAll();
+            });
+        }
+
+        function handleCapChange(e) {
+            state.ratedCapacity = parseInt(e.target.value);
+            // Ensure average output doesn't exceed rated capacity
+            if(state.averageOutput > state.ratedCapacity) {
+                state.averageOutput = state.ratedCapacity;
+                sliderAvg.value = state.averageOutput;
+            }
+            // Update slider max for Average Output to match new Capacity
+            sliderAvg.max = state.ratedCapacity;
+            updateAll();
+        }
+
+        function handleAvgChange(e) {
+            state.averageOutput = parseInt(e.target.value);
+            // In manual mode, maintain current economics
+            updateAll();
+        }
+
+        function setPreset(key) {
+            const p = presets[key];
+            state.type = p.type;
+            
+            // Update Economics
+            state.capex = p.capex;
+            state.fixedOM = p.fixedOM;
+            state.varCost = p.varCost;
+            
+            // Keep current capacity, just adjust output
+            state.averageOutput = Math.round(state.ratedCapacity * (p.cf / 100));
+            
+            sliderAvg.value = state.averageOutput;
+            sliderAvg.max = state.ratedCapacity;
+            
+            // Visual feedback on buttons
+            document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+            
+            updateAll();
+        }
+
+        function calculateMetrics() {
+            const cf = state.ratedCapacity > 0 ? (state.averageOutput / state.ratedCapacity) : 0;
+            const eMax = state.ratedCapacity * 8760 / 1000; // GWh
+            const eActual = state.averageOutput * 8760 / 1000; // GWh
+            
+            // LCOE Calculation
+            // CRF assumed roughly 0.1 for simplicity
+            const CRF = 0.1;
+            const fixedCostTotal = (state.capex * CRF + state.fixedOM) * state.ratedCapacity * 1000; // Total USD per year
+            // eActual is in GWh, convert to MWh for LCOE Calculation
+            const generationMWh = eActual * 1000;
+            
+            let lcoeUSD_MWh = 0;
+            if(generationMWh > 0) {
+                lcoeUSD_MWh = (fixedCostTotal / generationMWh) + state.varCost;
+            } else {
+                lcoeUSD_MWh = 9999; // Infinite cost theoretically
+            }
+            
+            // Convert to Taka/kWh
+            // 1 MWh = 1000 kWh
+            // USD/MWh / 1000 = USD/kWh
+            // USD/kWh * 120 = BDT/kWh
+            const lcoeBDT_kWh = (lcoeUSD_MWh / 1000) * USD_TO_BDT;
+            
+            return { cf, eMax, eActual, lcoe: lcoeBDT_kWh };
+        }
+
+        function updateAll() {
+            const m = calculateMetrics();
+            
+            // Update Text
+            valCap.innerText = state.ratedCapacity + " MW";
+            valAvg.innerText = state.averageOutput + " MW";
+            
+            dispCF.innerText = (m.cf * 100).toFixed(1) + "%";
+            dispRated.innerText = state.ratedCapacity + " MW";
+            dispEmax.innerText = m.eMax.toFixed(1) + " GWh";
+            dispEactual.innerText = m.eActual.toFixed(1) + " GWh";
+            dispLCOE.innerText = "৳" + m.lcoe.toFixed(2);
+
+            // Color Coding
+            let color = 'var(--status-low)';
+            if(m.cf > 0.4) color = 'var(--status-mid)';
+            if(m.cf > 0.7) color = 'var(--status-high)';
+            
+            // For solar, low CF is normal
+            if(state.type === 'cyclic' && m.cf > 0.15) color = 'var(--status-mid)';
+            if(state.type === 'cyclic' && m.cf > 0.25) color = 'var(--status-high)';
+
+            dispCF.style.color = color;
+            legendFill.style.background = color;
+
+            renderMainViz(m, color);
+            renderTimeline(m, color);
+            renderLCOEChart(m, color);
+        }
+
+        // --- RENDERING SVG ---
+
+        function renderMainViz(metrics, color) {
+            if (!metrics) return;
+            const width = mainViz.offsetWidth;
+            const height = mainViz.offsetHeight;
+            const barW = Math.min(100, width * 0.3);
+            const xCenter = width / 2;
+            
+            let svg = `<svg viewBox="0 0 ${width} ${height}">`;
+
+            // Comparison Bars
+            const margin = 40;
+            const plotH = height - margin * 2;
+            
+            // Container (Rated)
+            svg += `<rect x="${xCenter - barW - 20}" y="${margin}" width="${barW}" height="${plotH}" class="bar-bg" />`;
+            
+            // Fill (Actual)
+            const fillH = plotH * metrics.cf;
+            const fillY = margin + (plotH - fillH);
+            
+            svg += `<rect x="${xCenter - barW - 20}" y="${fillY}" width="${barW}" height="${fillH}" fill="${color}" class="bar-fill" />`;
+
+            // Labels
+            svg += `<text x="${xCenter - barW/2 - 20}" y="${height - 10}" class="label-text">Capacity Utilization</text>`;
+            
+            // Annotations
+            // Rated
+            svg += `<line x1="${xCenter - barW - 30}" y1="${margin}" x2="${xCenter + 20}" y2="${margin}" class="annotation-line" />`;
+            svg += `<text x="${xCenter + 25}" y="${margin + 5}" class="label-text" style="text-anchor:start;">Rated Capacity</text>`;
+            svg += `<text x="${xCenter + 25}" y="${margin + 20}" class="sub-text" style="text-anchor:start;">${state.ratedCapacity} MW (100%)</text>`;
+            
+            // Avg
+            if(metrics.cf < 0.98) {
+                svg += `<line x1="${xCenter - barW - 30}" y1="${fillY}" x2="${xCenter + 20}" y2="${fillY}" class="annotation-line" />`;
+                svg += `<text x="${xCenter + 25}" y="${fillY + 5}" class="label-text" style="text-anchor:start;">Avg Output</text>`;
+                svg += `<text x="${xCenter + 25}" y="${fillY + 20}" class="sub-text" style="text-anchor:start;">${state.averageOutput} MW (${(metrics.cf*100).toFixed(0)}%)</text>`;
+            }
+
+            // Unused
+            if(metrics.cf < 0.9) {
+                const unusedCenter = margin + (plotH - fillH)/2;
+                svg += `<text x="${xCenter - barW - 40}" y="${unusedCenter}" class="sub-text" style="text-anchor:end; fill:var(--text-light)">Unused / Idle</text>`;
+                svg += `<line x1="${xCenter - barW - 35}" y1="${margin}" x2="${xCenter - barW - 35}" y2="${fillY}" stroke="var(--border)" />`;
+            }
+
+            svg += `</svg>`;
+            mainViz.innerHTML = svg;
+        }
+
+        function renderTimeline(metrics, color) {
+            if (!metrics) return;
+            const width = timelineViz.offsetWidth;
+            const height = timelineViz.offsetHeight;
+            
+            // Grid: 52 weeks x 7 days
+            const cols = 52;
+            const rows = 7;
+            const cellW = width / cols;
+            const cellH = height / rows;
+
+            let svg = `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">`;
+            
+            const totalCells = cols * rows;
+            const targetCells = Math.round(totalCells * metrics.cf);
+            let grid = new Array(totalCells).fill(0);
+            
+            if(state.type === 'baseload') {
+                for(let i=0; i<targetCells; i++) grid[i] = 1;
+            } else if (state.type === 'cyclic') { 
+                for(let i=0; i<totalCells; i++) if(Math.random() < metrics.cf) grid[i] = 1; 
+            } else if (state.type === 'intermittent') {
+                 for(let i=0; i<totalCells; i++) if(Math.random() < metrics.cf) grid[i] = 1;
+            } else { 
+                for(let i=0; i<targetCells; i++) grid[i] = 1;
+                grid.sort(() => Math.random() - 0.5);
+            }
+
+            for(let r=0; r<rows; r++) {
+                for(let c=0; c<cols; c++) {
+                    const idx = r*cols + c;
+                    if(grid[idx]) {
+                        svg += `<rect x="${c*cellW}" y="${r*cellH}" width="${cellW-1}" height="${cellH-1}" fill="${color}" class="pixel" />`;
+                    } else {
+                        svg += `<rect x="${c*cellW}" y="${r*cellH}" width="${cellW-1}" height="${cellH-1}" fill="#e2e8f0" class="pixel" opacity="0.3" />`;
+                    }
+                }
+            }
+            
+            svg += `</svg>`;
+            timelineViz.innerHTML = svg;
+        }
+
+        function renderLCOEChart(metrics, color) {
+            if (!metrics) return;
+            const width = lcoeViz.offsetWidth;
+            const height = lcoeViz.offsetHeight;
+            const padding = { top: 10, right: 10, bottom: 20, left: 30 };
+            
+            let svg = `<svg viewBox="0 0 ${width} ${height}">`;
+            
+            // Calculate Curve Points
+            // LCOE = (Fixed / (Rated * 8760 * CF)) + Var
+            // Let's generate a simplified curve for the current economics
+            const CRF = 0.1;
+            const fixedAnnual = (state.capex * CRF + state.fixedOM) * 1000; // per MW capacity
+            
+            let points = "";
+            let maxY = 0;
+            
+            // Plot from 5% to 100% CF
+            for(let cf = 0.05; cf <= 1.0; cf += 0.05) {
+                const energy = 8760 * cf; // MWh per MW capacity
+                const lcoeUSD = (fixedAnnual / energy) + state.varCost;
+                
+                // Convert Y values for plotting scale
+                const lcoeBDT = (lcoeUSD / 1000) * USD_TO_BDT;
+                
+                if(lcoeBDT > maxY) maxY = lcoeBDT;
+            }
+            
+            // Add a buffer to maxY for better visual
+            maxY = maxY * 1.1;
+
+            const plotW = width - padding.left - padding.right;
+            const plotH = height - padding.top - padding.bottom;
+            
+            for(let cf = 0.05; cf <= 1.0; cf += 0.05) {
+                const energy = 8760 * cf;
+                const lcoeUSD = (fixedAnnual / energy) + state.varCost;
+                const lcoeBDT = (lcoeUSD / 1000) * USD_TO_BDT;
+                
+                const x = padding.left + (cf * plotW);
+                const y = padding.top + plotH - ((lcoeBDT / maxY) * plotH);
+                
+                points += `${x},${y} `;
+            }
+            
+            // Axes
+            svg += `<line x1="${padding.left}" y1="${padding.top}" x2="${padding.left}" y2="${height-padding.bottom}" class="lcoe-axis" />`;
+            svg += `<line x1="${padding.left}" y1="${height-padding.bottom}" x2="${width-padding.right}" y2="${height-padding.bottom}" class="lcoe-axis" />`;
+            svg += `<text x="${width/2}" y="${height-5}" font-size="9" fill="var(--text-light)" text-anchor="middle">Capacity Factor</text>`;
+
+            // Draw Curve
+            svg += `<polyline points="${points}" class="lcoe-path" stroke="var(--primary)" fill="none" />`;
+            
+            // Draw Current Point
+            // CF 0-1 mapped to plotW
+            const cx = padding.left + (Math.max(0.05, metrics.cf) * plotW);
+            
+            // Calculate live LCOE Y-pos
+            const cy = padding.top + plotH - ((metrics.lcoe / maxY) * plotH);
+            
+            // Ensure dot stays within bounds visually
+            const safeCy = Math.max(padding.top, Math.min(height-padding.bottom, cy));
+            
+            svg += `<circle cx="${cx}" cy="${safeCy}" class="lcoe-dot" />`;
+            
+            svg += `</svg>`;
+            lcoeViz.innerHTML = svg;
+        }
+
+        // Start
+        init();
+
+    </script>
+</body>
+</html>
