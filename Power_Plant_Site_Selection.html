@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Plant Siting & Sustainability Simulator</title>
+    <style>
+        /* --- CSS VARIABLES & RESET --- */
+        :root {
+            --col-bg: #f4f6f9;
+            --col-panel: #ffffff;
+            --col-text: #333333;
+            --col-border: #dcdcdc;
+            
+            /* Sustainability Pillars */
+            --col-social: #3498db;   /* Blue */
+            --col-env: #2ecc71;      /* Green */
+            --col-econ: #f1c40f;     /* Amber */
+            --col-econ-text: #b7950b;
+
+            /* UI Elements */
+            --col-highlight: #2c3e50;
+            --col-disabled: #bdc3c7;
+            --col-danger: #e74c3c;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+        body {
+            background-color: var(--col-bg);
+            color: var(--col-text);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden; /* Optimized for fixed 16:9 projection */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- HEADER --- */
+        header {
+            background: var(--col-highlight);
+            color: white;
+            padding: 0.8rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        header h1 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.5px; }
+        header .subtitle { font-size: 0.9rem; opacity: 0.8; font-weight: 400; }
+
+        /* --- MAIN LAYOUT (GRID) --- */
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 280px 1fr 350px; /* Controls | Map | Analysis */
+            gap: 15px;
+            padding: 15px;
+            overflow: hidden;
+        }
+
+        /* --- PANEL STYLING --- */
+        .panel {
+            background: var(--col-panel);
+            border-radius: 8px;
+            border: 1px solid var(--col-border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--col-border);
+            background: #fafafa;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-content {
+            padding: 15px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* --- LEFT COLUMN: CONTROLS --- */
+        .control-group { margin-bottom: 20px; }
+        .control-label { display: block; font-size: 0.85rem; color: #666; margin-bottom: 8px; font-weight: 600; text-transform: uppercase; }
+
+        .btn-tech {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 8px;
+            border: 1px solid var(--col-border);
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .btn-tech:hover { background: #f0f0f0; border-color: #bbb; }
+        
+        .btn-tech.active {
+            background: var(--col-highlight);
+            color: white;
+            border-color: var(--col-highlight);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .btn-tech i { width: 24px; margin-right: 10px; display: flex; justify-content: center; }
+
+        /* --- CENTER COLUMN: MAP --- */
+        #map-container {
+            position: relative;
+            background: #aaddff; /* Sea */
+            height: 100%;
+            width: 100%;
+            border-radius: 0 0 8px 8px;
+            overflow: hidden;
+        }
+
+        svg#game-map {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Map Interactive Elements (SVG Styling) */
+        .map-land { fill: #e8f5e9; stroke: #a5d6a7; stroke-width: 2; }
+        .map-river { fill: #4fc3f7; opacity: 0.8; }
+        .map-urban { fill: #cfd8dc; stroke: #90a4ae; stroke-width: 1; }
+        .map-mountain { fill: #d7ccc8; stroke: #a1887f; stroke-width: 1; }
+        
+        /* Marker Styling */
+        .site-marker {
+            cursor: pointer;
+            /* Removed transform transition to prevent flickering */
+        }
+        
+        /* Visual Feedback on Hover (Stable) */
+        .site-marker:hover circle.outer {
+            stroke: var(--col-danger);
+            stroke-width: 3;
+        }
+
+        .site-marker circle.outer { 
+            fill: rgba(255,255,255,0.9); 
+            stroke: #333; 
+            stroke-width: 2; 
+            transition: stroke 0.2s, stroke-width 0.2s;
+        }
+        
+        .site-marker circle.inner { fill: #333; }
+        
+        .site-marker.selected circle.outer { 
+            stroke: var(--col-danger); 
+            stroke-width: 4; 
+            fill: #fff; 
+        }
+        
+        .site-marker.selected circle.inner { fill: var(--col-danger); }
+
+        /* Text and visuals are not clickable, they let click pass to hitbox */
+        .site-marker text, 
+        .site-marker circle.outer, 
+        .site-marker circle.inner {
+            pointer-events: none;
+        }
+
+        .site-marker text {
+            font-size: 16px;
+            font-weight: 900;
+            fill: #000;
+            stroke: #fff;
+            stroke-width: 3px;
+            paint-order: stroke fill;
+            user-select: none;
+        }
+        
+        /* Hitbox is clickable and on top */
+        .hitbox {
+            fill: #ffffff;
+            fill-opacity: 0; /* Fully transparent but interactive */
+            cursor: pointer;
+            pointer-events: auto;
+        }
+
+        /* Tooltip */
+        #tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.85);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            pointer-events: none;
+            display: none;
+            z-index: 100;
+            max-width: 200px;
+        }
+
+        /* --- RIGHT COLUMN: ANALYSIS --- */
+        .pillar-card {
+            margin-bottom: 12px;
+            border-left: 4px solid #ccc;
+            padding: 10px;
+            background: #fafafa;
+        }
+
+        .pillar-social { border-color: var(--col-social); }
+        .pillar-env { border-color: var(--col-env); }
+        .pillar-econ { border-color: var(--col-econ); }
+
+        .pillar-title { font-weight: bold; font-size: 0.9rem; margin-bottom: 5px; display: flex; justify-content: space-between; }
+        .pillar-metrics { font-size: 0.8rem; color: #555; line-height: 1.4; }
+        
+        .sdg-container {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .sdg-badge {
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: help;
+        }
+
+        /* Chart Area */
+        .chart-wrapper {
+            width: 100%;
+            height: 200px;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        /* --- STATUS BAR --- */
+        .status-message {
+            margin-top: auto;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+            display: none; /* Hidden by default */
+        }
+        .status-message.error { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+        .status-message.success { background: #d4edda; color: #155724; border-color: #c3e6cb; }
+
+        /* --- UTILS --- */
+        .progress-bar {
+            height: 6px;
+            background: #eee;
+            border-radius: 3px;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+        .progress-fill { height: 100%; width: 0%; transition: width 0.5s ease; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div>
+            <h1>Power Plant Site Selection</h1>
+            <div class="subtitle">Sustainable Engineering Decision Support System</div>
+        </div>
+        <div style="font-size: 0.8rem; text-align: right;">
+            Course: ME-401<br>Module: Sustainability
+        </div>
+    </header>
+
+    <main>
+        <!-- LEFT PANEL: CONTROLS -->
+        <section class="panel">
+            <div class="panel-header">1. Select Technology</div>
+            <div class="panel-content">
+                <div class="control-group">
+                    <label class="control-label">Base Load</label>
+                    <button class="btn-tech" onclick="selectPlant('coal')" id="btn-coal">
+                        <i>🏭</i> Coal Thermal
+                    </button>
+                    <button class="btn-tech" onclick="selectPlant('gas')" id="btn-gas">
+                        <i>🔥</i> Combined Cycle Gas
+                    </button>
+                    <button class="btn-tech" onclick="selectPlant('nuclear')" id="btn-nuclear">
+                        <i>☢️</i> Nuclear
+                    </button>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Renewables</label>
+                    <button class="btn-tech" onclick="selectPlant('hydro')" id="btn-hydro">
+                        <i>💧</i> Hydropower
+                    </button>
+                    <button class="btn-tech" onclick="selectPlant('wind')" id="btn-wind">
+                        <i>💨</i> Wind Farm
+                    </button>
+                    <button class="btn-tech" onclick="selectPlant('solar')" id="btn-solar">
+                        <i>☀️</i> Solar PV
+                    </button>
+                </div>
+
+                <div style="margin-top: 20px; font-size: 0.8rem; color: #666; border-top: 1px solid #eee; padding-top: 10px;">
+                    <strong>Instruction:</strong> First select a plant type above, then click a site marker (A-E) on the map to evaluate feasibility.
+                </div>
+            </div>
+        </section>
+
+        <!-- CENTER PANEL: MAP -->
+        <section class="panel">
+            <div class="panel-header">2. Select Site Location</div>
+            <div id="map-container">
+                <svg id="game-map" viewBox="0 0 800 450" preserveAspectRatio="xMidYMid meet">
+                    <!-- Definitions for gradients/patterns -->
+                    <defs>
+                        <pattern id="urbanPattern" width="10" height="10" patternUnits="userSpaceOnUse">
+                            <rect width="10" height="10" fill="#cfd8dc"/>
+                            <path d="M0 0 L10 10 M10 0 L0 10" stroke="#b0bec5" stroke-width="0.5"/>
+                        </pattern>
+                        <linearGradient id="oceanGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#4fc3f7;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#81d4fa;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+
+                    <!-- Background: Ocean -->
+                    <rect width="800" height="450" fill="url(#oceanGrad)" />
+
+                    <!-- Landmass -->
+                    <path d="M 150,0 L 800,0 L 800,450 L 100,450 C 100,450 180,300 120,200 C 60,100 150,0 150,0 Z" class="map-land" />
+
+                    <!-- Mountains (Top Right) -->
+                    <path d="M 600,50 L 650,150 L 550,150 Z" class="map-mountain" />
+                    <path d="M 640,30 L 700,160 L 580,160 Z" class="map-mountain" />
+                    <path d="M 700,60 L 750,140 L 650,140 Z" class="map-mountain" />
+
+                    <!-- River -->
+                    <path d="M 620,160 C 620,160 550,250 450,250 C 350,250 300,350 250,450" stroke="#4fc3f7" stroke-width="15" fill="none" class="map-river-path"/>
+
+                    <!-- Urban Area (Center) -->
+                    <polygon points="350,150 480,150 480,280 350,280" fill="url(#urbanPattern)" stroke="#90a4ae" stroke-width="2"/>
+                    <text x="415" y="220" font-size="14" fill="#546e7a" text-anchor="middle" font-weight="bold">CITY</text>
+
+                    <!-- Markers -->
+                    <!-- IMPORTANT: Hitbox must be last child to be on top in SVG order -->
+                    
+                    <!-- Site A: Coast -->
+                    <g class="site-marker" id="site-A" transform="translate(130, 200)" onclick="selectSite('A')">
+                        <circle class="outer" r="12" cx="0" cy="0" />
+                        <circle class="inner" r="6" cx="0" cy="0" />
+                        <text y="-20" x="0" text-anchor="middle">A</text>
+                        <circle class="hitbox" r="30" cx="0" cy="-10" />
+                    </g>
+
+                    <!-- Site B: City Outskirts -->
+                    <g class="site-marker" id="site-B" transform="translate(360, 160)" onclick="selectSite('B')">
+                        <circle class="outer" r="12" cx="0" cy="0" />
+                        <circle class="inner" r="6" cx="0" cy="0" />
+                        <text y="-20" x="0" text-anchor="middle">B</text>
+                        <circle class="hitbox" r="30" cx="0" cy="-10" />
+                    </g>
+
+                    <!-- Site C: River/Plains -->
+                    <g class="site-marker" id="site-C" transform="translate(450, 300)" onclick="selectSite('C')">
+                        <circle class="outer" r="12" cx="0" cy="0" />
+                        <circle class="inner" r="6" cx="0" cy="0" />
+                        <text y="-20" x="0" text-anchor="middle">C</text>
+                        <circle class="hitbox" r="30" cx="0" cy="-10" />
+                    </g>
+
+                    <!-- Site D: Mountains -->
+                    <g class="site-marker" id="site-D" transform="translate(620, 180)" onclick="selectSite('D')">
+                        <circle class="outer" r="12" cx="0" cy="0" />
+                        <circle class="inner" r="6" cx="0" cy="0" />
+                        <text y="-20" x="0" text-anchor="middle">D</text>
+                        <circle class="hitbox" r="30" cx="0" cy="-10" />
+                    </g>
+
+                    <!-- Site E: Deep Plains -->
+                    <g class="site-marker" id="site-E" transform="translate(700, 350)" onclick="selectSite('E')">
+                        <circle class="outer" r="12" cx="0" cy="0" />
+                        <circle class="inner" r="6" cx="0" cy="0" />
+                        <text y="-20" x="0" text-anchor="middle">E</text>
+                        <circle class="hitbox" r="30" cx="0" cy="-10" />
+                    </g>
+
+                </svg>
+                <div id="tooltip"></div>
+            </div>
+        </section>
+
+        <!-- RIGHT PANEL: ANALYSIS -->
+        <section class="panel">
+            <div class="panel-header">3. Sustainability Impact Analysis</div>
+            <div class="panel-content">
+                
+                <!-- Radar Chart -->
+                <div class="chart-wrapper">
+                    <canvas id="radarChart" width="250" height="200"></canvas>
+                </div>
+
+                <h3 style="font-size: 1rem; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Pillar Breakdown</h3>
+
+                <!-- Social Pillar -->
+                <div class="pillar-card pillar-social">
+                    <div class="pillar-title">
+                        <span>Social</span>
+                        <span id="score-soc">--/100</span>
+                    </div>
+                    <div class="pillar-metrics" id="text-soc">Select technology and site.</div>
+                    <div class="sdg-container" id="sdg-soc">
+                        <!-- SDGs injected here -->
+                    </div>
+                </div>
+
+                <!-- Environmental Pillar -->
+                <div class="pillar-card pillar-env">
+                    <div class="pillar-title">
+                        <span>Environmental</span>
+                        <span id="score-env">--/100</span>
+                    </div>
+                    <div class="pillar-metrics" id="text-env">Select technology and site.</div>
+                    <div class="sdg-container" id="sdg-env"></div>
+                </div>
+
+                <!-- Economic Pillar -->
+                <div class="pillar-card pillar-econ">
+                    <div class="pillar-title">
+                        <span>Economic</span>
+                        <span id="score-econ">--/100</span>
+                    </div>
+                    <div class="pillar-metrics" id="text-econ">Select technology and site.</div>
+                    <div class="sdg-container" id="sdg-econ"></div>
+                </div>
+
+                <div id="decision-warning" class="status-message"></div>
+
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // --- DATA MODEL ---
+
+        // Site Definitions
+        const sites = {
+            'A': { name: "Coastal Zone", type: "coast", features: ["Water Access", "Port Logistics"], desc: "High water availability. Good for fuel transport. Vulnerable to sea-level rise." },
+            'B': { name: "Urban Outskirts", type: "urban", features: ["High Demand", "Dense Pop."], desc: "Close to load center. Very sensitive to pollution. High land cost." },
+            'C': { name: "River Bank (Plains)", type: "river", features: ["Fresh Water", "Agriculture"], desc: "Moderate water access. Agricultural land. Flood risk." },
+            'D': { name: "Mountain Valley", type: "mountain", features: ["Elevation", "Remote"], desc: "High head for hydro. Difficult construction logistics. Eco-sensitive." },
+            'E': { name: "Rural Plains", type: "plains", features: ["Open Land", "Sun Exposure"], desc: "Abundant land. Low cost. Far from grid connection." }
+        };
+
+        // Plant Technology Definitions
+        // Base scores (0-100) before site modifiers
+        const plants = {
+            'coal': { 
+                name: "Coal Thermal", 
+                base: { social: 40, env: 20, econ: 85 },
+                needs: ['water'],
+                bad_for: ['urban'],
+                desc: "High reliability, low cost fuel. Heavy carbon emissions and air pollutants." 
+            },
+            'gas': { 
+                name: "CCGT (Gas)", 
+                base: { social: 60, env: 50, econ: 75 },
+                needs: [],
+                bad_for: [],
+                desc: "Cleaner than coal. Efficient. Requires gas pipeline infrastructure." 
+            },
+            'nuclear': { 
+                name: "Nuclear", 
+                base: { social: 50, env: 85, econ: 60 },
+                needs: ['water'],
+                bad_for: ['urban'], // Safety regs
+                desc: "Zero operational carbon. High water use. Waste disposal and public perception issues." 
+            },
+            'hydro': { 
+                name: "Hydropower", 
+                base: { social: 60, env: 70, econ: 80 },
+                needs: ['elevation', 'river'], // Special logic
+                bad_for: [],
+                desc: "Renewable baseload. Requires specific geography. Can displace populations." 
+            },
+            'wind': { 
+                name: "Wind Farm", 
+                base: { social: 75, env: 90, econ: 65 },
+                needs: ['space'],
+                bad_for: ['urban'], // Noise/Shadow flicker
+                desc: "Intermittent renewable. Needs open space. Visual/noise impact." 
+            },
+            'solar': { 
+                name: "Solar PV", 
+                base: { social: 80, env: 95, econ: 60 },
+                needs: ['space'],
+                bad_for: ['mountain'], // Shadowing
+                desc: "Modular renewable. Land intensive. Generation matches daytime peak." 
+            }
+        };
+
+        // SDG Data
+        const sdgs = {
+            3: { color: "#4C9F38", label: "Good Health" },
+            6: { color: "#26BDE2", label: "Clean Water" },
+            7: { color: "#FCC30B", label: "Clean Energy" },
+            8: { color: "#A21942", label: "Decent Work" },
+            9: { color: "#FD6925", label: "Infrastructure" },
+            11: { color: "#FD9D24", label: "Cities" },
+            12: { color: "#BF8B2E", label: "Consumption" },
+            13: { color: "#3F7E44", label: "Climate Action" },
+            14: { color: "#0A97D9", label: "Life Below Water" },
+            15: { color: "#56C02B", label: "Life on Land" }
+        };
+
+        // Mappings
+        const plantSdgMap = {
+            'coal': { soc: [7,8], env: [], econ: [8,9] },
+            'gas': { soc: [7,8], env: [], econ: [9] },
+            'nuclear': { soc: [7], env: [13], econ: [9] },
+            'hydro': { soc: [7, 11], env: [6, 13], econ: [7] },
+            'wind': { soc: [7, 3], env: [13, 15], econ: [7, 12] },
+            'solar': { soc: [7, 3], env: [13], econ: [7, 12] }
+        };
+
+        // --- STATE ---
+        let state = {
+            plant: null,
+            site: null
+        };
+
+        // --- DOM ELEMENTS ---
+        const mapSvg = document.getElementById('game-map');
+        const tooltip = document.getElementById('tooltip');
+        const canvas = document.getElementById('radarChart');
+        const ctx = canvas.getContext('2d');
+
+        // --- INTERACTION FUNCTIONS ---
+
+        function selectPlant(type) {
+            state.plant = type;
+            
+            // UI Updates
+            document.querySelectorAll('.btn-tech').forEach(b => b.classList.remove('active'));
+            document.getElementById(`btn-${type}`).classList.add('active');
+            
+            calculateAndRender();
+        }
+
+        function selectSite(siteId) {
+            state.site = siteId;
+            
+            // UI Updates
+            document.querySelectorAll('.site-marker').forEach(m => m.classList.remove('selected'));
+            document.getElementById(`site-${siteId}`).classList.add('selected');
+            
+            calculateAndRender();
+        }
+
+        // --- CORE LOGIC ENGINE ---
+
+        function calculateAndRender() {
+            if (!state.plant || !state.site) return;
+
+            const P = plants[state.plant];
+            const S = sites[state.site];
+            
+            let scores = { ...P.base };
+            let messages = { social: [], env: [], econ: [] }; 
+            let warning = null;
+            let feasible = true;
+
+            // 1. Feasibility Checks (Hard Constraints)
+            
+            // Hydro Check
+            if (state.plant === 'hydro') {
+                if (S.type !== 'river' && S.type !== 'mountain') {
+                    feasible = false;
+                    warning = "CRITICAL: Hydropower requires a river or elevation for a dam.";
+                } else if (S.type === 'river') {
+                    // Run-of-river
+                    scores.econ -= 10; // Lower yield
+                    messages.econ.push("Run-of-river design (Lower capacity)");
+                } else {
+                    // Mountain Dam
+                    scores.env -= 20; // Ecosystem flood
+                    scores.econ += 10; // High head
+                    messages.env.push("Reservoir floods ecosystem");
+                }
+            }
+
+            // Cooling Water Check (Thermal/Nuclear)
+            if (['coal', 'nuclear'].includes(state.plant)) {
+                if (S.type !== 'coast' && S.type !== 'river') {
+                    scores.econ -= 40; // Expensive cooling towers/piping
+                    scores.env -= 10; // Efficiency loss
+                    messages.econ.push("Lack of natural cooling water increases CapEx drastically.");
+                }
+            }
+
+            // Wind/Solar Land Check
+            if (['wind', 'solar'].includes(state.plant)) {
+                if (S.type === 'urban') {
+                    scores.econ -= 30; // Land cost
+                    scores.social -= 20; // NIMBY
+                    messages.econ.push("Extremely high urban land cost.");
+                } else if (S.type === 'plains') {
+                    scores.econ += 10;
+                    messages.econ.push("Ideal land availability.");
+                }
+            }
+
+            // 2. Pillar Adjustments (Soft Constraints)
+
+            // Pollution in Cities
+            if (['coal', 'gas'].includes(state.plant) && S.type === 'urban') {
+                scores.social -= 40;
+                scores.env -= 10;
+                messages.social.push("Severe public health impact (Air Quality).");
+                warning = "WARNING: Siting thermal plants in cities violates SDG 3 & 11.";
+            }
+
+            // Logistics (Coal needs port/rail)
+            if (state.plant === 'coal') {
+                if (S.type === 'coast') {
+                    scores.econ += 10;
+                    messages.econ.push("Easy coal import via port.");
+                } else if (S.type === 'mountain') {
+                    scores.econ -= 20;
+                    messages.econ.push("Difficult fuel transport logistics.");
+                }
+            }
+
+            // Distance to Grid
+            if (S.type === 'mountain' || S.type === 'plains') {
+                if (S.name === 'Rural Plains') { // Site E
+                   scores.econ -= 15;
+                   messages.econ.push("High transmission connection costs.");
+                }
+            }
+
+            // Clamping scores 0-100
+            ['social', 'env', 'econ'].forEach(k => {
+                if (scores[k] > 100) scores[k] = 100;
+                if (scores[k] < 0) scores[k] = 0;
+            });
+
+            // 3. Render Output
+            renderScores(scores, messages);
+            renderChart(scores);
+            renderSDGs(scores);
+            
+            // Warning Box
+            const warnBox = document.getElementById('decision-warning');
+            if (!feasible) {
+                warnBox.className = "status-message error";
+                warnBox.innerHTML = `<strong>⛔ INFEASIBLE:</strong> ${warning}`;
+                warnBox.style.display = 'block';
+                // Zero out for visuals if impossible
+                renderChart({social:0, env:0, econ:0});
+            } else if (warning) {
+                warnBox.className = "status-message error"; // Actually just amber usually, but error style works for warning
+                warnBox.style.background = "#fff3cd"; warnBox.style.color="#856404"; warnBox.style.borderColor="#ffeeba";
+                warnBox.innerHTML = `<strong>⚠️ CAUTION:</strong> ${warning}`;
+                warnBox.style.display = 'block';
+            } else {
+                warnBox.className = "status-message success";
+                warnBox.innerHTML = `<strong>✅ FEASIBLE:</strong> Site appears technically suitable. Review trade-offs above.`;
+                warnBox.style.display = 'block';
+            }
+        }
+
+        function renderScores(scores, messages) {
+            // Social
+            document.getElementById('score-soc').innerText = Math.round(scores.social) + "/100";
+            document.getElementById('text-soc').innerHTML = messages.social.length ? messages.social.join("<br>") : "Standard social impact profile.";
+            
+            // Env
+            document.getElementById('score-env').innerText = Math.round(scores.env) + "/100";
+            document.getElementById('text-env').innerHTML = messages.env.length ? messages.env.join("<br>") : "Standard environmental profile.";
+            
+            // Econ
+            document.getElementById('score-econ').innerText = Math.round(scores.econ) + "/100";
+            document.getElementById('text-econ').innerHTML = messages.econ.length ? messages.econ.join("<br>") : "Standard economic profile.";
+        }
+
+        function renderSDGs(scores) {
+            // Helper to build badges
+            const buildBadge = (id) => `<div class="sdg-badge" style="background:${sdgs[id].color}" title="SDG ${id}: ${sdgs[id].label}">${id}</div>`;
+            
+            const mapping = plantSdgMap[state.plant];
+            
+            // Social
+            let socHTML = mapping.soc.map(buildBadge).join('');
+            if(scores.social < 40) socHTML += `<span style="font-size:10px; color:red; margin-left:5px;">(Risk to SDG 3)</span>`;
+            document.getElementById('sdg-soc').innerHTML = socHTML;
+
+            // Env
+            let envHTML = mapping.env.map(buildBadge).join('');
+            if(scores.env < 40) envHTML += `<span style="font-size:10px; color:red; margin-left:5px;">(Risk to SDG 13/15)</span>`;
+            document.getElementById('sdg-env').innerHTML = envHTML;
+
+            // Econ
+            let econHTML = mapping.econ.map(buildBadge).join('');
+            document.getElementById('sdg-econ').innerHTML = econHTML;
+        }
+
+        // --- CHARTING (CANVAS) ---
+        function renderChart(scores) {
+            // Clear
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2 + 10;
+            const radius = 80;
+
+            // Axis config: Social (Top), Env (Bottom Right), Econ (Bottom Left)
+            // Angles: -90 (Top), 30 (Right), 150 (Left)
+            const angles = [-Math.PI/2, Math.PI/6, 5*Math.PI/6];
+            
+            // Draw Web
+            ctx.strokeStyle = "#ddd";
+            ctx.lineWidth = 1;
+            
+            // Concentric circles
+            [0.25, 0.5, 0.75, 1].forEach(scale => {
+                ctx.beginPath();
+                angles.forEach((angle, i) => {
+                    const x = cx + Math.cos(angle) * radius * scale;
+                    const y = cy + Math.sin(angle) * radius * scale;
+                    if (i===0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                });
+                ctx.closePath();
+                ctx.stroke();
+            });
+
+            // Draw Axes
+            ctx.beginPath();
+            angles.forEach(angle => {
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius);
+            });
+            ctx.stroke();
+
+            // Labels
+            ctx.font = "bold 11px sans-serif";
+            ctx.fillStyle = "#333";
+            ctx.textAlign = "center";
+            ctx.fillText("Social", cx, cy - radius - 10);
+            ctx.fillText("Environment", cx + Math.cos(angles[1])*radius + 20, cy + Math.sin(angles[1])*radius + 10);
+            ctx.fillText("Economic", cx + Math.cos(angles[2])*radius - 20, cy + Math.sin(angles[2])*radius + 10);
+
+            // Draw Data Area
+            const getPoint = (score, angleIdx) => {
+                const r = (score / 100) * radius;
+                return {
+                    x: cx + Math.cos(angles[angleIdx]) * r,
+                    y: cy + Math.sin(angles[angleIdx]) * r
+                };
+            };
+
+            const pSoc = getPoint(scores.social, 0);
+            const pEnv = getPoint(scores.env, 1);
+            const pEcon = getPoint(scores.econ, 2);
+
+            ctx.beginPath();
+            ctx.moveTo(pSoc.x, pSoc.y);
+            ctx.lineTo(pEnv.x, pEnv.y);
+            ctx.lineTo(pEcon.x, pEcon.y);
+            ctx.closePath();
+            
+            ctx.fillStyle = "rgba(44, 62, 80, 0.4)";
+            ctx.fill();
+            ctx.strokeStyle = "#2c3e50";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Draw dots
+            [pSoc, pEnv, pEcon].forEach((p, i) => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 4, 0, Math.PI*2);
+                ctx.fillStyle = i===0 ? "#3498db" : i===1 ? "#2ecc71" : "#f1c40f";
+                ctx.fill();
+            });
+        }
+
+        // --- MAP TOOLTIPS ---
+        document.querySelectorAll('.site-marker').forEach(marker => {
+            marker.addEventListener('mouseenter', (e) => {
+                const siteId = marker.id.split('-')[1];
+                const data = sites[siteId];
+                tooltip.innerHTML = `<strong>${data.name}</strong><br><span style="font-size:0.75em">${data.features.join(", ")}</span>`;
+                tooltip.style.display = 'block';
+                tooltip.style.left = (e.pageX + 10) + 'px';
+                tooltip.style.top = (e.pageY - 30) + 'px';
+            });
+            marker.addEventListener('mousemove', (e) => {
+                tooltip.style.left = (e.pageX + 10) + 'px';
+                tooltip.style.top = (e.pageY - 30) + 'px';
+            });
+            marker.addEventListener('mouseleave', () => {
+                tooltip.style.display = 'none';
+            });
+        });
+
+        // --- INIT ---
+        // Draw empty chart on load
+        renderChart({social:0, env:0, econ:0});
+
+    </script>
+</body>
+</html>
