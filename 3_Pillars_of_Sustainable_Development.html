@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Three Pillars & 17 SDGs | Interactive Educational Tool</title>
+    <style>
+        /* --- CSS VARIABLES & RESET --- */
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #212529;
+            --panel-bg: #ffffff;
+            --social-col: #e74c3c;
+            --env-col: #27ae60;
+            --econ-col: #f1c40f;
+            --transition-speed: 0.3s;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* --- LAYOUT --- */
+        header {
+            background: #fff;
+            padding: 1.5rem;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+        .subtitle { color: #666; font-size: 0.95rem; max-width: 800px; margin: 0 auto; }
+
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 350px 1fr 300px; /* Sidebar, Visual, Details */
+            gap: 1rem;
+            padding: 1rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+            height: calc(100vh - 140px);
+            overflow: hidden;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 1024px) {
+            main {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+                height: auto;
+                overflow-y: auto;
+            }
+            .visualization-area { min-height: 500px; }
+        }
+
+        /* --- SECTIONS --- */
+        .panel {
+            background: var(--panel-bg);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- LEFT: SDG GRID --- */
+        .sdg-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px;
+            padding-top: 10px;
+        }
+
+        .sdg-btn {
+            aspect-ratio: 1;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .sdg-btn:hover, .sdg-btn:focus {
+            transform: scale(1.1);
+            outline: 3px solid #333;
+            z-index: 20;
+        }
+
+        .sdg-btn.dimmed { opacity: 0.3; }
+        
+        .controls { margin-bottom: 1rem; border-bottom: 1px solid #eee; padding-bottom: 1rem; }
+        .btn {
+            padding: 8px 12px;
+            margin: 4px;
+            border: 1px solid #ccc;
+            background: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .btn.active { background: #333; color: #fff; }
+
+        /* --- CENTER: VISUALIZATION --- */
+        .visualization-area {
+            position: relative;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* Contains SVG lines */
+        }
+
+        /* SVG Overlay for Lines */
+        #connections-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Let clicks pass through */
+            z-index: 5;
+        }
+
+        /* Venn Diagram */
+        .venn-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+        }
+
+        .pillar-circle {
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            opacity: 0.8;
+            mix-blend-mode: multiply; /* Blending effect */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: default;
+            flex-direction: column;
+            z-index: 2;
+        }
+
+        .pillar-circle span { pointer-events: none; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+        .pillar-sub { font-size: 0.8rem; font-weight: normal; display: block; }
+
+        #pillar-social { top: 0; left: 50%; transform: translateX(-50%); background-color: var(--social-col); }
+        #pillar-env { bottom: 0; right: 0; background-color: var(--env-col); }
+        #pillar-econ { bottom: 0; left: 0; background-color: var(--econ-col); }
+
+        /* Active State for Venn */
+        .pillar-circle.highlight { opacity: 1; transform: scale(1.05); z-index: 10; box-shadow: 0 0 20px rgba(0,0,0,0.2); }
+        #pillar-social.highlight { transform: translateX(-50%) scale(1.05); } 
+        
+        /* Central Node (Integration) */
+        .integration-center {
+            position: absolute;
+            top: 55%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: bold;
+            z-index: 4;
+            text-align: center;
+            opacity: 0.9;
+            pointer-events: none;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+        }
+
+        /* --- RIGHT: INFO PANEL --- */
+        .info-content h2 { margin-bottom: 0.5rem; color: #333; }
+        .info-content .tag {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            color: white;
+        }
+        .info-desc { margin-top: 1rem; font-size: 0.95rem; }
+        .pillar-breakdown { margin-top: 1.5rem; border-top: 1px solid #eee; padding-top: 1rem; }
+        .pillar-breakdown h3 { font-size: 1rem; margin-bottom: 0.5rem; }
+        .pb-item { margin-bottom: 0.5rem; display: flex; align-items: baseline; }
+        .pb-dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; flex-shrink: 0; }
+
+        /* --- FOOTER --- */
+        footer {
+            padding: 1rem;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #777;
+            background: #f1f1f1;
+            border-top: 1px solid #ddd;
+        }
+
+        /* Tour Overlay */
+        #tour-overlay {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            max-width: 300px;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+        #tour-overlay button {
+            background: white;
+            color: black;
+            border: none;
+            padding: 5px 10px;
+            margin-top: 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>The Three Pillars of Sustainable Development</h1>
+        <p class="subtitle">An interactive exploration of the 17 SDGs and their integration into Social, Economic, and Environmental dimensions (UN Agenda 2030).</p>
+    </header>
+
+    <main>
+        <!-- Sidebar: Controls & SDG Grid -->
+        <section class="panel">
+            <div class="controls">
+                <h3>Filter View</h3>
+                <button class="btn active" onclick="resetFilter()">Show All</button>
+                <button class="btn" onclick="filterByPillar('social')">Social (People)</button>
+                <button class="btn" onclick="filterByPillar('economic')">Economic (Prosperity)</button>
+                <button class="btn" onclick="filterByPillar('environmental')">Environmental (Planet)</button>
+                <button class="btn" style="border-color: #007bff; color: #007bff;" onclick="startTour()">🎓 Learning Mode</button>
+            </div>
+            
+            <h3>Select an SDG</h3>
+            <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">Hover or Click to see connections.</p>
+            <div class="sdg-grid" id="sdg-container">
+                <!-- SDGs generated by JS -->
+            </div>
+        </section>
+
+        <!-- Center: Visualization -->
+        <section class="visualization-area" id="viz-area">
+            <svg id="connections-layer">
+                <!-- Lines drawn dynamically -->
+            </svg>
+
+            <div class="venn-container">
+                <div id="pillar-social" class="pillar-circle">
+                    Social
+                    <span class="pillar-sub">(People)</span>
+                </div>
+                <div id="pillar-econ" class="pillar-circle">
+                    Economic
+                    <span class="pillar-sub">(Prosperity)</span>
+                </div>
+                <div id="pillar-env" class="pillar-circle">
+                    Environmental
+                    <span class="pillar-sub">(Planet)</span>
+                </div>
+                <div class="integration-center">Integrated<br>& Indivisible</div>
+            </div>
+        </section>
+
+        <!-- Right: Info Panel -->
+        <section class="panel">
+            <div id="info-content" class="info-content">
+                <h2>Welcome</h2>
+                <p>Sustainable development has been defined as development that meets the needs of the present without compromising the ability of future generations to meet their own needs.</p>
+                <br>
+                <p><strong>The Core Concept:</strong> To achieve true sustainability, we must harmonize three core elements: economic growth, social inclusion, and environmental protection.</p>
+                <br>
+                <p><em>Hover over the SDGs on the left to see how each goal connects to these pillars.</em></p>
+            </div>
+        </section>
+    </main>
+
+    <div id="tour-overlay">
+        <p id="tour-text">Welcome to the Learning Mode.</p>
+        <button onclick="nextTourStep()">Next</button>
+        <button onclick="endTour()" style="background:transparent; color:#bbb; border:1px solid #555;">Exit</button>
+    </div>
+
+    <footer>
+        <p>Based on "Transforming our world: the 2030 Agenda for Sustainable Development" (A/RES/70/1).<br>
+        The SDGs are integrated and indivisible and balance the three dimensions of sustainable development.</p>
+    </footer>
+
+    <script>
+        // --- DATA STRUCTURE ---
+        // Colors are standard UN SDG branding colors
+        const sdgData = [
+            { id: 1, name: "No Poverty", color: "#E5243B", desc: "End poverty in all its forms everywhere.", pillars: { social: "Primary", economic: "Primary", environmental: "Secondary" }, note: "Requires economic growth to fund social safety nets." },
+            { id: 2, name: "Zero Hunger", color: "#DDA63A", desc: "End hunger, achieve food security and improved nutrition and promote sustainable agriculture.", pillars: { social: "Primary", environmental: "Primary", economic: "Secondary" }, note: "Agriculture links environment (soil/water) with social need (food)." },
+            { id: 3, name: "Good Health", color: "#4C9F38", desc: "Ensure healthy lives and promote well-being for all at all ages.", pillars: { social: "Primary", economic: "Secondary", environmental: "Secondary" }, note: "Healthy people drive economies; pollution harms health." },
+            { id: 4, name: "Quality Education", color: "#C5192D", desc: "Ensure inclusive and equitable quality education and promote lifelong learning opportunities for all.", pillars: { social: "Primary", economic: "Primary", environmental: "Secondary" }, note: "Education empowers people to participate in the economy." },
+            { id: 5, name: "Gender Equality", color: "#FF3A21", desc: "Achieve gender equality and empower all women and girls.", pillars: { social: "Primary", economic: "Primary", environmental: "Secondary" }, note: "Unlocking human potential drives social and economic progress." },
+            { id: 6, name: "Clean Water & Sanitation", color: "#26BDE2", desc: "Ensure availability and sustainable management of water and sanitation for all.", pillars: { environmental: "Primary", social: "Primary", economic: "Secondary" }, note: "Water is a basic human right and an environmental resource." },
+            { id: 7, name: "Affordable & Clean Energy", color: "#FCC30B", desc: "Ensure access to affordable, reliable, sustainable and modern energy for all.", pillars: { economic: "Primary", environmental: "Primary", social: "Secondary" }, note: "Energy drives industry but must be clean to protect the planet." },
+            { id: 8, name: "Decent Work & Economic Growth", color: "#A21942", desc: "Promote sustained, inclusive and sustainable economic growth, full and productive employment and decent work for all.", pillars: { economic: "Primary", social: "Primary", environmental: "Secondary" }, note: "Jobs provide income (social) but must not degrade the environment." },
+            { id: 9, name: "Industry, Innovation & Infrastructure", color: "#FD6925", desc: "Build resilient infrastructure, promote inclusive and sustainable industrialization and foster innovation.", pillars: { economic: "Primary", environmental: "Secondary", social: "Secondary" }, note: "Green infrastructure is key to sustainable economic scaling." },
+            { id: 10, name: "Reduced Inequalities", color: "#DD1367", desc: "Reduce inequality within and among countries.", pillars: { social: "Primary", economic: "Primary", environmental: "Secondary" }, note: "Fair distribution of wealth is essential for social stability." },
+            { id: 11, name: "Sustainable Cities & Communities", color: "#FD9D24", desc: "Make cities and human settlements inclusive, safe, resilient and sustainable.", pillars: { social: "Primary", environmental: "Primary", economic: "Primary" }, note: "Cities are where people, commerce, and environmental impact converge." },
+            { id: 12, name: "Responsible Consumption", color: "#BF8B2E", desc: "Ensure sustainable consumption and production patterns.", pillars: { economic: "Primary", environmental: "Primary", social: "Secondary" }, note: "Decoupling economic growth from environmental degradation." },
+            { id: 13, name: "Climate Action", color: "#3F7E44", desc: "Take urgent action to combat climate change and its impacts.", pillars: { environmental: "Primary", economic: "Secondary", social: "Secondary" }, note: "Climate change threatens livelihoods (Econ) and safety (Social)." },
+            { id: 14, name: "Life Below Water", color: "#0A97D9", desc: "Conserve and sustainably use the oceans, seas and marine resources.", pillars: { environmental: "Primary", economic: "Secondary", social: "Secondary" }, note: "Fisheries support economies and food security." },
+            { id: 15, name: "Life on Land", color: "#56C02B", desc: "Protect, restore and promote sustainable use of terrestrial ecosystems.", pillars: { environmental: "Primary", economic: "Secondary", social: "Secondary" }, note: "Biodiversity underpins agriculture and health." },
+            { id: 16, name: "Peace, Justice & Strong Institutions", color: "#00689D", desc: "Promote peaceful and inclusive societies for sustainable development.", pillars: { social: "Primary", economic: "Secondary", environmental: "Secondary" }, note: "Without peace, development (social or economic) is impossible." },
+            { id: 17, name: "Partnerships for the Goals", color: "#19486A", desc: "Strengthen the means of implementation and revitalize the Global Partnership for Sustainable Development.", pillars: { social: "Primary", economic: "Primary", environmental: "Primary" }, note: "The glue that holds the agenda together." }
+        ];
+
+        // --- STATE & DOM ELEMENTS ---
+        const container = document.getElementById('sdg-container');
+        const infoContent = document.getElementById('info-content');
+        const svgLayer = document.getElementById('connections-layer');
+        const vizArea = document.getElementById('viz-area');
+        
+        const pillarEls = {
+            social: document.getElementById('pillar-social'),
+            economic: document.getElementById('pillar-econ'),
+            environmental: document.getElementById('pillar-env')
+        };
+
+        let activeFilter = null;
+        let tourStep = 0;
+        let isTourActive = false;
+
+        // --- INITIALIZATION ---
+        function init() {
+            renderSDGs();
+            window.addEventListener('resize', () => {
+                // Clear lines on resize as coordinates change
+                svgLayer.innerHTML = '';
+            });
+        }
+
+        // --- RENDER FUNCTION ---
+        function renderSDGs() {
+            container.innerHTML = '';
+            sdgData.forEach(sdg => {
+                const btn = document.createElement('button');
+                btn.className = 'sdg-btn';
+                btn.id = `sdg-${sdg.id}`;
+                btn.textContent = sdg.id;
+                btn.style.backgroundColor = sdg.color;
+                btn.setAttribute('aria-label', `${sdg.id}: ${sdg.name}`);
+                
+                // Event Listeners
+                btn.addEventListener('mouseenter', () => handleInteraction(sdg));
+                btn.addEventListener('click', () => handleInteraction(sdg, true));
+                btn.addEventListener('mouseleave', clearHighlights);
+                btn.addEventListener('focus', () => handleInteraction(sdg)); // Keyboard a11y
+
+                container.appendChild(btn);
+            });
+        }
+
+        // --- INTERACTION LOGIC ---
+        function handleInteraction(sdg, isClick = false) {
+            if (isTourActive) return;
+
+            // 1. Show Info
+            updateInfoPanel(sdg);
+
+            // 2. Highlight Pillars
+            highlightPillars(sdg.pillars);
+
+            // 3. Draw Lines
+            drawLines(sdg.id, sdg.pillars);
+        }
+
+        function updateInfoPanel(sdg) {
+            let pillarTags = '';
+            // Generate colored tags for panel
+            if(sdg.pillars.social) pillarTags += `<span class="tag" style="background:var(--social-col)">Social</span>`;
+            if(sdg.pillars.economic) pillarTags += `<span class="tag" style="background:var(--econ-col)">Economic</span>`;
+            if(sdg.pillars.environmental) pillarTags += `<span class="tag" style="background:var(--env-col)">Environmental</span>`;
+
+            infoContent.innerHTML = `
+                <div style="border-bottom: 4px solid ${sdg.color}; padding-bottom:10px; margin-bottom:10px;">
+                    <h1 style="color:${sdg.color}">SDG ${sdg.id}</h1>
+                    <h2>${sdg.name}</h2>
+                </div>
+                <div>${pillarTags}</div>
+                <p class="info-desc"><strong>Official Goal:</strong> ${sdg.desc}</p>
+                
+                <div class="pillar-breakdown">
+                    <h3>Integration Logic:</h3>
+                    <p class="pb-item">${sdg.note}</p>
+                    <p style="font-size:0.85rem; color:#666; margin-top:10px;">
+                        <em>According to the 2030 Agenda, this goal is indivisible from the others, balancing the three dimensions shown in the diagram.</em>
+                    </p>
+                </div>
+            `;
+        }
+
+        function highlightPillars(pillars) {
+            // Reset
+            Object.values(pillarEls).forEach(el => {
+                el.classList.remove('highlight');
+                el.style.opacity = '0.3'; // Dim non-active
+            });
+
+            // Activate specific
+            if (pillars.social) {
+                pillarEls.social.classList.add('highlight');
+                pillarEls.social.style.opacity = '1';
+            }
+            if (pillars.economic) {
+                pillarEls.economic.classList.add('highlight');
+                pillarEls.economic.style.opacity = '1';
+            }
+            if (pillars.environmental) {
+                pillarEls.environmental.classList.add('highlight');
+                pillarEls.environmental.style.opacity = '1';
+            }
+        }
+
+        function clearHighlights() {
+            if (isTourActive) return; // Don't clear if touring
+            
+            // Remove lines
+            svgLayer.innerHTML = '';
+            
+            // Reset Pillars to default state
+            Object.values(pillarEls).forEach(el => {
+                el.classList.remove('highlight');
+                el.style.opacity = '0.8'; // Default opacity
+            });
+        }
+
+        // --- SVG LINE DRAWING ---
+        function drawLines(sdgId, pillars) {
+            svgLayer.innerHTML = ''; // Clear existing
+            
+            const sdgBtn = document.getElementById(`sdg-${sdgId}`);
+            if(!sdgBtn) return;
+
+            const sdgRect = sdgBtn.getBoundingClientRect();
+            const vizRect = vizArea.getBoundingClientRect();
+
+            // Calculate SDG center relative to the Visualization Area
+            const startX = sdgRect.left + sdgRect.width / 2 - vizRect.left;
+            const startY = sdgRect.top + sdgRect.height / 2 - vizRect.top;
+
+            // Define Connection Points for Pillars
+            // These offsets correspond to the pillar-circle CSS positions
+            const containerW = 300; // defined in CSS
+            const containerH = 300;
+            const offsetX = (vizRect.width - containerW) / 2;
+            const offsetY = (vizRect.height - containerH) / 2;
+
+            const targets = [];
+            
+            if(pillars.social) {
+                // Top Center circle
+                targets.push({ x: offsetX + 150, y: offsetY + 40, color: 'var(--social-col)' });
+            }
+            if(pillars.economic) {
+                // Bottom Left circle
+                targets.push({ x: offsetX + 60, y: offsetY + 220, color: 'var(--econ-col)' });
+            }
+            if(pillars.environmental) {
+                // Bottom Right circle
+                targets.push({ x: offsetX + 240, y: offsetY + 220, color: 'var(--env-col)' });
+            }
+
+            targets.forEach(target => {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', startX);
+                line.setAttribute('y1', startY);
+                line.setAttribute('x2', target.x);
+                line.setAttribute('y2', target.y);
+                line.setAttribute('stroke', target.color); // Should really compute computed style, but variable works in modern browsers
+                line.setAttribute('stroke-width', '3');
+                line.setAttribute('stroke-linecap', 'round');
+                
+                // Simple animation
+                const animate = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
+                animate.setAttribute('attributeName', 'stroke-dasharray');
+                animate.setAttribute('from', '0, 1000');
+                animate.setAttribute('to', '1000, 0');
+                animate.setAttribute('dur', '0.5s');
+                animate.setAttribute('fill', 'freeze');
+                
+                line.appendChild(animate);
+                svgLayer.appendChild(line);
+            });
+        }
+
+        // --- FILTER LOGIC ---
+        function filterByPillar(pillar) {
+            activeFilter = pillar;
+            
+            // Update Buttons
+            document.querySelectorAll('.controls .btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update Grid visibility
+            const buttons = document.querySelectorAll('.sdg-btn');
+            buttons.forEach(btn => {
+                const id = parseInt(btn.textContent);
+                const data = sdgData.find(d => d.id === id);
+                
+                if (data.pillars[pillar]) {
+                    btn.classList.remove('dimmed');
+                } else {
+                    btn.classList.add('dimmed');
+                }
+            });
+
+            // Highlight the Venn Pillar visually
+            Object.values(pillarEls).forEach(el => el.style.opacity = '0.2');
+            if(pillar === 'social') pillarEls.social.style.opacity = '1';
+            if(pillar === 'economic') pillarEls.economic.style.opacity = '1';
+            if(pillar === 'environmental') pillarEls.environmental.style.opacity = '1';
+        }
+
+        function resetFilter() {
+            activeFilter = null;
+            document.querySelectorAll('.controls .btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active'); // Highlight "Show All"
+            
+            document.querySelectorAll('.sdg-btn').forEach(btn => btn.classList.remove('dimmed'));
+            
+            // Reset Venn
+            clearHighlights();
+        }
+
+        // --- LEARNING MODE (TOUR) ---
+        const tourSteps = [
+            {
+                text: "The Social Pillar (People) focuses on equity, health, and education. SDGs 1-5 heavily populate this area.",
+                action: () => { filterByPillar('social'); highlightPillars({social:true}); }
+            },
+            {
+                text: "The Environmental Pillar (Planet) protects our natural resources. SDGs 13, 14, and 15 are critical guardians here.",
+                action: () => { filterByPillar('environmental'); highlightPillars({environmental:true}); }
+            },
+            {
+                text: "The Economic Pillar (Prosperity) ensures decent work and growth. Note how SDG 8 and 9 anchor this dimension.",
+                action: () => { filterByPillar('economic'); highlightPillars({economic:true}); }
+            },
+            {
+                text: "However, True Sustainability happens at the intersection. SDG 12 (Consumption) requires Economic activity that respects Environmental limits.",
+                action: () => { 
+                    resetFilter(); 
+                    document.querySelectorAll('.controls .btn')[0].classList.remove('active'); // hack to clear UI highlight
+                    handleInteraction(sdgData.find(d => d.id === 12)); 
+                }
+            },
+            {
+                text: "Finally, SDG 17 (Partnerships) binds them all. It is the structural framework for the entire agenda.",
+                action: () => { handleInteraction(sdgData.find(d => d.id === 17)); }
+            }
+        ];
+
+        function startTour() {
+            isTourActive = true;
+            tourStep = 0;
+            document.getElementById('tour-overlay').style.display = 'block';
+            runStep();
+        }
+
+        function runStep() {
+            if(tourStep >= tourSteps.length) {
+                endTour();
+                return;
+            }
+            const step = tourSteps[tourStep];
+            document.getElementById('tour-text').textContent = step.text;
+            step.action();
+        }
+
+        function nextTourStep() {
+            tourStep++;
+            runStep();
+        }
+
+        function endTour() {
+            isTourActive = false;
+            document.getElementById('tour-overlay').style.display = 'none';
+            resetFilter();
+            // Trigger a reset on the first button to restore default state visually
+            document.querySelectorAll('.controls .btn')[0].click();
+            infoContent.innerHTML = '<h2>Tour Complete</h2><p>Explore the grid freely to see specific connections.</p>';
+        }
+
+        // Run Init
+        init();
+
+    </script>
+</body>
+</html>
