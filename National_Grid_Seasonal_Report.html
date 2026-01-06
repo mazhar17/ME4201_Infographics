@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National Grid: Seasonal Comparison Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.15);
+            background: rgba(255, 255, 255, 1);
+        }
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #3b82f6;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #3b82f6;
+        }
+        .season-btn {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .season-btn.active {
+            background-color: #ffffff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-color: #e2e8f0;
+            font-weight: 700;
+        }
+        .season-btn.winter-active { color: #2563eb; }
+        .season-btn.summer-active { color: #ea580c; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+        /* Animation Classes */
+        .fade-enter { opacity: 0; transform: translateY(10px); }
+        .fade-enter-active { opacity: 1; transform: translateY(0); transition: opacity 300ms, transform 300ms; }
+    </style>
+</head>
+<body class="min-h-screen w-full flex items-center justify-center p-2 sm:p-6 overflow-auto bg-slate-50">
+
+    <!-- Main Container (16:9 Fixed Ratio) -->
+    <div class="w-full max-w-[1600px] aspect-video bg-white rounded-[2rem] shadow-2xl flex flex-col relative overflow-hidden ring-1 ring-slate-900/5">
+        
+        <!-- Dynamic Background Gradient -->
+        <div class="absolute inset-0 z-0 transition-opacity duration-1000" id="bgGradient"></div>
+        
+        <!-- Animated Background Orbs -->
+        <div class="absolute top-0 right-0 w-[800px] h-[800px] rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 z-0 transition-all duration-1000 opacity-60" id="bgDecor1"></div>
+        <div class="absolute bottom-0 left-0 w-[800px] h-[800px] rounded-full blur-[100px] translate-y-1/2 -translate-x-1/3 z-0 transition-all duration-1000 opacity-60" id="bgDecor2"></div>
+
+        <!-- Header -->
+        <header class="relative z-20 w-full px-10 py-6 flex justify-between items-center border-b border-slate-100/80 bg-white/70 backdrop-blur-md shrink-0">
+            <div class="flex items-center gap-5">
+                <div class="h-14 w-14 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-xl shadow-slate-900/20">
+                    BD
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800 tracking-tight">National Grid <span class="gradient-text">Seasonal Analysis</span></h1>
+                    <p class="text-sm text-slate-500 font-medium mt-0.5 flex items-center gap-2">
+                        Comparing: 
+                        <span class="text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded text-xs border border-blue-100">Winter '25</span> 
+                        vs 
+                        <span class="text-orange-600 font-bold bg-orange-50 px-2 py-0.5 rounded text-xs border border-orange-100">Summer '25</span>
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Seasonal Toggle -->
+            <div class="flex items-center gap-1 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/60 shadow-inner">
+                <button onclick="switchMode('winter')" id="btnWinter" class="season-btn active winter-active px-6 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:text-blue-600 flex items-center gap-2">
+                    <span class="text-lg">❄️</span> Winter (Dec 15)
+                </button>
+                <button onclick="switchMode('summer')" id="btnSummer" class="season-btn px-6 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:text-orange-600 flex items-center gap-2">
+                    <span class="text-lg">☀️</span> Summer (Jul 25)
+                </button>
+            </div>
+
+            <div class="flex items-center gap-6">
+                <div class="text-right hidden xl:block">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1">System Frequency</p>
+                    <div class="flex items-center justify-end gap-2 bg-white px-3 py-1.5 rounded-full border border-slate-100 shadow-sm">
+                        <span class="relative flex h-2.5 w-2.5">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                        </span>
+                        <span class="text-slate-700 font-bold text-sm">50.00 Hz</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="relative z-10 flex-1 grid grid-cols-12 gap-6 p-8 min-h-0">
+            
+            <!-- Left Column: KPI Stack -->
+            <div class="col-span-3 flex flex-col gap-5 h-full">
+                
+                <!-- KPI 1: Generation -->
+                <div class="glass-panel rounded-3xl p-6 card-hover border-l-[6px] border-blue-500 flex-1 flex flex-col justify-center relative group">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Energy</h3>
+                        <div class="p-2 bg-blue-50 rounded-lg text-blue-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        </div>
+                    </div>
+                    <p class="text-5xl font-bold text-slate-800 tracking-tight mb-1" id="kpiGen">225.5</p>
+                    <div class="flex items-center gap-2">
+                         <span class="text-sm font-medium text-slate-400">MKWh</span>
+                         <span class="text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors duration-500" id="genBadge">Base Load</span>
+                    </div>
+                </div>
+
+                <!-- KPI 2: Peak Demand -->
+                <div class="glass-panel rounded-3xl p-6 card-hover border-l-[6px] border-red-500 flex-1 flex flex-col justify-center relative group">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Peak Demand</h3>
+                        <span class="text-[10px] font-bold px-2 py-1 rounded bg-slate-100 text-slate-500" id="kpiPeakTime">18:00 Hr</span>
+                    </div>
+                    <p class="text-5xl font-bold text-slate-800 tracking-tight mb-1" id="kpiPeak">11,237</p>
+                    <div class="flex items-center gap-2">
+                         <span class="text-sm font-medium text-slate-400">MW</span>
+                         <span class="text-[10px] text-red-600 bg-red-50 font-bold px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">Max Load</span>
+                    </div>
+                </div>
+
+                <!-- KPI 3: Grid Stability (Load Shedding) -->
+                <div class="glass-panel rounded-3xl p-6 card-hover border-l-[6px] border-emerald-500 flex-1 flex flex-col justify-center">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Load Shedding</h3>
+                        <div class="p-2 bg-emerald-50 rounded-lg text-emerald-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                    </div>
+                    <p class="text-5xl font-bold text-slate-800 tracking-tight mb-1" id="kpiLoadShed">0</p>
+                    <div class="flex items-center gap-2">
+                         <span class="text-sm font-medium text-slate-400">MW</span>
+                         <span class="text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors duration-500 bg-emerald-100 text-emerald-700" id="loadShedBadge">Stable Grid</span>
+                    </div>
+                </div>
+
+                 <!-- KPI 4: Environmental Context -->
+                 <div class="glass-panel rounded-3xl p-6 card-hover border-l-[6px] border-purple-500 flex-1 flex flex-col justify-center">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Conditions</h3>
+                    
+                    <!-- Temp Bar -->
+                    <div class="mb-4">
+                        <div class="flex justify-between items-end mb-1">
+                            <span class="text-xs text-slate-500 font-semibold">Max Temp</span>
+                            <span class="text-lg font-bold text-slate-700" id="ctxTemp">28.8°C</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                            <div class="h-full rounded-full transition-all duration-1000 ease-out" id="tempBar" style="width: 55%; background: linear-gradient(90deg, #a855f7, #ec4899);"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Cost Bar -->
+                    <div>
+                        <div class="flex justify-between items-end mb-1">
+                            <span class="text-xs text-slate-500 font-semibold">Unit Cost</span>
+                            <span class="text-lg font-bold text-slate-700" id="ctxCost">৳ 5.56</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                            <div class="bg-purple-400 h-full rounded-full transition-all duration-1000 ease-out" id="costBar" style="width: 65%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Middle Column: Charts -->
+            <div class="col-span-6 flex flex-col gap-6 h-full">
+                
+                <!-- Load Curve Chart -->
+                <div class="glass-panel rounded-3xl p-6 h-[58%] flex flex-col relative">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-sm font-bold text-slate-700 flex items-center gap-2">
+                            <span class="w-2 h-2 bg-blue-600 rounded-full"></span>
+                            Generation Profile (MW)
+                        </h3>
+                        <div class="flex gap-2 text-[10px] font-medium text-slate-400">
+                            <span class="px-2 py-1 rounded-md bg-slate-50 border border-slate-100">Hourly Data</span>
+                        </div>
+                    </div>
+                    <div class="flex-1 relative w-full h-full min-h-0">
+                        <canvas id="loadCurveChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Generation Mix Chart -->
+                <div class="glass-panel rounded-3xl p-6 h-[42%] flex flex-row gap-6 relative">
+                    <!-- Unit Toggle -->
+                    <div class="absolute top-6 right-6 z-10 flex items-center gap-2 group">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase group-hover:text-slate-600 transition-colors">Show:</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="unitToggle" class="sr-only peer" onchange="toggleMixUnit()">
+                            <div class="w-14 h-7 bg-slate-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-200 after:border after:rounded-full after:h-5 after:w-6 after:transition-all peer-checked:bg-slate-800 shadow-inner"></div>
+                            <span class="absolute left-2.5 top-1.5 text-[9px] font-bold text-slate-500 pointer-events-none peer-checked:text-white/30">%</span>
+                            <span class="absolute right-2.5 top-1.5 text-[9px] font-bold text-slate-300 pointer-events-none peer-checked:text-white">MW</span>
+                        </label>
+                    </div>
+
+                    <div class="w-5/12 flex flex-col justify-center pl-2">
+                        <h3 class="text-sm font-bold text-slate-700 mb-1">Energy Mix</h3>
+                        <p class="text-[10px] text-slate-400 mb-5" id="mixSub">Primary fuel sources</p>
+                        <ul class="space-y-3 text-xs" id="legendList">
+                            <!-- Populated by JS -->
+                        </ul>
+                    </div>
+                    <div class="w-7/12 relative flex items-center justify-center pr-4">
+                        <canvas id="mixChart"></canvas>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total</span>
+                            <span class="text-2xl font-bold text-slate-800" id="mixTotalCenter">225 M</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Analysis -->
+            <div class="col-span-3 flex flex-col gap-6 h-full">
+                
+                <!-- Seasonal Analysis Text -->
+                <div class="glass-panel rounded-3xl p-6 h-[50%] flex flex-col relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                    
+                    <h3 class="text-sm font-bold text-slate-700 mb-4 flex items-center justify-between relative z-10">
+                        <span>Seasonal Context</span>
+                        <span class="text-[10px] px-2 py-1 rounded-lg font-bold transition-colors duration-500" id="seasonTag">Winter Base</span>
+                    </h3>
+                    
+                    <div class="flex-1 flex flex-col gap-4 text-sm relative z-10">
+                        <div class="bg-white/60 p-4 rounded-2xl border border-white/50 shadow-sm">
+                            <p class="text-slate-600 leading-relaxed text-xs" id="analysisText">
+                                Standard winter operation. Low demand (11GW) met comfortably by Gas & Coal. No load shedding recorded.
+                            </p>
+                        </div>
+
+                        <div class="mt-auto">
+                            <div class="flex justify-between text-xs mb-2">
+                                <span class="text-slate-500 font-semibold">Grid Stress Level</span>
+                                <span class="font-bold transition-colors duration-500" id="demandIntensity">Low</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div class="h-full rounded-full transition-all duration-1000 ease-out" id="intensityBar" style="width: 40%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financial Snapshot -->
+                <div class="glass-panel rounded-3xl p-6 h-[50%] flex flex-col cursor-pointer hover:bg-white transition-colors group relative overflow-hidden">
+                    <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-emerald-50/50 rounded-full blur-3xl transition-opacity duration-500 group-hover:opacity-100 opacity-0"></div>
+                    
+                    <div class="flex justify-between items-start mb-2 relative z-10">
+                        <h3 class="text-sm font-bold text-slate-700">Daily Cost Estimate</h3>
+                        <div class="p-1.5 bg-slate-50 rounded-lg group-hover:bg-emerald-50 transition-colors">
+                            <span class="text-lg">৳</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 flex flex-col justify-center relative z-10">
+                        <div class="text-center mb-6">
+                            <span class="text-slate-400 text-[10px] uppercase font-bold tracking-widest">Total Cost</span>
+                            <div class="text-4xl font-bold text-slate-800 tracking-tight mt-1 group-hover:scale-105 transition-transform duration-300" id="finTotal">৳ 1,255 <span class="text-lg text-slate-400 font-medium">M</span></div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 border-t border-slate-100 pt-4">
+                            <div class="text-center">
+                                <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Avg Unit Cost</span>
+                                <span class="block text-lg font-bold text-emerald-600" id="finUnit">৳ 5.56</span>
+                            </div>
+                            <div class="text-center border-l border-slate-100">
+                                <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Top Fuel</span>
+                                <span class="block text-lg font-bold text-slate-700" id="finTop">Gas</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+        
+        <!-- Footer -->
+        <footer class="absolute bottom-4 right-8 text-[10px] text-slate-400 z-10 font-mono pointer-events-none opacity-60">
+            Source: BPDB Daily Generation Reports (Dec '25 / Jul '25)
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // --- Data Models ---
+        const data = {
+            'winter': {
+                date: '15 Dec 2025',
+                gen: 225.5,
+                peak: 11237,
+                peakTime: '18:00 Hr',
+                loadShed: 0,
+                temp: 28.8,
+                tempPct: 55,
+                cost: 5.56,
+                costPct: 65,
+                costTotal: 1255,
+                topFuel: 'Gas',
+                mix: { labels: ['Gas', 'Coal', 'Import', 'Others'], colors: ['#3b82f6', '#334155', '#fb923c', '#10b981'], pct: [43.5, 30.3, 20.0, 6.2] },
+                curve: [8900, 7600, 7800, 10130, 10600, 10000, 11200, 11237, 10800, 9800], // Approx Winter Curve
+                theme: { 
+                    bgGradient: 'bg-gradient-to-br from-blue-50/50 to-indigo-50/50',
+                    bg1: 'bg-blue-200', bg2: 'bg-indigo-200', 
+                    intensity: 40, intensityText: 'Low', intensityColor: 'text-emerald-600', intensityBarColor: 'bg-emerald-500',
+                    tagBg: 'bg-blue-100', tagText: 'text-blue-700',
+                    desc: 'Typical winter profile. Moderate temperature (28.8°C) keeps demand stable (~11.2 GW). Generation is dominated by Gas (43%) and Coal (30%). Zero load shedding indicates a healthy reserve margin.' 
+                }
+            },
+            'summer': {
+                date: '25 Jul 2025',
+                gen: 293.4,
+                peak: 13600,
+                peakTime: '21:00 Hr',
+                loadShed: 47,
+                temp: 33.6,
+                tempPct: 90,
+                cost: 5.49,
+                costPct: 62,
+                costTotal: 1612,
+                topFuel: 'Gas',
+                mix: { labels: ['Gas', 'Coal', 'Import', 'Liquid'], colors: ['#3b82f6', '#334155', '#fb923c', '#ef4444'], pct: [51.1, 27.2, 13.6, 6.8] }, // High Gas/Liquid
+                curve: [14975, 13000, 12500, 10710, 11500, 12000, 13000, 13553, 13600, 12800], // Summer Curve (High Night Peak)
+                theme: { 
+                    bgGradient: 'bg-gradient-to-br from-orange-50/50 to-red-50/50',
+                    bg1: 'bg-orange-200', bg2: 'bg-red-200', 
+                    intensity: 95, intensityText: 'Critical', intensityColor: 'text-red-600', intensityBarColor: 'bg-red-500',
+                    tagBg: 'bg-orange-100', tagText: 'text-orange-700',
+                    desc: 'High summer peak. Cooling load drives demand to 13.6 GW. Significant increase in Liquid Fuel usage (6.8%) to meet peak. Minor load shedding (47 MW) reflects grid stress during evening peak.' 
+                }
+            }
+        };
+
+        let currentMode = 'winter';
+        let mixChartInstance;
+        let loadChartInstance;
+
+        // --- Init ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            updateUI('winter');
+        });
+
+        // --- Core Functions ---
+        function switchMode(mode) {
+            currentMode = mode;
+            
+            // Toggle Button Styles
+            const btnWinter = document.getElementById('btnWinter');
+            const btnSummer = document.getElementById('btnSummer');
+
+            if (mode === 'winter') {
+                btnWinter.classList.add('active', 'winter-active');
+                btnSummer.classList.remove('active', 'summer-active');
+            } else {
+                btnSummer.classList.add('active', 'summer-active');
+                btnWinter.classList.remove('active', 'winter-active');
+            }
+
+            // Update UI & Data
+            updateUI(mode);
+        }
+
+        function updateUI(mode) {
+            const d = data[mode];
+
+            // Removed dateDisplay update as it is removed from HTML
+
+            document.getElementById('kpiGen').textContent = d.gen.toLocaleString();
+            document.getElementById('genBadge').textContent = mode === 'winter' ? 'Base Load' : 'High Demand';
+            document.getElementById('genBadge').className = `text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors duration-500 ${mode === 'winter' ? 'bg-slate-100 text-slate-500' : 'bg-orange-100 text-orange-600'}`;
+
+            document.getElementById('kpiPeak').textContent = d.peak.toLocaleString();
+            document.getElementById('kpiPeakTime').textContent = d.peakTime;
+            
+            // KPI 3 Logic (Load Shed vs Stable)
+            const kpiLoadShed = document.getElementById('kpiLoadShed');
+            const loadShedBadge = document.getElementById('loadShedBadge');
+            
+            if(d.loadShed > 0) {
+                kpiLoadShed.textContent = d.loadShed;
+                kpiLoadShed.classList.add('text-red-600');
+                kpiLoadShed.classList.remove('text-slate-800');
+                loadShedBadge.textContent = 'Grid Stress';
+                loadShedBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors duration-500 bg-red-100 text-red-600';
+            } else {
+                kpiLoadShed.textContent = '0';
+                kpiLoadShed.classList.remove('text-red-600');
+                kpiLoadShed.classList.add('text-slate-800');
+                loadShedBadge.textContent = 'Stable Grid';
+                loadShedBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors duration-500 bg-emerald-100 text-emerald-700';
+            }
+
+            // Context Bars
+            document.getElementById('ctxTemp').textContent = `${d.temp}°C`;
+            document.getElementById('tempBar').style.width = `${d.tempPct}%`;
+            document.getElementById('tempBar').style.background = mode === 'winter' ? 'linear-gradient(90deg, #3b82f6, #8b5cf6)' : 'linear-gradient(90deg, #f59e0b, #ef4444)';
+            
+            document.getElementById('ctxCost').textContent = `৳ ${d.cost}`;
+            document.getElementById('costBar').style.width = `${d.costPct}%`;
+
+            // Financials
+            document.getElementById('finTotal').innerHTML = `৳ ${d.costTotal.toLocaleString()} <span class="text-lg text-slate-400 font-medium">M</span>`;
+            document.getElementById('finUnit').textContent = `৳ ${d.cost}`;
+            document.getElementById('finTop').textContent = d.topFuel;
+
+            // Analysis Panel
+            const seasonTag = document.getElementById('seasonTag');
+            seasonTag.textContent = mode === 'summer' ? 'Summer Peak' : 'Winter Base';
+            seasonTag.className = `text-[10px] px-2 py-1 rounded-lg font-bold transition-colors duration-500 ${d.theme.tagBg} ${d.theme.tagText}`;
+
+            document.getElementById('analysisText').textContent = d.theme.desc;
+            
+            const demandIntensity = document.getElementById('demandIntensity');
+            demandIntensity.textContent = d.theme.intensityText;
+            demandIntensity.className = `font-bold transition-colors duration-500 ${d.theme.intensityColor}`;
+
+            const intensityBar = document.getElementById('intensityBar');
+            intensityBar.style.width = `${d.theme.intensity}%`;
+            intensityBar.className = `h-full rounded-full transition-all duration-1000 ease-out ${d.theme.intensityBarColor}`;
+
+            // Mix Chart Center
+            document.getElementById('mixTotalCenter').textContent = `${Math.round(d.gen)} M`;
+
+            // Background Theme
+            document.getElementById('bgGradient').className = `absolute inset-0 z-0 transition-opacity duration-1000 opacity-50 ${d.theme.bgGradient}`;
+            document.getElementById('bgDecor1').className = `absolute top-0 right-0 w-[800px] h-[800px] rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 z-0 transition-all duration-1000 opacity-40 ${d.theme.bg1}`;
+            document.getElementById('bgDecor2').className = `absolute bottom-0 left-0 w-[800px] h-[800px] rounded-full blur-[100px] translate-y-1/2 -translate-x-1/3 z-0 transition-all duration-1000 opacity-40 ${d.theme.bg2}`;
+
+            // Charts Update
+            updateCharts(d, mode);
+            updateLegend(d);
+        }
+
+        // --- Chart Logic ---
+        function initCharts() {
+            // Load Curve
+            const ctxLoad = document.getElementById('loadCurveChart').getContext('2d');
+            const hours = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '19:00', '21:00', '23:00'];
+            
+            loadChartInstance = new Chart(ctxLoad, {
+                type: 'line',
+                data: {
+                    labels: hours,
+                    datasets: [{
+                        label: 'Generation (MW)',
+                        data: [], // Init empty
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            titleColor: '#1e293b',
+                            bodyColor: '#334155',
+                            borderColor: '#e2e8f0',
+                            borderWidth: 1,
+                            padding: 10,
+                            displayColors: false,
+                            callbacks: {
+                                label: (ctx) => ` ${ctx.raw.toLocaleString()} MW`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: false, 
+                            min: 6000, 
+                            grid: { borderDash: [4, 4], color: '#f1f5f9' }, 
+                            ticks: { font: { size: 10, family: "'Inter', sans-serif" }, color: '#94a3b8' } 
+                        },
+                        x: { 
+                            grid: { display: false }, 
+                            ticks: { font: { size: 10, family: "'Inter', sans-serif" }, color: '#94a3b8' } 
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+
+            // Mix Chart
+            const ctxMix = document.getElementById('mixChart').getContext('2d');
+            mixChartInstance = new Chart(ctxMix, {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: [],
+                        borderWidth: 0,
+                        hoverOffset: 15
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                    animation: { animateScale: true, animateRotate: true }
+                }
+            });
+        }
+
+        function updateCharts(d, mode) {
+            // Update Load Curve
+            loadChartInstance.data.datasets[0].data = d.curve;
+            
+            const ctx = document.getElementById('loadCurveChart').getContext('2d');
+            
+            if(mode === 'summer') {
+                loadChartInstance.options.scales.y.min = 8000;
+                loadChartInstance.data.datasets[0].borderColor = '#f97316'; // Orange
+                loadChartInstance.data.datasets[0].pointBorderColor = '#f97316';
+                
+                const grad = ctx.createLinearGradient(0, 0, 0, 300);
+                grad.addColorStop(0, 'rgba(249, 115, 22, 0.2)');
+                grad.addColorStop(1, 'rgba(249, 115, 22, 0.0)');
+                loadChartInstance.data.datasets[0].backgroundColor = grad;
+            } else {
+                loadChartInstance.options.scales.y.min = 6000;
+                loadChartInstance.data.datasets[0].borderColor = '#3b82f6'; // Blue
+                loadChartInstance.data.datasets[0].pointBorderColor = '#3b82f6';
+                
+                const grad = ctx.createLinearGradient(0, 0, 0, 300);
+                grad.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
+                grad.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+                loadChartInstance.data.datasets[0].backgroundColor = grad;
+            }
+            loadChartInstance.update();
+
+            // Update Mix Chart
+            mixChartInstance.data.labels = d.mix.labels;
+            mixChartInstance.data.datasets[0].data = d.mix.pct;
+            mixChartInstance.data.datasets[0].backgroundColor = d.mix.colors;
+            mixChartInstance.update();
+        }
+
+        function updateLegend(d) {
+            const list = document.getElementById('legendList');
+            list.innerHTML = '';
+            const isMW = document.getElementById('unitToggle').checked;
+            
+            d.mix.labels.forEach((label, i) => {
+                const pct = d.mix.pct[i];
+                const mwVal = (pct / 100 * d.gen).toFixed(1);
+                const displayVal = isMW ? mwVal : pct;
+                const unit = isMW ? 'MKWh' : '%';
+                
+                const li = document.createElement('li');
+                li.className = 'flex items-center justify-between group cursor-default p-2 hover:bg-slate-50 rounded-lg transition-colors';
+                li.innerHTML = `
+                    <span class="flex items-center gap-2 text-slate-600 font-medium text-xs">
+                        <span class="w-3 h-3 rounded-full shadow-sm ring-1 ring-slate-100" style="background-color: ${d.mix.colors[i]}"></span>
+                        ${label}
+                    </span>
+                    <span class="font-bold text-slate-700">
+                        ${displayVal}<span class="text-[9px] text-slate-400 ml-0.5 font-normal">${unit}</span>
+                    </span>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        function toggleMixUnit() {
+            // Trigger UI update to refresh legend
+            updateUI(currentMode);
+        }
+    </script>
+</body>
+</html>
