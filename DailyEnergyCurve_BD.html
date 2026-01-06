@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Energy Curve (02-12-2025)</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load D3.js for Data Visualization -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <style>
+        /* Custom styles for the chart */
+        .chart-container {
+            font-family: 'Inter', sans-serif;
+        }
+        .area-layer {
+            opacity: 0.9;
+            transition: opacity 0.2s ease;
+        }
+        .area-layer:hover {
+            opacity: 1;
+            stroke: white;
+            stroke-width: 1px;
+        }
+        .tooltip {
+            position: absolute;
+            text-align: left;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            pointer-events: none;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            font-size: 0.85rem;
+            z-index: 50;
+            line-height: 1.4;
+        }
+        .axis-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            fill: #4a5568;
+        }
+        .grid-line {
+            stroke: #e2e8f0;
+            stroke-dasharray: 4;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 sm:p-8 flex flex-col items-center">
+
+    <div class="w-full max-w-6xl bg-white p-6 sm:p-10 rounded-2xl shadow-xl">
+        <div class="mb-8 text-center">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-2">Daily Energy Curve</h1>
+            <h2 class="text-xl text-blue-600 font-semibold">02-12-2025</h2>
+            <p class="text-gray-500 mt-2">National Load Dispatch Center (NLDC)</p>
+        </div>
+
+        <div id="chart" class="w-full aspect-[16/9] relative"></div>
+
+        <!-- Legend Container -->
+        <div id="legend" class="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <!-- Legend items will be injected here -->
+        </div>
+
+        <!-- Controls -->
+        <div class="mt-8 flex justify-center gap-4">
+            <button id="start-animation" class="flex items-center space-x-2 px-8 py-3 bg-blue-600 text-white font-bold rounded-full shadow-lg hover:bg-blue-700 hover:shadow-xl transition transform hover:-translate-y-0.5 active:translate-y-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>Play Animation</span>
+            </button>
+            <button id="reset-animation" class="flex items-center space-x-2 px-8 py-3 bg-gray-200 text-gray-700 font-bold rounded-full shadow hover:bg-gray-300 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                <span>Reset</span>
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        // --- Configuration ---
+        const MARGIN = { top: 40, right: 40, bottom: 60, left: 70 };
+        const MAX_Y = 12000; // Slightly above 11,500 for headroom
+
+        // Layer Definitions (Bottom to Top)
+        // Adjusting colors to match the description better
+        const layers = [
+            { key: 'HVDC', name: 'HVDC', color: '#87CEEB' }, // Light Blue
+            { key: 'PublicGas', name: 'Public (Gas)', color: '#40E0D0' }, // Turquoise
+            { key: 'PrivateGas', name: 'Private (Gas)', color: '#778899' }, // Blue-Gray
+            { key: 'Adani', name: 'Adani', color: '#1E3A8A' }, // Darker Blue
+            { key: 'Hydro', name: 'Hydro', color: '#90EE90' }, // Light Green
+            { key: 'PublicHFO', name: 'Public (HFO)', color: '#D2B48C' }, // Light Brown
+            { key: 'Coal', name: 'Coal', color: '#4A5568' }, // Dark Gray
+            { key: 'Solar', name: 'Solar', color: '#FFD700' }, // Gold
+            { key: 'PrivateHFO', name: 'Private (HFO)', color: '#CD5C5C' }, // Pink/Reddish-Brown
+            { key: 'Tripura', name: 'Tripura', color: '#DEB887' }, // Tan/Yellow-Brown
+            { key: 'PublicHSD', name: 'Public (HSD)', color: '#9F7AEA' }, // Purple-ish
+            { key: 'Wind', name: 'Wind', color: '#2F855A' } // Green-ish
+        ];
+
+        const layerKeys = layers.map(l => l.key);
+
+        // --- Data Generation Logic ---
+        function generateData() {
+            const data = [];
+            
+            // Key Points
+            // 05:00 -> 7705
+            // 12:00 -> 9973
+            // 18:00 -> 11218
+            // 00:00 -> ~9300 (Assumed start based on typical curve)
+            // 24:00 -> ~9600 (Assumed end)
+
+            for (let h = 0; h <= 24; h++) {
+                // 1. Calculate Total Target Load using piecewise interpolation
+                let totalTarget;
+                if (h <= 5) {
+                    // Drop from 9300 to 7705
+                    totalTarget = 9300 - ((9300 - 7705) * (h / 5));
+                } else if (h <= 12) {
+                    // Rise from 7705 to 9973
+                    totalTarget = 7705 + ((9973 - 7705) * ((h - 5) / 7));
+                } else if (h <= 18) {
+                    // Rise from 9973 to 11218
+                    totalTarget = 9973 + ((11218 - 9973) * ((h - 12) / 6));
+                } else {
+                    // Drop from 11218 to 9600
+                    totalTarget = 11218 - ((11218 - 9600) * ((h - 18) / 6));
+                }
+
+                // Add some slight natural noise
+                totalTarget += (Math.random() - 0.5) * 50;
+
+                // 2. Calculate Base Layers (Steady sources)
+                // HVDC: ~900 MW constant
+                // Adani: ~1400 MW constant
+                // Coal: ~1800 MW constant
+                // Tripura: ~100 MW constant
+                const hvdc = 900 + Math.sin(h/10)*50;
+                const adani = 1400; 
+                const coal = 1800 + Math.cos(h/8)*100;
+                const tripura = 100;
+                const wind = 20 + Math.random() * 30; // Negligible
+                
+                // 3. Solar Calculation
+                // Parabola centered at 12:00, width +/- 6 hours
+                let solar = 0;
+                if (h > 6 && h < 18) {
+                    const x = (h - 12) / 6;
+                    solar = 1600 * (1 - x*x); // Peak ~1600MW at noon
+                    if (solar < 0) solar = 0;
+                }
+
+                // 4. Determine Remaining Load for Dispatchable/Peaking Sources
+                const currentFixed = hvdc + adani + coal + tripura + wind + solar;
+                let remainder = totalTarget - currentFixed;
+                if (remainder < 0) remainder = 0;
+
+                // 5. Distribute Remainder to Gas, Hydro, HFO based on time of day
+                // Peak hours (17-21) utilize more HFO and Hydro
+                // Off-peak utilizes more Gas
+                
+                let hydroShare, gasPubShare, gasPrivShare, hfoPrivShare, hfoPubShare, hsdShare;
+
+                // Simple heuristic for dispatch priority
+                if (h >= 17 && h <= 21) {
+                    // Evening Peak: Maximize HFO and Hydro
+                    hydroShare = 0.15;
+                    hfoPrivShare = 0.25; // Peaker
+                    hfoPubShare = 0.10;
+                    gasPubShare = 0.25;
+                    gasPrivShare = 0.20;
+                    hsdShare = 0.05;
+                } else {
+                    // Normal/Day: Gas heavy
+                    hydroShare = 0.10;
+                    hfoPrivShare = 0.15;
+                    hfoPubShare = 0.05;
+                    gasPubShare = 0.35;
+                    gasPrivShare = 0.30;
+                    hsdShare = 0.05;
+                }
+
+                const hydro = remainder * hydroShare;
+                const gasPublic = remainder * gasPubShare;
+                const gasPrivate = remainder * gasPrivShare;
+                const hfoPrivate = remainder * hfoPrivShare;
+                const hfoPublic = remainder * hfoPubShare;
+                const hsdPublic = remainder * hsdShare;
+
+                data.push({
+                    hour: h,
+                    HVDC: hvdc,
+                    PublicGas: gasPublic,
+                    PrivateGas: gasPrivate,
+                    Adani: adani,
+                    Hydro: hydro,
+                    PublicHFO: hfoPublic,
+                    Coal: coal,
+                    Solar: solar,
+                    PrivateHFO: hfoPrivate,
+                    Tripura: tripura,
+                    PublicHSD: hsdPublic,
+                    Wind: wind
+                });
+            }
+            return data;
+        }
+
+        const rawData = generateData();
+
+        // --- Chart Setup ---
+        const container = document.getElementById('chart');
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+
+        const svg = d3.select("#chart")
+            .append("svg")
+            .attr("width", "100%")
+            .attr("height", "100%")
+            .attr("viewBox", `0 0 ${width} ${height}`)
+            .append("g")
+            .attr("transform", `translate(${MARGIN.left},${MARGIN.top})`);
+
+        const innerWidth = width - MARGIN.left - MARGIN.right;
+        const innerHeight = height - MARGIN.top - MARGIN.bottom;
+
+        // Scales
+        const x = d3.scaleLinear()
+            .domain([0, 24])
+            .range([0, innerWidth]);
+
+        const y = d3.scaleLinear()
+            .domain([0, MAX_Y])
+            .range([innerHeight, 0]);
+
+        // Stack
+        const stack = d3.stack()
+            .keys(layerKeys)
+            .order(d3.stackOrderNone)
+            .offset(d3.stackOffsetNone);
+
+        const stackedData = stack(rawData);
+
+        // Area Generator
+        const area = d3.area()
+            .x(d => x(d.data.hour))
+            .y0(d => y(d[0]))
+            .y1(d => y(d[1]))
+            .curve(d3.curveMonotoneX); // Smooth curve
+
+        // --- Render Axes ---
+        
+        // X-Axis
+        const xAxis = svg.append("g")
+            .attr("transform", `translate(0,${innerHeight})`)
+            .call(d3.axisBottom(x).ticks(24).tickFormat(d => d === 24 ? "24:00" : `${d.toString().padStart(2, '0')}:00`));
+
+        xAxis.selectAll("text")
+            .style("text-anchor", "end")
+            .attr("dx", "-.8em")
+            .attr("dy", ".15em")
+            .attr("transform", "rotate(-45)");
+
+        svg.append("text")
+            .attr("class", "axis-label")
+            .attr("text-anchor", "middle")
+            .attr("x", innerWidth / 2)
+            .attr("y", innerHeight + 50)
+            .text("Hour");
+
+        // Y-Axis
+        svg.append("g")
+            .call(d3.axisLeft(y).ticks(10).tickFormat(d3.format("~s")))
+            .call(g => g.select(".domain").remove())
+            .call(g => g.selectAll(".tick line").clone()
+                .attr("x2", innerWidth)
+                .attr("class", "grid-line"));
+
+        svg.append("text")
+            .attr("class", "axis-label")
+            .attr("text-anchor", "middle")
+            .attr("transform", "rotate(-90)")
+            .attr("y", -55)
+            .attr("x", -innerHeight / 2)
+            .text("Generation (MW)");
+
+        // --- Render Layers (Initial State: Empty) ---
+        // We will animate the "d" attribute from a flat line to the full data
+        
+        // Clip Path for animation (revealing from left to right)
+        const clipPath = svg.append("defs")
+            .append("clipPath")
+            .attr("id", "clip-reveal")
+            .append("rect")
+            .attr("width", 0) // Initially 0 width
+            .attr("height", innerHeight)
+            .attr("x", 0)
+            .attr("y", 0);
+
+        const layerGroups = svg.selectAll(".layer")
+            .data(stackedData)
+            .join("path")
+            .attr("class", "area-layer")
+            .attr("fill", (d) => layers.find(l => l.key === d.key).color)
+            .attr("d", area)
+            .attr("clip-path", "url(#clip-reveal)"); // Apply clip path
+
+        // --- Tooltip Interaction ---
+        const tooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
+
+        // Add a transparent overlay for tracking mouse events across the whole chart
+        const overlay = svg.append("rect")
+            .attr("width", innerWidth)
+            .attr("height", innerHeight)
+            .style("fill", "none")
+            .style("pointer-events", "all")
+            .on("mousemove", function(event) {
+                const [mx] = d3.pointer(event);
+                const h = Math.round(x.invert(mx));
+                if (h < 0 || h > 24) return;
+
+                // Find data point
+                const d = rawData[h];
+                if (!d) return;
+
+                // Highlight Vertical Line
+                verticalLine.attr("x1", x(h)).attr("x2", x(h)).style("opacity", 1);
+
+                // Tooltip Content
+                let total = 0;
+                let html = `<div class="font-bold border-b pb-1 mb-1">${h.toString().padStart(2, '0')}:00 Hr</div>`;
+                // Iterate in reverse to show top layers first in tooltip
+                [...layers].reverse().forEach(layer => {
+                    const val = d[layer.key];
+                    total += val;
+                    if (val > 10) { // Only show significant values
+                         html += `<div class="flex items-center justify-between gap-4">
+                            <span class="flex items-center"><span class="w-3 h-3 rounded-full mr-2" style="background:${layer.color}"></span>${layer.name}</span>
+                            <span class="font-mono">${Math.round(val)}</span>
+                         </div>`;
+                    }
+                });
+                html += `<div class="border-t pt-1 mt-1 flex justify-between font-bold"><span>Total</span><span>${Math.round(total)} MW</span></div>`;
+
+                tooltip.html(html)
+                    .style("left", (event.pageX + 15) + "px")
+                    .style("top", (event.pageY - 28) + "px")
+                    .style("opacity", 1);
+            })
+            .on("mouseout", () => {
+                tooltip.style("opacity", 0);
+                verticalLine.style("opacity", 0);
+            });
+
+        const verticalLine = svg.append("line")
+            .attr("y1", 0)
+            .attr("y2", innerHeight)
+            .attr("stroke", "#4a5568")
+            .attr("stroke-width", 1)
+            .attr("stroke-dasharray", "4")
+            .style("opacity", 0)
+            .style("pointer-events", "none");
+
+        // --- Legend Generation ---
+        const legendContainer = d3.select("#legend");
+        // Reverse layers for legend so top of stack is first, or keep logical order?
+        // User list order is Bottom -> Top. Usually legends read Top -> Bottom or logic.
+        // Let's list them in reverse visual order (Top layer first)
+        [...layers].reverse().forEach(layer => {
+            const item = legendContainer.append("div").attr("class", "flex items-center text-sm");
+            item.append("span")
+                .attr("class", "w-4 h-4 rounded-sm mr-2 shadow-sm")
+                .style("background-color", layer.color);
+            item.append("span").text(layer.name);
+        });
+
+        // --- Animation Logic ---
+        let animationId;
+        
+        function playAnimation() {
+            // Stop any existing animation
+            if (animationId) cancelAnimationFrame(animationId);
+            
+            // Reset clip rect
+            d3.select("#clip-reveal rect")
+                .attr("width", 0);
+
+            const duration = 10000; // 10 seconds for full day
+            const start = performance.now();
+
+            function step(timestamp) {
+                const elapsed = timestamp - start;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Interpolate width
+                const currentWidth = innerWidth * progress;
+                d3.select("#clip-reveal rect").attr("width", currentWidth);
+
+                if (progress < 1) {
+                    animationId = requestAnimationFrame(step);
+                } else {
+                    animationId = null;
+                }
+            }
+            animationId = requestAnimationFrame(step);
+        }
+
+        // --- Event Listeners ---
+        document.getElementById("start-animation").addEventListener("click", playAnimation);
+        
+        document.getElementById("reset-animation").addEventListener("click", () => {
+            if (animationId) cancelAnimationFrame(animationId);
+            d3.select("#clip-reveal rect").attr("width", 0);
+        });
+
+        // Start animation on load
+        setTimeout(playAnimation, 500);
+
+        // Handle Resize
+        window.addEventListener("resize", () => {
+            const newWidth = container.clientWidth;
+            const newInnerWidth = newWidth - MARGIN.left - MARGIN.right;
+            
+            d3.select("svg").attr("viewBox", `0 0 ${newWidth} ${height}`);
+            x.range([0, newInnerWidth]);
+            xAxis.call(d3.axisBottom(x).ticks(24).tickFormat(d => d === 24 ? "24:00" : `${d.toString().padStart(2, '0')}:00`));
+            
+            // Update areas
+            area.x(d => x(d.data.hour));
+            layerGroups.attr("d", area);
+            
+            // Update overlay
+            overlay.attr("width", newInnerWidth);
+        });
+
+    </script>
+</body>
+</html>
