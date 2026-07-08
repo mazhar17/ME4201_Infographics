@@ -1,854 +1,511 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Power Plant Siting & Sustainability Simulator</title>
-    <style>
-        /* --- CSS VARIABLES & RESET --- */
-        :root {
-            --col-bg: #f4f6f9;
-            --col-panel: #ffffff;
-            --col-text: #333333;
-            --col-border: #dcdcdc;
-            
-            /* Sustainability Pillars */
-            --col-social: #3498db;   /* Blue */
-            --col-env: #2ecc71;      /* Green */
-            --col-econ: #f1c40f;     /* Amber */
-            --col-econ-text: #b7950b;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Power Plant Site Selection — Interactive Learning Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDF1F4; --grid-line:rgba(20,40,60,.055);
+    --ink:#14283C; --ink-soft:#43596E; --line:#C9D4DD; --panel:#FFFFFF;
+    --hydro:#2272B5; --thermal:#8C4A2F; --gas:#C2452A; --combined:#2E7D5B;
+    --nuclear:#6B4FA3; --diesel:#5A5F66; --solar:#D9950B; --wind:#1F8A8C;
+    --ok:#2E7D5B; --bad:#C2452A;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid-line) 1px,transparent 1px),
+      linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);
+    background-size:28px 28px;
+    line-height:1.55;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px 80px}
 
-            /* UI Elements */
-            --col-highlight: #2c3e50;
-            --col-disabled: #bdc3c7;
-            --col-danger: #e74c3c;
-        }
+  /* ---------- Header ---------- */
+  header{padding:40px 0 8px}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.14em;color:var(--ink-soft);text-transform:uppercase}
+  h1{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:clamp(1.7rem,4.5vw,2.6rem);line-height:1.12;margin:.35rem 0 .5rem}
+  .sub{color:var(--ink-soft);max-width:640px;font-size:.98rem}
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+  /* ---------- Mode tabs ---------- */
+  .modes{display:flex;gap:8px;margin:26px 0 0;border-bottom:2px solid var(--ink);padding-bottom:0;flex-wrap:wrap}
+  .mode-btn{
+    font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:.92rem;letter-spacing:.03em;
+    background:transparent;border:2px solid transparent;border-bottom:none;color:var(--ink-soft);
+    padding:10px 18px;cursor:pointer;border-radius:8px 8px 0 0;
+  }
+  .mode-btn[aria-selected="true"]{background:var(--ink);color:#fff}
+  .mode-btn:focus-visible{outline:3px solid var(--hydro);outline-offset:2px}
+  main{background:var(--panel);border:2px solid var(--ink);border-top:none;border-radius:0 0 14px 14px;padding:26px 22px 34px}
+  @media(min-width:760px){main{padding:34px 34px 44px}}
 
-        body {
-            background-color: var(--col-bg);
-            color: var(--col-text);
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden; /* Optimized for fixed 16:9 projection */
-            display: flex;
-            flex-direction: column;
-        }
+  /* ---------- General criteria strip ---------- */
+  .gen-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+  h2{font-family:'Chakra Petch',sans-serif;font-size:1.2rem;font-weight:700}
+  .tag{font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+  .gen-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:8px}
+  .gen-card{border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;font-size:.86rem;background:#FAFCFD}
+  .gen-card b{display:block;font-size:.86rem;color:var(--ink)}
+  .gen-card span{color:var(--ink-soft);font-size:.8rem}
+  details.gen{margin-bottom:26px}
+  details.gen summary{cursor:pointer;font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:1.02rem;padding:10px 0;list-style:none;display:flex;align-items:center;gap:10px}
+  details.gen summary::before{content:'+';font-family:'IBM Plex Mono',monospace;width:26px;height:26px;border:2px solid var(--ink);border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-weight:500}
+  details.gen[open] summary::before{content:'–'}
+  details.gen summary:focus-visible{outline:3px solid var(--hydro);outline-offset:2px}
 
-        /* --- HEADER --- */
-        header {
-            background: var(--col-highlight);
-            color: white;
-            padding: 0.8rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 60px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
+  /* ---------- Bus-bar selector (signature) ---------- */
+  .busbar-outer{overflow-x:auto;padding:6px 0 2px;-webkit-overflow-scrolling:touch}
+  .busbar{position:relative;display:flex;gap:14px;min-width:max-content;padding:16px 4px 26px}
+  .busbar::after{ /* the grid bus line */
+    content:'';position:absolute;left:0;right:0;bottom:10px;height:3px;background:var(--ink);border-radius:2px;
+  }
+  .node{
+    position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;
+    background:transparent;border:none;cursor:pointer;padding:0 4px;min-width:88px;
+  }
+  .node::after{ /* drop line to bus */
+    content:'';position:absolute;bottom:-14px;width:3px;height:16px;background:var(--ink);
+  }
+  .node .icon{
+    width:58px;height:58px;border-radius:12px;border:2.5px solid var(--ink);
+    display:flex;align-items:center;justify-content:center;background:#fff;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .node .icon svg{width:32px;height:32px}
+  .node .lbl{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:.74rem;text-align:center;line-height:1.15;color:var(--ink)}
+  .node:hover .icon{transform:translateY(-3px)}
+  .node[aria-pressed="true"] .icon{background:var(--acc);border-color:var(--acc);box-shadow:0 4px 0 rgba(20,40,60,.25)}
+  .node[aria-pressed="true"] .icon svg{stroke:#fff;fill:none}
+  .node:focus-visible{outline:3px solid var(--hydro);outline-offset:3px;border-radius:8px}
+  .node svg{stroke:var(--acc);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
-        header h1 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.5px; }
-        header .subtitle { font-size: 0.9rem; opacity: 0.8; font-weight: 400; }
+  /* ---------- Plant detail ---------- */
+  .plant-panel{margin-top:10px;border-top:3px solid var(--acc,#14283C);padding-top:20px}
+  .plant-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+  .plant-head .chip{
+    font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.35rem;color:#fff;
+    background:var(--acc);padding:6px 16px;border-radius:9px;
+  }
+  .plant-head .keyfact{font-family:'IBM Plex Mono',monospace;font-size:.76rem;color:var(--ink-soft)}
+  .plant-note{color:var(--ink-soft);font-size:.94rem;max-width:720px;margin-bottom:18px}
+  .crit-groups{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:700px){.crit-groups{grid-template-columns:1fr 1fr}}
+  .crit-group{border:1.5px solid var(--line);border-radius:12px;padding:14px 16px;background:#FAFCFD}
+  .crit-group h3{
+    font-family:'IBM Plex Mono',monospace;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--acc);margin-bottom:8px;display:flex;align-items:center;gap:8px;
+  }
+  .crit-group h3::before{content:'';width:10px;height:10px;background:var(--acc);border-radius:3px;display:inline-block}
+  .crit-group ul{list-style:none}
+  .crit-group li{font-size:.88rem;padding:5px 0 5px 18px;position:relative;color:var(--ink)}
+  .crit-group li::before{content:'▸';position:absolute;left:0;color:var(--acc);font-size:.8rem}
+  .crit-group li b{font-weight:600}
 
-        /* --- MAIN LAYOUT (GRID) --- */
-        main {
-            flex: 1;
-            display: grid;
-            grid-template-columns: 280px 1fr 350px; /* Controls | Map | Analysis */
-            gap: 15px;
-            padding: 15px;
-            overflow: hidden;
-        }
+  /* ---------- Compare ---------- */
+  .pickrow{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 20px}
+  .pick{
+    font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:.82rem;
+    border:2px solid var(--acc);color:var(--acc);background:#fff;border-radius:999px;
+    padding:7px 14px;cursor:pointer;
+  }
+  .pick[aria-pressed="true"]{background:var(--acc);color:#fff}
+  .pick:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+  .hint{font-size:.84rem;color:var(--ink-soft);margin-bottom:10px}
+  .cmp-scroll{overflow-x:auto}
+  table.cmp{border-collapse:collapse;width:100%;min-width:560px;font-size:.86rem}
+  table.cmp th,table.cmp td{border:1.5px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+  table.cmp thead th{font-family:'Chakra Petch',sans-serif;font-size:.86rem;background:#F2F6F9}
+  table.cmp thead th.plant{color:#fff;background:var(--acc)}
+  table.cmp td .rate{font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.04em;display:inline-block;padding:2px 8px;border-radius:6px;background:#EEF2F5;color:var(--ink);margin-bottom:3px}
+  table.cmp td .why{display:block;color:var(--ink-soft);font-size:.78rem}
+  table.cmp th.factor{font-family:'IBM Plex Mono',monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);background:#FAFCFD;width:150px}
 
-        /* --- PANEL STYLING --- */
-        .panel {
-            background: var(--col-panel);
-            border-radius: 8px;
-            border: 1px solid var(--col-border);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .panel-header {
-            padding: 10px 15px;
-            border-bottom: 1px solid var(--col-border);
-            background: #fafafa;
-            font-weight: 600;
-            font-size: 0.95rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .panel-content {
-            padding: 15px;
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        /* --- LEFT COLUMN: CONTROLS --- */
-        .control-group { margin-bottom: 20px; }
-        .control-label { display: block; font-size: 0.85rem; color: #666; margin-bottom: 8px; font-weight: 600; text-transform: uppercase; }
-
-        .btn-tech {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 8px;
-            border: 1px solid var(--col-border);
-            background: white;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.9rem;
-        }
-
-        .btn-tech:hover { background: #f0f0f0; border-color: #bbb; }
-        
-        .btn-tech.active {
-            background: var(--col-highlight);
-            color: white;
-            border-color: var(--col-highlight);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-
-        .btn-tech i { width: 24px; margin-right: 10px; display: flex; justify-content: center; }
-
-        /* --- CENTER COLUMN: MAP --- */
-        #map-container {
-            position: relative;
-            background: #aaddff; /* Sea */
-            height: 100%;
-            width: 100%;
-            border-radius: 0 0 8px 8px;
-            overflow: hidden;
-        }
-
-        svg#game-map {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
-        /* Map Interactive Elements (SVG Styling) */
-        .map-land { fill: #e8f5e9; stroke: #a5d6a7; stroke-width: 2; }
-        .map-river { fill: #4fc3f7; opacity: 0.8; }
-        .map-urban { fill: #cfd8dc; stroke: #90a4ae; stroke-width: 1; }
-        .map-mountain { fill: #d7ccc8; stroke: #a1887f; stroke-width: 1; }
-        
-        /* Marker Styling */
-        .site-marker {
-            cursor: pointer;
-            /* Removed transform transition to prevent flickering */
-        }
-        
-        /* Visual Feedback on Hover (Stable) */
-        .site-marker:hover circle.outer {
-            stroke: var(--col-danger);
-            stroke-width: 3;
-        }
-
-        .site-marker circle.outer { 
-            fill: rgba(255,255,255,0.9); 
-            stroke: #333; 
-            stroke-width: 2; 
-            transition: stroke 0.2s, stroke-width 0.2s;
-        }
-        
-        .site-marker circle.inner { fill: #333; }
-        
-        .site-marker.selected circle.outer { 
-            stroke: var(--col-danger); 
-            stroke-width: 4; 
-            fill: #fff; 
-        }
-        
-        .site-marker.selected circle.inner { fill: var(--col-danger); }
-
-        /* Text and visuals are not clickable, they let click pass to hitbox */
-        .site-marker text, 
-        .site-marker circle.outer, 
-        .site-marker circle.inner {
-            pointer-events: none;
-        }
-
-        .site-marker text {
-            font-size: 16px;
-            font-weight: 900;
-            fill: #000;
-            stroke: #fff;
-            stroke-width: 3px;
-            paint-order: stroke fill;
-            user-select: none;
-        }
-        
-        /* Hitbox is clickable and on top */
-        .hitbox {
-            fill: #ffffff;
-            fill-opacity: 0; /* Fully transparent but interactive */
-            cursor: pointer;
-            pointer-events: auto;
-        }
-
-        /* Tooltip */
-        #tooltip {
-            position: absolute;
-            background: rgba(0,0,0,0.85);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            pointer-events: none;
-            display: none;
-            z-index: 100;
-            max-width: 200px;
-            /* Ensure text wraps if needed so width calculation is stable */
-            white-space: normal; 
-        }
-
-        /* --- RIGHT COLUMN: ANALYSIS --- */
-        .pillar-card {
-            margin-bottom: 12px;
-            border-left: 4px solid #ccc;
-            padding: 10px;
-            background: #fafafa;
-        }
-
-        .pillar-social { border-color: var(--col-social); }
-        .pillar-env { border-color: var(--col-env); }
-        .pillar-econ { border-color: var(--col-econ); }
-
-        .pillar-title { font-weight: bold; font-size: 0.9rem; margin-bottom: 5px; display: flex; justify-content: space-between; }
-        .pillar-metrics { font-size: 0.8rem; color: #555; line-height: 1.4; }
-        
-        .sdg-container {
-            display: flex;
-            gap: 5px;
-            margin-top: 8px;
-            flex-wrap: wrap;
-        }
-
-        .sdg-badge {
-            width: 28px;
-            height: 28px;
-            border-radius: 4px;
-            color: white;
-            font-size: 10px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: help;
-        }
-
-        /* Chart Area */
-        .chart-wrapper {
-            width: 100%;
-            height: 200px;
-            display: flex;
-            justify-content: center;
-            margin-bottom: 15px;
-        }
-
-        /* --- STATUS BAR --- */
-        .status-message {
-            margin-top: auto;
-            padding: 10px;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeeba;
-            display: none; /* Hidden by default */
-        }
-        .status-message.error { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
-        .status-message.success { background: #d4edda; color: #155724; border-color: #c3e6cb; }
-
-        /* --- UTILS --- */
-        .progress-bar {
-            height: 6px;
-            background: #eee;
-            border-radius: 3px;
-            margin-top: 4px;
-            overflow: hidden;
-        }
-        .progress-fill { height: 100%; width: 0%; transition: width 0.5s ease; }
-
-    </style>
+  /* ---------- Quiz ---------- */
+  .quiz-meta{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:6px 0 16px}
+  .progress{flex:1;min-width:160px;height:10px;border:2px solid var(--ink);border-radius:999px;overflow:hidden;background:#fff}
+  .progress i{display:block;height:100%;background:var(--ink);width:0%;transition:width .25s ease}
+  .qcount{font-family:'IBM Plex Mono',monospace;font-size:.78rem;color:var(--ink-soft)}
+  .qtext{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:1.12rem;margin-bottom:14px;max-width:720px}
+  .opts{display:grid;gap:9px;max-width:720px}
+  .opt{
+    text-align:left;border:2px solid var(--line);background:#fff;border-radius:10px;
+    padding:11px 14px;font-size:.92rem;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;color:var(--ink);
+  }
+  .opt:hover:not(:disabled){border-color:var(--ink)}
+  .opt:focus-visible{outline:3px solid var(--hydro);outline-offset:2px}
+  .opt.correct{border-color:var(--ok);background:#EAF5EF}
+  .opt.wrong{border-color:var(--bad);background:#FBEDEA}
+  .opt:disabled{cursor:default;opacity:.92}
+  .explain{max-width:720px;margin-top:14px;border-left:4px solid var(--ink);background:#F2F6F9;padding:12px 14px;font-size:.88rem;border-radius:0 10px 10px 0;display:none}
+  .explain.show{display:block}
+  .quiz-nav{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap}
+  .btn{
+    font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:.92rem;
+    background:var(--ink);color:#fff;border:2px solid var(--ink);border-radius:9px;
+    padding:10px 20px;cursor:pointer;
+  }
+  .btn.ghost{background:#fff;color:var(--ink)}
+  .btn:disabled{opacity:.4;cursor:default}
+  .btn:focus-visible{outline:3px solid var(--hydro);outline-offset:2px}
+  .score-card{max-width:560px;border:2px solid var(--ink);border-radius:14px;padding:26px;text-align:center;margin:10px auto}
+  .score-num{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:3rem;line-height:1}
+  .score-msg{color:var(--ink-soft);margin:8px 0 18px}
+  .hide{display:none!important}
+  footer{margin-top:26px;font-family:'IBM Plex Mono',monospace;font-size:.7rem;color:var(--ink-soft);text-align:center;letter-spacing:.04em}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}html{scroll-behavior:auto}}
+</style>
 </head>
 <body>
+<div class="wrap">
 
-    <header>
-        <div>
-            <h1>Power Plant Site Selection</h1>
-            <div class="subtitle">Sustainable Engineering Decision Support System</div>
-        </div>
-        <div style="font-size: 0.8rem; text-align: right;">
-            Course: ME-401<br>Module: Sustainability
-        </div>
-    </header>
+<header>
+  <p class="eyebrow">Power Plant Engineering · Module 04</p>
+  <h1>Site Selection Criteria for Power Plants</h1>
+  <p class="sub">Where a power plant is built decides its cost, safety and performance for the next 40+ years. Explore each technology on the grid bus below, compare them side by side, then test yourself.</p>
+</header>
 
-    <main>
-        <!-- LEFT PANEL: CONTROLS -->
-        <section class="panel">
-            <div class="panel-header">1. Select Technology</div>
-            <div class="panel-content">
-                <div class="control-group">
-                    <label class="control-label">Base Load</label>
-                    <button class="btn-tech" onclick="selectPlant('coal')" id="btn-coal">
-                        <i>🏭</i> Coal Thermal
-                    </button>
-                    <button class="btn-tech" onclick="selectPlant('gas')" id="btn-gas">
-                        <i>🔥</i> Combined Cycle Gas
-                    </button>
-                    <button class="btn-tech" onclick="selectPlant('nuclear')" id="btn-nuclear">
-                        <i>☢️</i> Nuclear
-                    </button>
-                </div>
+<div class="modes" role="tablist" aria-label="Learning modes">
+  <button class="mode-btn" role="tab" id="tab-explore" aria-selected="true" onclick="setMode('explore')">1 · Explore</button>
+  <button class="mode-btn" role="tab" id="tab-compare" aria-selected="false" onclick="setMode('compare')">2 · Compare</button>
+  <button class="mode-btn" role="tab" id="tab-quiz" aria-selected="false" onclick="setMode('quiz')">3 · Quiz</button>
+</div>
 
-                <div class="control-group">
-                    <label class="control-label">Renewables</label>
-                    <button class="btn-tech" onclick="selectPlant('hydro')" id="btn-hydro">
-                        <i>💧</i> Hydropower
-                    </button>
-                    <button class="btn-tech" onclick="selectPlant('wind')" id="btn-wind">
-                        <i>💨</i> Wind Farm
-                    </button>
-                    <button class="btn-tech" onclick="selectPlant('solar')" id="btn-solar">
-                        <i>☀️</i> Solar PV
-                    </button>
-                </div>
+<main>
 
-                <div style="margin-top: 20px; font-size: 0.8rem; color: #666; border-top: 1px solid #eee; padding-top: 10px;">
-                    <strong>Instruction:</strong> First select a plant type above, then click a site marker (A-E) on the map to evaluate feasibility.
-                </div>
-            </div>
-        </section>
+  <!-- =================== EXPLORE =================== -->
+  <section id="mode-explore">
+    <details class="gen" open>
+      <summary>General criteria — apply to <em>every</em> plant type</summary>
+      <div class="gen-grid">
+        <div class="gen-card"><b>Near the load center</b><span>Cuts transmission cost and I²R line losses.</span></div>
+        <div class="gen-card"><b>Land: cost &amp; bearing capacity</b><span>Cheap, ample land with soil that carries heavy plant.</span></div>
+        <div class="gen-card"><b>Transport access</b><span>Rail / road / port for fuel and heavy equipment.</span></div>
+        <div class="gen-card"><b>Water availability</b><span>Cooling, steam raising, and general plant use.</span></div>
+        <div class="gen-card"><b>Distance from towns</b><span>Safety, noise and pollution control.</span></div>
+        <div class="gen-card"><b>Environmental clearance</b><span>Regulatory approval and impact assessment.</span></div>
+        <div class="gen-card"><b>Room for expansion</b><span>Future units on the same site are far cheaper.</span></div>
+        <div class="gen-card"><b>Skilled labour</b><span>Operators and maintenance staff nearby.</span></div>
+        <div class="gen-card"><b>Grid interconnection</b><span>Practical tie-in to existing transmission.</span></div>
+      </div>
+    </details>
 
-        <!-- CENTER PANEL: MAP -->
-        <section class="panel">
-            <div class="panel-header">2. Select Site Location</div>
-            <div id="map-container">
-                <svg id="game-map" viewBox="0 0 800 450" preserveAspectRatio="xMidYMid meet">
-                    <!-- Definitions for gradients/patterns -->
-                    <defs>
-                        <pattern id="urbanPattern" width="10" height="10" patternUnits="userSpaceOnUse">
-                            <rect width="10" height="10" fill="#cfd8dc"/>
-                            <path d="M0 0 L10 10 M10 0 L0 10" stroke="#b0bec5" stroke-width="0.5"/>
-                        </pattern>
-                        <linearGradient id="oceanGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" style="stop-color:#4fc3f7;stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:#81d4fa;stop-opacity:1" />
-                        </linearGradient>
-                    </defs>
+    <div class="gen-head">
+      <h2>Technology-specific criteria</h2>
+      <span class="tag">tap a plant on the bus</span>
+    </div>
 
-                    <!-- Background: Ocean -->
-                    <rect width="800" height="450" fill="url(#oceanGrad)" />
+    <div class="busbar-outer">
+      <div class="busbar" id="busbar" role="group" aria-label="Select a plant type"></div>
+    </div>
 
-                    <!-- Landmass -->
-                    <path d="M 150,0 L 800,0 L 800,450 L 100,450 C 100,450 180,300 120,200 C 60,100 150,0 150,0 Z" class="map-land" />
+    <div id="plantPanel" class="plant-panel"></div>
+  </section>
 
-                    <!-- Mountains (Top Right) -->
-                    <path d="M 600,50 L 650,150 L 550,150 Z" class="map-mountain" />
-                    <path d="M 640,30 L 700,160 L 580,160 Z" class="map-mountain" />
-                    <path d="M 700,60 L 750,140 L 650,140 Z" class="map-mountain" />
+  <!-- =================== COMPARE =================== -->
+  <section id="mode-compare" class="hide">
+    <h2>Compare plant types</h2>
+    <p class="hint">Select two or three technologies to place them side by side on the six siting factors that differ most.</p>
+    <div class="pickrow" id="pickrow"></div>
+    <div class="cmp-scroll"><div id="cmpTable"></div></div>
+  </section>
 
-                    <!-- River -->
-                    <path d="M 620,160 C 620,160 550,250 450,250 C 350,250 300,350 250,450" stroke="#4fc3f7" stroke-width="15" fill="none" class="map-river-path"/>
+  <!-- =================== QUIZ =================== -->
+  <section id="mode-quiz" class="hide">
+    <h2>Check your understanding</h2>
+    <div id="quizBody">
+      <div class="quiz-meta">
+        <span class="qcount" id="qcount"></span>
+        <div class="progress" aria-hidden="true"><i id="qbar"></i></div>
+      </div>
+      <p class="qtext" id="qtext"></p>
+      <div class="opts" id="qopts"></div>
+      <div class="explain" id="qexplain"></div>
+      <div class="quiz-nav">
+        <button class="btn" id="qnext" onclick="nextQ()" disabled>Next question</button>
+      </div>
+    </div>
+    <div id="quizDone" class="hide">
+      <div class="score-card">
+        <p class="tag">Result</p>
+        <p class="score-num" id="scoreNum"></p>
+        <p class="score-msg" id="scoreMsg"></p>
+        <button class="btn" onclick="restartQuiz()">Try again</button>
+        <button class="btn ghost" onclick="setMode('explore')">Review criteria</button>
+      </div>
+    </div>
+  </section>
 
-                    <!-- Urban Area (Center) -->
-                    <polygon points="350,150 480,150 480,280 350,280" fill="url(#urbanPattern)" stroke="#90a4ae" stroke-width="2"/>
-                    <text x="415" y="220" font-size="14" fill="#546e7a" text-anchor="middle" font-weight="bold">CITY</text>
+</main>
+<footer>GENERAL CRITERIA APPLY TO ALL PLANT TYPES · SPECIFIC CRITERIA DETERMINE FINAL SITE SUITABILITY</footer>
+</div>
 
-                    <!-- Markers -->
-                    <!-- IMPORTANT: Hitbox must be last child to be on top in SVG order -->
-                    
-                    <!-- Site A: Coast -->
-                    <g class="site-marker" id="site-A" transform="translate(130, 200)" onclick="selectSite('A')">
-                        <circle class="outer" r="12" cx="0" cy="0" />
-                        <circle class="inner" r="6" cx="0" cy="0" />
-                        <text y="-20" x="0" text-anchor="middle">A</text>
-                        <circle class="hitbox" r="30" cx="0" cy="-10" />
-                    </g>
+<script>
+/* ---------------- Data ---------------- */
+const ICONS = {
+  hydro:'<path d="M12 3c3.5 4.6 6 7.9 6 11a6 6 0 1 1-12 0c0-3.1 2.5-6.4 6-11z"/><path d="M9 14a3 3 0 0 0 3 3"/>',
+  thermal:'<path d="M8 21h8"/><path d="M10 21v-3"/><path d="M14 21v-3"/><path d="M12 3c2.8 3.2 4.5 5.6 4.5 8a4.5 4.5 0 1 1-9 0c0-2.4 1.7-4.8 4.5-8z"/>',
+  gas:'<circle cx="12" cy="12" r="8"/><path d="M12 4v4"/><path d="M12 16v4"/><path d="M4 12h4"/><path d="M16 12h4"/><circle cx="12" cy="12" r="1.5"/>',
+  combined:'<path d="M4 8h11a4 4 0 0 1 0 8H9"/><path d="M7 5 4 8l3 3"/><path d="M17 13l3 3-3 3"/>',
+  nuclear:'<circle cx="12" cy="12" r="2"/><ellipse cx="12" cy="12" rx="9" ry="3.6"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(120 12 12)"/>',
+  diesel:'<rect x="5" y="7" width="10" height="13" rx="1.5"/><path d="M7 4h6v3"/><path d="M15 11h3l2 2v5a1.5 1.5 0 0 1-3 0v-7"/>',
+  solar:'<circle cx="12" cy="12" r="4"/><path d="M12 2v3"/><path d="M12 19v3"/><path d="M2 12h3"/><path d="M19 12h3"/><path d="M4.9 4.9l2.1 2.1"/><path d="M17 17l2.1 2.1"/><path d="M4.9 19.1 7 17"/><path d="M17 7l2.1-2.1"/>',
+  wind:'<path d="M12 12v9"/><path d="M12 12 6.5 8.4a3.4 3.4 0 1 1 4.4-1.3z"/><path d="M12 12l6.4-1.3a3.4 3.4 0 1 1-1.9 4.2z"/><path d="M12 12l-.9 6.5a3.4 3.4 0 1 1-2.5-3z"/>'
+};
 
-                    <!-- Site B: City Outskirts -->
-                    <g class="site-marker" id="site-B" transform="translate(360, 160)" onclick="selectSite('B')">
-                        <circle class="outer" r="12" cx="0" cy="0" />
-                        <circle class="inner" r="6" cx="0" cy="0" />
-                        <text y="-20" x="0" text-anchor="middle">B</text>
-                        <circle class="hitbox" r="30" cx="0" cy="-10" />
-                    </g>
+const PLANTS = [
+ {id:'hydro', name:'Hydroelectric', css:'--hydro',
+  fact:'Site IS the resource — head × discharge = power.',
+  note:'Hydro sites are fixed by nature: the plant must go where head and water are, and everything else (transmission, access roads) follows.',
+  groups:{
+   'Resource':[ '<b>High head and/or large reliable discharge</b> — the fundamental requirement (P ∝ ρgQH).',
+     'Large catchment area with adequate, dependable rainfall.',
+     'Storage / reservoir capacity to ride through dry seasons.'],
+   'Land & geology':[ '<b>Strong, impervious foundation rock</b> at the dam site.',
+     'Suitable narrow valley or gorge to reduce dam volume and cost.',
+     'Low sediment load, or provision for silt management.'],
+   'Environment & safety':[ 'Minimal submergence of villages, farmland and forests.',
+     'Resettlement and ecological impact acceptable and cleared.'],
+   'Grid & load':[ 'Usually remote from load centers — long EHV transmission must be economical.']
+  }},
+ {id:'thermal', name:'Thermal (coal / steam)', css:'--thermal',
+  fact:'Fuel is bulky — coal logistics dominate siting.',
+  note:'A coal plant burns thousands of tonnes per day, so it sits either at the mine mouth or on a cheap transport corridor, with lots of water beside it.',
+  groups:{
+   'Resource':[ '<b>Proximity to coal mines</b>, or economical rail / sea coal transport.',
+     'Space for weeks of coal stockpile.'],
+   'Water':[ '<b>Abundant cooling and boiler feed water</b> — river, lake or sea.'],
+   'Land & geology':[ 'Large land area for plant, coal yard and ash ponds.',
+     'Strong soil for heavy turbo-generator foundations.'],
+   'Environment & safety':[ '<b>Ash disposal facilities</b> nearby.',
+     'Located downwind of towns to limit stack-emission impact.']
+  }},
+ {id:'gas', name:'Gas turbine', css:'--gas',
+  fact:'Small footprint, quick start — the peak-load specialist.',
+  note:'Open-cycle gas turbines need little land and almost no water, so they can sit right at the load center and start in minutes to cover peaks.',
+  groups:{
+   'Resource':[ '<b>Proximity to a natural-gas pipeline</b> or secure liquid-fuel supply.'],
+   'Water':[ 'Very small water requirement — cooling water not critical.'],
+   'Land & geology':[ 'Small plot suffices; light civil works.'],
+   'Grid & load':[ '<b>Near load centers</b> — ideal for peaking duty and grid support.',
+     'Quick-start capability suits locations needing fast reserve.'],
+   'Environment & safety':[ '<b>Ambient temperature and altitude derate output</b> — hot or high sites lose capacity.']
+  }},
+ {id:'combined', name:'Combined cycle (CCGT)', css:'--combined',
+  fact:'GT + steam bottoming cycle → ~60% efficiency.',
+  note:'A combined-cycle plant adds a steam cycle to the gas turbine exhaust, so it inherits the pipeline requirement and adds a moderate cooling-water need.',
+  groups:{
+   'Resource':[ '<b>Reliable long-term natural-gas supply</b> / pipeline access.'],
+   'Water':[ '<b>Moderate cooling water</b> for the steam bottoming cycle.'],
+   'Land & geology':[ 'Land requirement between a gas turbine and a full thermal plant.'],
+   'Grid & load':[ 'Near load center — high efficiency suits base and intermediate load.']
+  }},
+ {id:'nuclear', name:'Nuclear', css:'--nuclear',
+  fact:'Fuel energy density ≈ 10⁶ × coal — fuel transport is trivial.',
+  note:'Because a year of fuel fits on a few trucks, nuclear siting is driven not by fuel but by cooling water, geology, and distance from people.',
+  groups:{
+   'Water':[ '<b>Very large, assured cooling water</b> — coast or major river.'],
+   'Environment & safety':[ '<b>Remote from dense population</b> with an emergency exclusion zone.',
+     'Radioactive waste storage / disposal provision.',
+     'Strict regulatory siting approval process.'],
+   'Land & geology':[ '<b>Geologically stable, seismically safe bedrock.</b>',
+     'Ample land for plant, safety zones and expansion.'],
+   'Resource':[ 'Fuel transport is a minor factor — mine proximity NOT required.']
+  }},
+ {id:'diesel', name:'Diesel', css:'--diesel',
+  fact:'The small, standby and island-grid workhorse.',
+  note:'Diesel sets go where big plants cannot: small loads, emergency standby, and remote or island sites reachable by fuel tanker.',
+  groups:{
+   'Resource':[ 'Fuel storage tanks and reliable road / tanker delivery logistics.'],
+   'Land & geology':[ '<b>Very small land and water needs.</b>'],
+   'Grid & load':[ '<b>Right at the load</b> — small towns, industries, hospitals, islands.',
+     'Best for standby / emergency and remote off-grid supply.'],
+   'Environment & safety':[ 'Noise and exhaust require a buffer near residential areas.']
+  }},
+ {id:'solar', name:'Solar (PV)', css:'--solar',
+  fact:'Resource measured in kWh/m²/day of irradiance.',
+  note:'Solar farms chase sunshine and cheap flat land; since panels make no noise and no emissions, the constraints are area, irradiance and grid access.',
+  groups:{
+   'Resource':[ '<b>High annual solar irradiance</b> (kWh/m²/day) with few cloudy days.',
+     'Minimal shading and low dust / soiling levels.'],
+   'Land & geology':[ '<b>Large, flat, low-cost land</b> — deserts and barren tracts.',
+     'Land unsuitable for agriculture preferred.'],
+   'Water':[ 'Modest water for periodic panel cleaning.'],
+   'Grid & load':[ 'Grid connection / evacuation capacity available.']
+  }},
+ {id:'wind', name:'Wind', css:'--wind',
+  fact:'Power ∝ v³ — small wind-speed gains matter enormously.',
+  note:'Because output rises with the cube of wind speed, siting starts with a measured wind resource; everything else is secondary.',
+  groups:{
+   'Resource':[ '<b>High, consistent wind — typically &gt; 5–6 m/s at hub height</b>, proven by a wind resource assessment.',
+     'Open terrain, coasts, ridges or offshore with low turbulence and few obstacles.'],
+   'Land & geology':[ 'Land with adequate spacing between turbines (wake losses).'],
+   'Environment & safety':[ 'Setback from habitation for noise and shadow flicker.',
+     'Avoidance of bird migration routes.'],
+   'Grid & load':[ 'Grid access for a variable, resource-tied location.']
+  }}
+];
 
-                    <!-- Site C: River/Plains -->
-                    <g class="site-marker" id="site-C" transform="translate(450, 300)" onclick="selectSite('C')">
-                        <circle class="outer" r="12" cx="0" cy="0" />
-                        <circle class="inner" r="6" cx="0" cy="0" />
-                        <text y="-20" x="0" text-anchor="middle">C</text>
-                        <circle class="hitbox" r="30" cx="0" cy="-10" />
-                    </g>
+/* Comparison factors: [rating, one-line reason] per plant id */
+const FACTORS = [
+ {f:'Water need', d:{hydro:['IS THE RESOURCE','Water itself drives the turbines.'],thermal:['VERY HIGH','Condenser cooling + boiler feed.'],gas:['LOW','No steam cycle to cool.'],combined:['MODERATE','Steam bottoming cycle only.'],nuclear:['VERY HIGH','Largest condenser cooling duty.'],diesel:['LOW','Engine jacket cooling only.'],solar:['LOW','Panel cleaning only.'],wind:['NONE','No cooling required.']}},
+ {f:'Land need', d:{hydro:['VERY HIGH','Reservoir submerges large areas.'],thermal:['HIGH','Coal yard + ash ponds.'],gas:['LOW','Compact machine hall.'],combined:['MODERATE','GT + HRSG + steam turbine.'],nuclear:['HIGH','Plant + exclusion zone.'],diesel:['VERY LOW','A building suffices.'],solar:['VERY HIGH','Low power density per m².'],wind:['HIGH','Turbine spacing (land dual-use).']}},
+ {f:'Near load center?', d:{hydro:['NO','Tied to head & river site.'],thermal:['FLEXIBLE','Trade fuel vs power transport.'],gas:['YES','Ideal urban peaker.'],combined:['YES','Sited for the load.'],nuclear:['NO','Kept away from population.'],diesel:['YES','Sits at the load itself.'],solar:['RESOURCE-TIED','Goes where the sun is.'],wind:['RESOURCE-TIED','Goes where the wind is.']}},
+ {f:'Fuel transport', d:{hydro:['NONE','Fuel is the river.'],thermal:['HEAVY','Trainloads of coal daily.'],gas:['PIPELINE','Continuous gas supply.'],combined:['PIPELINE','Continuous gas supply.'],nuclear:['MINOR','Tiny fuel mass per year.'],diesel:['ROAD / TANKER','Periodic fuel deliveries.'],solar:['NONE','No fuel at all.'],wind:['NONE','No fuel at all.']}},
+ {f:'Distance from towns', d:{hydro:['MODERATE','Dam-break risk downstream.'],thermal:['AWAY / DOWNWIND','Stack emissions & ash.'],gas:['CAN BE CLOSE','Low emissions, small site.'],combined:['CAN BE CLOSE','Clean-burning gas.'],nuclear:['FAR + EXCLUSION ZONE','Radiological safety.'],diesel:['NOISE BUFFER','Engine noise & exhaust.'],solar:['FLEXIBLE','Silent, no emissions.'],wind:['SETBACK','Noise & shadow flicker.']}},
+ {f:'Geology / foundation', d:{hydro:['CRITICAL','Impervious rock for the dam.'],thermal:['STRONG SOIL','Heavy TG foundations.'],gas:['ORDINARY','Light machinery.'],combined:['GOOD','Steam plant foundations.'],nuclear:['SEISMICALLY CRITICAL','Stable bedrock mandatory.'],diesel:['ORDINARY','Small foundations.'],solar:['ORDINARY','Light racking only.'],wind:['GOOD','Tall tower foundations.']}}
+];
 
-                    <!-- Site D: Mountains -->
-                    <g class="site-marker" id="site-D" transform="translate(620, 180)" onclick="selectSite('D')">
-                        <circle class="outer" r="12" cx="0" cy="0" />
-                        <circle class="inner" r="6" cx="0" cy="0" />
-                        <text y="-20" x="0" text-anchor="middle">D</text>
-                        <circle class="hitbox" r="30" cx="0" cy="-10" />
-                    </g>
+const QUIZ = [
+ {q:'Which plant type legally requires an emergency exclusion zone around it?',
+  o:['Combined cycle','Nuclear','Thermal (coal)','Wind'],a:1,
+  e:'Nuclear plants must sit away from dense population with an exclusion zone, on seismically stable bedrock, with large assured cooling water.'},
+ {q:'"High head and large reliable discharge" is the fundamental siting requirement for which plant?',
+  o:['Diesel','Gas turbine','Hydroelectric','Solar PV'],a:2,
+  e:'Hydro power ∝ ρgQH — the product of discharge (Q) and head (H) is the resource, so the site is fixed by nature.'},
+ {q:'Ash disposal facilities are a major site-selection concern for:',
+  o:['Coal-fired thermal plants','Gas turbines','Wind farms','Nuclear plants'],a:0,
+  e:'Coal combustion leaves large ash volumes, so thermal plants need land for ash ponds and disposal — plus downwind location relative to towns.'},
+ {q:'A city needs fast-starting peak-load capacity on a small plot with little water. Best choice?',
+  o:['Hydroelectric','Nuclear','Coal thermal','Gas turbine'],a:3,
+  e:'Open-cycle gas turbines need minimal land and water and start in minutes, so they can sit right at the urban load center for peaking duty.'},
+ {q:'A commercially viable wind site typically needs an average wind speed of about:',
+  o:['1–2 m/s at ground level','5–6 m/s or more at hub height','15–20 m/s continuously','Wind speed does not matter'],a:1,
+  e:'Since power ∝ v³, sites are screened for roughly 5–6 m/s+ at hub height, verified by a formal wind resource assessment.'},
+ {q:'Why does a nuclear plant NOT need to be near its fuel source?',
+  o:['It uses no fuel','Uranium is found everywhere','Its fuel has extremely high energy density, so transport is trivial','Fuel is delivered by pipeline'],a:2,
+  e:'A year of nuclear fuel is only a few truckloads (~10⁶ × the energy density of coal), so fuel logistics barely influence siting.'},
+ {q:'Ideal land for a large solar PV farm is:',
+  o:['Fertile irrigated farmland','Flat, cheap, high-irradiance barren land','Dense forest','Steep river gorge'],a:1,
+  e:'Solar siting seeks high irradiance (kWh/m²/day), minimal shading/dust, and large flat low-cost land — preferably unsuitable for agriculture.'},
+ {q:'A combined-cycle plant needs moderate cooling water because:',
+  o:['Gas turbines need water injection','Its steam bottoming cycle has a condenser','Fuel must be washed','Solar panels need cleaning'],a:1,
+  e:'The heat-recovery steam cycle added to the gas turbine exhaust requires condenser cooling — less than a full thermal plant, more than an open-cycle GT.'},
+ {q:'Diesel power plants are best suited for:',
+  o:['National base-load supply','Small loads, standby duty, and remote or island sites','Replacing hydro dams','Large industrial base load'],a:1,
+  e:'Tiny land/water needs and easy fuel delivery make diesel ideal at the load itself — hospitals, islands, and emergency standby.'},
+ {q:'Which criterion applies to ALL power plant types?',
+  o:['Proximity to coal mines','High solar irradiance','Proximity to load center to reduce transmission cost and losses','An exclusion zone'],a:2,
+  e:'General criteria — load-center proximity, land, transport, water, safety distance, clearances, expansion room, labour and grid access — apply to every technology.'}
+];
 
-                    <!-- Site E: Deep Plains -->
-                    <g class="site-marker" id="site-E" transform="translate(700, 350)" onclick="selectSite('E')">
-                        <circle class="outer" r="12" cx="0" cy="0" />
-                        <circle class="inner" r="6" cx="0" cy="0" />
-                        <text y="-20" x="0" text-anchor="middle">E</text>
-                        <circle class="hitbox" r="30" cx="0" cy="-10" />
-                    </g>
+/* ---------------- Explore ---------------- */
+const busbar=document.getElementById('busbar');
+PLANTS.forEach((p,i)=>{
+  const b=document.createElement('button');
+  b.className='node';b.style.setProperty('--acc',`var(${p.css})`);
+  b.setAttribute('aria-pressed', i===0?'true':'false');
+  b.innerHTML=`<span class="icon"><svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[p.id]}</svg></span><span class="lbl">${p.name}</span>`;
+  b.onclick=()=>selectPlant(p.id);
+  busbar.appendChild(b);
+});
+function selectPlant(id){
+  [...busbar.children].forEach((n,i)=>n.setAttribute('aria-pressed', PLANTS[i].id===id?'true':'false'));
+  const p=PLANTS.find(x=>x.id===id);
+  const panel=document.getElementById('plantPanel');
+  panel.style.setProperty('--acc',`var(${p.css})`);
+  let g='';
+  for(const [name,items] of Object.entries(p.groups)){
+    g+=`<div class="crit-group"><h3>${name}</h3><ul>${items.map(t=>`<li>${t}</li>`).join('')}</ul></div>`;
+  }
+  panel.innerHTML=`<div class="plant-head"><span class="chip">${p.name}</span><span class="keyfact">${p.fact}</span></div>
+    <p class="plant-note">${p.note}</p><div class="crit-groups">${g}</div>`;
+}
+selectPlant('hydro');
 
-                </svg>
-                <div id="tooltip"></div>
-            </div>
-        </section>
+/* ---------------- Compare ---------------- */
+let picked=['hydro','nuclear'];
+const pickrow=document.getElementById('pickrow');
+PLANTS.forEach(p=>{
+  const b=document.createElement('button');
+  b.className='pick';b.style.setProperty('--acc',`var(${p.css})`);
+  b.textContent=p.name;b.dataset.id=p.id;
+  b.setAttribute('aria-pressed', picked.includes(p.id)?'true':'false');
+  b.onclick=()=>{
+    if(picked.includes(p.id)){ if(picked.length>2) picked=picked.filter(x=>x!==p.id); }
+    else { picked.push(p.id); if(picked.length>3) picked.shift(); }
+    [...pickrow.children].forEach(x=>x.setAttribute('aria-pressed',picked.includes(x.dataset.id)?'true':'false'));
+    renderCmp();
+  };
+  pickrow.appendChild(b);
+});
+function renderCmp(){
+  const sel=picked.map(id=>PLANTS.find(p=>p.id===id));
+  let h='<table class="cmp"><thead><tr><th class="factor">Factor</th>';
+  sel.forEach(p=>h+=`<th class="plant" style="--acc:var(${p.css})">${p.name}</th>`);
+  h+='</tr></thead><tbody>';
+  FACTORS.forEach(row=>{
+    h+=`<tr><th class="factor">${row.f}</th>`;
+    sel.forEach(p=>{const [r,w]=row.d[p.id];h+=`<td><span class="rate">${r}</span><span class="why">${w}</span></td>`;});
+    h+='</tr>';
+  });
+  h+='</tbody></table>';
+  document.getElementById('cmpTable').innerHTML=h;
+}
+renderCmp();
 
-        <!-- RIGHT PANEL: ANALYSIS -->
-        <section class="panel">
-            <div class="panel-header">3. Sustainability Impact Analysis</div>
-            <div class="panel-content">
-                
-                <!-- Radar Chart -->
-                <div class="chart-wrapper">
-                    <canvas id="radarChart" width="250" height="200"></canvas>
-                </div>
+/* ---------------- Quiz ---------------- */
+let qi=0,score=0,answered=false;
+function renderQ(){
+  answered=false;
+  const q=QUIZ[qi];
+  document.getElementById('qcount').textContent=`Question ${qi+1} / ${QUIZ.length} · Score ${score}`;
+  document.getElementById('qbar').style.width=(qi/QUIZ.length*100)+'%';
+  document.getElementById('qtext').textContent=q.q;
+  const ex=document.getElementById('qexplain');ex.classList.remove('show');ex.textContent='';
+  const box=document.getElementById('qopts');box.innerHTML='';
+  q.o.forEach((opt,i)=>{
+    const b=document.createElement('button');b.className='opt';b.textContent=opt;
+    b.onclick=()=>answer(i,b);box.appendChild(b);
+  });
+  document.getElementById('qnext').disabled=true;
+  document.getElementById('qnext').textContent = qi===QUIZ.length-1 ? 'See result' : 'Next question';
+}
+function answer(i,btn){
+  if(answered)return;answered=true;
+  const q=QUIZ[qi];
+  const opts=[...document.getElementById('qopts').children];
+  opts.forEach(o=>o.disabled=true);
+  opts[q.a].classList.add('correct');
+  if(i===q.a){score++;}else{btn.classList.add('wrong');}
+  document.getElementById('qcount').textContent=`Question ${qi+1} / ${QUIZ.length} · Score ${score}`;
+  const ex=document.getElementById('qexplain');ex.textContent=q.e;ex.classList.add('show');
+  document.getElementById('qnext').disabled=false;
+}
+function nextQ(){
+  if(qi<QUIZ.length-1){qi++;renderQ();window.scrollTo({top:document.getElementById('mode-quiz').offsetTop-10,behavior:'smooth'});}
+  else{
+    document.getElementById('quizBody').classList.add('hide');
+    document.getElementById('quizDone').classList.remove('hide');
+    document.getElementById('scoreNum').textContent=`${score} / ${QUIZ.length}`;
+    const pct=score/QUIZ.length;
+    document.getElementById('scoreMsg').textContent =
+      pct===1?'Perfect — you could chair a siting committee.':
+      pct>=0.7?'Strong grasp of the siting criteria. Review the ones you missed.':
+      pct>=0.4?'Good start — revisit the Explore tab and try again.':
+      'Head back to Explore mode and study each plant panel, then retry.';
+  }
+}
+function restartQuiz(){
+  qi=0;score=0;
+  document.getElementById('quizDone').classList.add('hide');
+  document.getElementById('quizBody').classList.remove('hide');
+  renderQ();
+}
+renderQ();
 
-                <h3 style="font-size: 1rem; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Pillar Breakdown</h3>
-
-                <!-- Social Pillar -->
-                <div class="pillar-card pillar-social">
-                    <div class="pillar-title">
-                        <span>Social</span>
-                        <span id="score-soc">--/100</span>
-                    </div>
-                    <div class="pillar-metrics" id="text-soc">Select technology and site.</div>
-                    <div class="sdg-container" id="sdg-soc">
-                        <!-- SDGs injected here -->
-                    </div>
-                </div>
-
-                <!-- Environmental Pillar -->
-                <div class="pillar-card pillar-env">
-                    <div class="pillar-title">
-                        <span>Environmental</span>
-                        <span id="score-env">--/100</span>
-                    </div>
-                    <div class="pillar-metrics" id="text-env">Select technology and site.</div>
-                    <div class="sdg-container" id="sdg-env"></div>
-                </div>
-
-                <!-- Economic Pillar -->
-                <div class="pillar-card pillar-econ">
-                    <div class="pillar-title">
-                        <span>Economic</span>
-                        <span id="score-econ">--/100</span>
-                    </div>
-                    <div class="pillar-metrics" id="text-econ">Select technology and site.</div>
-                    <div class="sdg-container" id="sdg-econ"></div>
-                </div>
-
-                <div id="decision-warning" class="status-message"></div>
-
-            </div>
-        </section>
-    </main>
-
-    <script>
-        // --- DATA MODEL ---
-
-        // Site Definitions
-        const sites = {
-            'A': { name: "Coastal Zone", type: "coast", features: ["Water Access", "Port Logistics"], desc: "High water availability. Good for fuel transport. Vulnerable to sea-level rise." },
-            'B': { name: "Urban Outskirts", type: "urban", features: ["High Demand", "Dense Pop."], desc: "Close to load center. Very sensitive to pollution. High land cost." },
-            'C': { name: "River Bank (Plains)", type: "river", features: ["Fresh Water", "Agriculture"], desc: "Moderate water access. Agricultural land. Flood risk." },
-            'D': { name: "Mountain Valley", type: "mountain", features: ["Elevation", "Remote"], desc: "High head for hydro. Difficult construction logistics. Eco-sensitive." },
-            'E': { name: "Rural Plains", type: "plains", features: ["Open Land", "Sun Exposure"], desc: "Abundant land. Low cost. Far from grid connection." }
-        };
-
-        // Plant Technology Definitions
-        // Base scores (0-100) before site modifiers
-        const plants = {
-            'coal': { 
-                name: "Coal Thermal", 
-                base: { social: 40, env: 20, econ: 85 },
-                needs: ['water'],
-                bad_for: ['urban'],
-                desc: "High reliability, low cost fuel. Heavy carbon emissions and air pollutants." 
-            },
-            'gas': { 
-                name: "CCGT (Gas)", 
-                base: { social: 60, env: 50, econ: 75 },
-                needs: [],
-                bad_for: [],
-                desc: "Cleaner than coal. Efficient. Requires gas pipeline infrastructure." 
-            },
-            'nuclear': { 
-                name: "Nuclear", 
-                base: { social: 50, env: 85, econ: 60 },
-                needs: ['water'],
-                bad_for: ['urban'], // Safety regs
-                desc: "Zero operational carbon. High water use. Waste disposal and public perception issues." 
-            },
-            'hydro': { 
-                name: "Hydropower", 
-                base: { social: 60, env: 70, econ: 80 },
-                needs: ['elevation', 'river'], // Special logic
-                bad_for: [],
-                desc: "Renewable baseload. Requires specific geography. Can displace populations." 
-            },
-            'wind': { 
-                name: "Wind Farm", 
-                base: { social: 75, env: 90, econ: 65 },
-                needs: ['space'],
-                bad_for: ['urban'], // Noise/Shadow flicker
-                desc: "Intermittent renewable. Needs open space. Visual/noise impact." 
-            },
-            'solar': { 
-                name: "Solar PV", 
-                base: { social: 80, env: 95, econ: 60 },
-                needs: ['space'],
-                bad_for: ['mountain'], // Shadowing
-                desc: "Modular renewable. Land intensive. Generation matches daytime peak." 
-            }
-        };
-
-        // SDG Data
-        const sdgs = {
-            3: { color: "#4C9F38", label: "Good Health" },
-            6: { color: "#26BDE2", label: "Clean Water" },
-            7: { color: "#FCC30B", label: "Clean Energy" },
-            8: { color: "#A21942", label: "Decent Work" },
-            9: { color: "#FD6925", label: "Infrastructure" },
-            11: { color: "#FD9D24", label: "Cities" },
-            12: { color: "#BF8B2E", label: "Consumption" },
-            13: { color: "#3F7E44", label: "Climate Action" },
-            14: { color: "#0A97D9", label: "Life Below Water" },
-            15: { color: "#56C02B", label: "Life on Land" }
-        };
-
-        // Mappings
-        const plantSdgMap = {
-            'coal': { soc: [7,8], env: [], econ: [8,9] },
-            'gas': { soc: [7,8], env: [], econ: [9] },
-            'nuclear': { soc: [7], env: [13], econ: [9] },
-            'hydro': { soc: [7, 11], env: [6, 13], econ: [7] },
-            'wind': { soc: [7, 3], env: [13, 15], econ: [7, 12] },
-            'solar': { soc: [7, 3], env: [13], econ: [7, 12] }
-        };
-
-        // --- STATE ---
-        let state = {
-            plant: null,
-            site: null
-        };
-
-        // --- DOM ELEMENTS ---
-        const mapSvg = document.getElementById('game-map');
-        const tooltip = document.getElementById('tooltip');
-        const mapContainer = document.getElementById('map-container');
-        const canvas = document.getElementById('radarChart');
-        const ctx = canvas.getContext('2d');
-
-        // --- INTERACTION FUNCTIONS ---
-
-        function selectPlant(type) {
-            state.plant = type;
-            
-            // UI Updates
-            document.querySelectorAll('.btn-tech').forEach(b => b.classList.remove('active'));
-            document.getElementById(`btn-${type}`).classList.add('active');
-            
-            calculateAndRender();
-        }
-
-        function selectSite(siteId) {
-            state.site = siteId;
-            
-            // UI Updates
-            document.querySelectorAll('.site-marker').forEach(m => m.classList.remove('selected'));
-            document.getElementById(`site-${siteId}`).classList.add('selected');
-            
-            calculateAndRender();
-        }
-
-        // --- CORE LOGIC ENGINE ---
-
-        function calculateAndRender() {
-            if (!state.plant || !state.site) return;
-
-            const P = plants[state.plant];
-            const S = sites[state.site];
-            
-            let scores = { ...P.base };
-            let messages = { social: [], env: [], econ: [] }; 
-            let warning = null;
-            let feasible = true;
-
-            // 1. Feasibility Checks (Hard Constraints)
-            
-            // Hydro Check
-            if (state.plant === 'hydro') {
-                if (S.type !== 'river' && S.type !== 'mountain') {
-                    feasible = false;
-                    warning = "CRITICAL: Hydropower requires a river or elevation for a dam.";
-                } else if (S.type === 'river') {
-                    // Run-of-river
-                    scores.econ -= 10; // Lower yield
-                    messages.econ.push("Run-of-river design (Lower capacity)");
-                } else {
-                    // Mountain Dam
-                    scores.env -= 20; // Ecosystem flood
-                    scores.econ += 10; // High head
-                    messages.env.push("Reservoir floods ecosystem");
-                }
-            }
-
-            // Cooling Water Check (Thermal/Nuclear)
-            if (['coal', 'nuclear'].includes(state.plant)) {
-                if (S.type !== 'coast' && S.type !== 'river') {
-                    scores.econ -= 40; // Expensive cooling towers/piping
-                    scores.env -= 10; // Efficiency loss
-                    messages.econ.push("Lack of natural cooling water increases CapEx drastically.");
-                }
-            }
-
-            // Wind/Solar Land Check
-            if (['wind', 'solar'].includes(state.plant)) {
-                if (S.type === 'urban') {
-                    scores.econ -= 30; // Land cost
-                    scores.social -= 20; // NIMBY
-                    messages.econ.push("Extremely high urban land cost.");
-                } else if (S.type === 'plains') {
-                    scores.econ += 10;
-                    messages.econ.push("Ideal land availability.");
-                }
-            }
-
-            // 2. Pillar Adjustments (Soft Constraints)
-
-            // Pollution in Cities
-            if (['coal', 'gas'].includes(state.plant) && S.type === 'urban') {
-                scores.social -= 40;
-                scores.env -= 10;
-                messages.social.push("Severe public health impact (Air Quality).");
-                warning = "WARNING: Siting thermal plants in cities violates SDG 3 & 11.";
-            }
-
-            // Logistics (Coal needs port/rail)
-            if (state.plant === 'coal') {
-                if (S.type === 'coast') {
-                    scores.econ += 10;
-                    messages.econ.push("Easy coal import via port.");
-                } else if (S.type === 'mountain') {
-                    scores.econ -= 20;
-                    messages.econ.push("Difficult fuel transport logistics.");
-                }
-            }
-
-            // Distance to Grid
-            if (S.type === 'mountain' || S.type === 'plains') {
-                if (S.name === 'Rural Plains') { // Site E
-                   scores.econ -= 15;
-                   messages.econ.push("High transmission connection costs.");
-                }
-            }
-
-            // Clamping scores 0-100
-            ['social', 'env', 'econ'].forEach(k => {
-                if (scores[k] > 100) scores[k] = 100;
-                if (scores[k] < 0) scores[k] = 0;
-            });
-
-            // 3. Render Output
-            renderScores(scores, messages);
-            renderChart(scores);
-            renderSDGs(scores);
-            
-            // Warning Box
-            const warnBox = document.getElementById('decision-warning');
-            if (!feasible) {
-                warnBox.className = "status-message error";
-                warnBox.innerHTML = `<strong>⛔ INFEASIBLE:</strong> ${warning}`;
-                warnBox.style.display = 'block';
-                // Zero out for visuals if impossible
-                renderChart({social:0, env:0, econ:0});
-            } else if (warning) {
-                warnBox.className = "status-message error"; // Actually just amber usually, but error style works for warning
-                warnBox.style.background = "#fff3cd"; warnBox.style.color="#856404"; warnBox.style.borderColor="#ffeeba";
-                warnBox.innerHTML = `<strong>⚠️ CAUTION:</strong> ${warning}`;
-                warnBox.style.display = 'block';
-            } else {
-                warnBox.className = "status-message success";
-                warnBox.innerHTML = `<strong>✅ FEASIBLE:</strong> Site appears technically suitable. Review trade-offs above.`;
-                warnBox.style.display = 'block';
-            }
-        }
-
-        function renderScores(scores, messages) {
-            // Social
-            document.getElementById('score-soc').innerText = Math.round(scores.social) + "/100";
-            document.getElementById('text-soc').innerHTML = messages.social.length ? messages.social.join("<br>") : "Standard social impact profile.";
-            
-            // Env
-            document.getElementById('score-env').innerText = Math.round(scores.env) + "/100";
-            document.getElementById('text-env').innerHTML = messages.env.length ? messages.env.join("<br>") : "Standard environmental profile.";
-            
-            // Econ
-            document.getElementById('score-econ').innerText = Math.round(scores.econ) + "/100";
-            document.getElementById('text-econ').innerHTML = messages.econ.length ? messages.econ.join("<br>") : "Standard economic profile.";
-        }
-
-        function renderSDGs(scores) {
-            // Helper to build badges
-            const buildBadge = (id) => `<div class="sdg-badge" style="background:${sdgs[id].color}" title="SDG ${id}: ${sdgs[id].label}">${id}</div>`;
-            
-            const mapping = plantSdgMap[state.plant];
-            
-            // Social
-            let socHTML = mapping.soc.map(buildBadge).join('');
-            if(scores.social < 40) socHTML += `<span style="font-size:10px; color:red; margin-left:5px;">(Risk to SDG 3)</span>`;
-            document.getElementById('sdg-soc').innerHTML = socHTML;
-
-            // Env
-            let envHTML = mapping.env.map(buildBadge).join('');
-            if(scores.env < 40) envHTML += `<span style="font-size:10px; color:red; margin-left:5px;">(Risk to SDG 13/15)</span>`;
-            document.getElementById('sdg-env').innerHTML = envHTML;
-
-            // Econ
-            let econHTML = mapping.econ.map(buildBadge).join('');
-            document.getElementById('sdg-econ').innerHTML = econHTML;
-        }
-
-        // --- CHARTING (CANVAS) ---
-        function renderChart(scores) {
-            // Clear
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2 + 10;
-            const radius = 80;
-
-            // Axis config: Social (Top), Env (Bottom Right), Econ (Bottom Left)
-            // Angles: -90 (Top), 30 (Right), 150 (Left)
-            const angles = [-Math.PI/2, Math.PI/6, 5*Math.PI/6];
-            
-            // Draw Web
-            ctx.strokeStyle = "#ddd";
-            ctx.lineWidth = 1;
-            
-            // Concentric circles
-            [0.25, 0.5, 0.75, 1].forEach(scale => {
-                ctx.beginPath();
-                angles.forEach((angle, i) => {
-                    const x = cx + Math.cos(angle) * radius * scale;
-                    const y = cy + Math.sin(angle) * radius * scale;
-                    if (i===0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-                });
-                ctx.closePath();
-                ctx.stroke();
-            });
-
-            // Draw Axes
-            ctx.beginPath();
-            angles.forEach(angle => {
-                ctx.moveTo(cx, cy);
-                ctx.lineTo(cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius);
-            });
-            ctx.stroke();
-
-            // Labels
-            ctx.font = "bold 11px sans-serif";
-            ctx.fillStyle = "#333";
-            ctx.textAlign = "center";
-            ctx.fillText("Social", cx, cy - radius - 10);
-            ctx.fillText("Environment", cx + Math.cos(angles[1])*radius + 20, cy + Math.sin(angles[1])*radius + 10);
-            ctx.fillText("Economic", cx + Math.cos(angles[2])*radius - 20, cy + Math.sin(angles[2])*radius + 10);
-
-            // Draw Data Area
-            const getPoint = (score, angleIdx) => {
-                const r = (score / 100) * radius;
-                return {
-                    x: cx + Math.cos(angles[angleIdx]) * r,
-                    y: cy + Math.sin(angles[angleIdx]) * r
-                };
-            };
-
-            const pSoc = getPoint(scores.social, 0);
-            const pEnv = getPoint(scores.env, 1);
-            const pEcon = getPoint(scores.econ, 2);
-
-            ctx.beginPath();
-            ctx.moveTo(pSoc.x, pSoc.y);
-            ctx.lineTo(pEnv.x, pEnv.y);
-            ctx.lineTo(pEcon.x, pEcon.y);
-            ctx.closePath();
-            
-            ctx.fillStyle = "rgba(44, 62, 80, 0.4)";
-            ctx.fill();
-            ctx.strokeStyle = "#2c3e50";
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            // Draw dots
-            [pSoc, pEnv, pEcon].forEach((p, i) => {
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, 4, 0, Math.PI*2);
-                ctx.fillStyle = i===0 ? "#3498db" : i===1 ? "#2ecc71" : "#f1c40f";
-                ctx.fill();
-            });
-        }
-
-        // --- MAP TOOLTIPS ---
-        document.querySelectorAll('.site-marker').forEach(marker => {
-            const siteId = marker.id.split('-')[1];
-
-            marker.addEventListener('mouseenter', (e) => {
-                const data = sites[siteId];
-                tooltip.innerHTML = `<strong>${data.name}</strong><br><span style="font-size:0.75em">${data.features.join(", ")}</span>`;
-                tooltip.style.display = 'block';
-                updateTooltip(e, siteId);
-            });
-            
-            marker.addEventListener('mousemove', (e) => {
-                updateTooltip(e, siteId);
-            });
-            
-            marker.addEventListener('mouseleave', () => {
-                tooltip.style.display = 'none';
-            });
-        });
-
-        function updateTooltip(e, id) {
-            // Get container position to calculate relative mouse position
-            const rect = mapContainer.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
-            
-            // Logic: A on right of cursor, others (B-E) on left
-            if (id === 'A') {
-                tooltip.style.left = (mouseX + 15) + 'px';
-                tooltip.style.top = (mouseY - 20) + 'px';
-            } else {
-                // To position on left, subtract tooltip width
-                const w = tooltip.offsetWidth;
-                tooltip.style.left = (mouseX - w - 15) + 'px';
-                tooltip.style.top = (mouseY - 20) + 'px';
-            }
-        }
-
-        // --- INIT ---
-        // Draw empty chart on load
-        renderChart({social:0, env:0, econ:0});
-
-    </script>
+/* ---------------- Modes ---------------- */
+function setMode(m){
+  ['explore','compare','quiz'].forEach(x=>{
+    document.getElementById('mode-'+x).classList.toggle('hide',x!==m);
+    document.getElementById('tab-'+x).setAttribute('aria-selected',String(x===m));
+  });
+}
+</script>
 </body>
 </html>
