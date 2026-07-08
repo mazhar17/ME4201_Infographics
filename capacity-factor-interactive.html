@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capacity Factor — How Hard Does the Plant Actually Work?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDF1F4; --grid-line:rgba(20,40,60,.055);
+    --ink:#14283C; --ink-soft:#43596E; --line:#C9D4DD; --panel:#FFFFFF;
+    --acc:#1F5F7A; --good:#2E7D5B; --warn:#C98A12; --bad:#BF3B2B; --violet:#6B4FA3; --blue:#2272B5;
+    --gen:#2E7D5B; --idle:#B9C6D0; --maint:#C98A12; --forced:#BF3B2B; --partload:#CFE4DA;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);
+    background-color:var(--paper);
+    background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);
+    background-size:28px 28px;line-height:1.55;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px 80px}
+  header{padding:40px 0 8px}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.14em;color:var(--ink-soft);text-transform:uppercase}
+  h1{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:clamp(1.6rem,4.4vw,2.5rem);line-height:1.12;margin:.35rem 0 .5rem}
+  .sub{color:var(--ink-soft);max-width:700px;font-size:.98rem}
+  h2{font-family:'Chakra Petch',sans-serif;font-size:1.2rem;font-weight:700}
+  h2 .formula{font-family:'IBM Plex Mono',monospace;font-size:.85rem;font-weight:500;color:var(--ink-soft)}
+  h3.mini{font-family:'Chakra Petch',sans-serif;font-size:1.02rem;margin:18px 0 8px}
+  .tag{font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+
+  .modes{display:flex;gap:8px;margin:26px 0 0;border-bottom:2px solid var(--ink);flex-wrap:wrap}
+  .mode-btn{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:.88rem;background:transparent;border:none;color:var(--ink-soft);padding:10px 14px;cursor:pointer;border-radius:8px 8px 0 0}
+  .mode-btn[aria-selected="true"]{background:var(--ink);color:#fff}
+  .mode-btn:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+  main{background:var(--panel);border:2px solid var(--ink);border-top:none;border-radius:0 0 14px 14px;padding:26px 20px 34px}
+  @media(min-width:760px){main{padding:34px 32px 44px}}
+  .hide{display:none!important}
+
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:16px 0}
+  .kpi{border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;background:#FAFCFD}
+  .kpi .v{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.3rem}
+  .kpi .v small{font-size:.75rem;font-weight:500;color:var(--ink-soft)}
+  .kpi .l{font-family:'IBM Plex Mono',monospace;font-size:.62rem;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-soft)}
+
+  .chart-box{border:2px solid var(--ink);border-radius:14px;padding:14px 10px 8px;background:#fff;position:relative}
+  svg.chart{width:100%;height:auto;display:block}
+  .legend{display:flex;flex-wrap:wrap;gap:10px 16px;padding:12px 6px 4px;font-size:.78rem}
+  .legend span{display:inline-flex;align-items:center;gap:6px;color:var(--ink-soft)}
+  .legend i{width:14px;height:14px;border-radius:4px;display:inline-block}
+
+  .def-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:16px}
+  @media(min-width:720px){.def-grid{grid-template-columns:1fr 1fr}}
+  .dcard{border:1.5px solid var(--line);border-radius:12px;padding:14px 16px;background:#FAFCFD}
+  .dcard h4{font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;color:var(--acc);margin-bottom:7px}
+  .dcard p{font-size:.88rem}
+  .dcard .big{font-family:'IBM Plex Mono',monospace;background:#fff;border:1.5px dashed var(--line);border-radius:8px;padding:10px 12px;margin:8px 0;font-size:.84rem;text-align:center}
+
+  .fac-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-top:16px}
+  .fcard{border:1.5px solid var(--line);border-left:5px solid var(--fc);border-radius:12px;padding:13px 15px;background:#FAFCFD}
+  .fcard h4{font-family:'Chakra Petch',sans-serif;font-size:.95rem;margin-bottom:4px}
+  .fcard .dir{font-family:'IBM Plex Mono',monospace;font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;color:var(--fc);margin-bottom:6px;display:block}
+  .fcard p{font-size:.84rem;color:var(--ink-soft)}
+
+  /* simulator */
+  .presets{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 16px}
+  .preset{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:.82rem;border:2px solid var(--pc);color:var(--pc);background:#fff;border-radius:999px;padding:7px 14px;cursor:pointer}
+  .preset[aria-pressed="true"]{background:var(--pc);color:#fff}
+  .preset:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+  .sim-flex{display:grid;grid-template-columns:1fr;gap:18px}
+  @media(min-width:860px){.sim-flex{grid-template-columns:3fr 2fr}}
+  .sliders{border:1.5px solid var(--line);border-radius:12px;padding:16px;background:#FAFCFD}
+  .sliders label{font-family:'IBM Plex Mono',monospace;font-size:.66rem;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-soft);display:flex;justify-content:space-between;margin-top:12px}
+  .sliders label:first-child{margin-top:0}
+  .sliders label output{color:var(--ink);font-weight:500}
+  input[type=range]{width:100%;margin:6px 0 2px;accent-color:var(--acc)}
+  .sim-note{font-size:.8rem;color:var(--ink-soft);margin-top:12px;border-top:1.5px dashed var(--line);padding-top:10px}
+
+  /* economics */
+  .econ-flex{display:grid;grid-template-columns:1fr;gap:20px;margin-top:16px}
+  @media(min-width:860px){.econ-flex{grid-template-columns:3fr 2fr}}
+  .lf-slider-box{border:1.5px solid var(--line);border-radius:12px;padding:16px;background:#FAFCFD}
+  .lf-slider-box label{font-family:'IBM Plex Mono',monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+  .cost-read{font-size:.92rem}
+  .cost-read b{font-family:'Chakra Petch',sans-serif;font-size:1.4rem;color:var(--acc)}
+  .cost-bars{margin-top:10px}
+  .cbar{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:.76rem;font-family:'IBM Plex Mono',monospace}
+  .cbar i{height:16px;border-radius:4px;display:block}
+  .ops-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:18px}
+  @media(min-width:720px){.ops-grid{grid-template-columns:1fr 1fr}}
+
+  /* quiz */
+  .quiz-meta{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:6px 0 16px}
+  .progress{flex:1;min-width:160px;height:10px;border:2px solid var(--ink);border-radius:999px;overflow:hidden;background:#fff}
+  .progress i{display:block;height:100%;background:var(--ink);width:0%;transition:width .25s ease}
+  .qcount{font-family:'IBM Plex Mono',monospace;font-size:.78rem;color:var(--ink-soft)}
+  .qtext{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:1.1rem;margin-bottom:14px;max-width:740px}
+  .opts{display:grid;gap:9px;max-width:740px}
+  .opt{text-align:left;border:2px solid var(--line);background:#fff;border-radius:10px;padding:11px 14px;font-size:.92rem;cursor:pointer;color:var(--ink);font-family:'IBM Plex Sans',sans-serif}
+  .opt:hover:not(:disabled){border-color:var(--ink)}
+  .opt.correct{border-color:var(--good);background:#EAF5EF}
+  .opt.wrong{border-color:var(--bad);background:#FBEDEA}
+  .opt:disabled{cursor:default}
+  .opt:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+  .explain{max-width:740px;margin-top:14px;border-left:4px solid var(--ink);background:#F2F6F9;padding:12px 14px;font-size:.88rem;border-radius:0 10px 10px 0;display:none}
+  .explain.show{display:block}
+  .btnrow{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+  .btn{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:.92rem;background:var(--ink);color:#fff;border:2px solid var(--ink);border-radius:9px;padding:10px 20px;cursor:pointer}
+  .btn.ghost{background:#fff;color:var(--ink)}
+  .btn:disabled{opacity:.4;cursor:default}
+  .btn:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+  .score-card{max-width:560px;border:2px solid var(--ink);border-radius:14px;padding:26px;text-align:center;margin:10px auto}
+  .score-num{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:3rem;line-height:1}
+  .score-msg{color:var(--ink-soft);margin:8px 0 18px}
+  footer{margin-top:26px;font-family:'IBM Plex Mono',monospace;font-size:.68rem;color:var(--ink-soft);text-align:center;letter-spacing:.04em}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">Power Plant Engineering · Module 07 · Bangladesh Perspective</p>
+  <h1>Capacity Factor: How Hard Does the Plant Actually Work?</h1>
+  <p class="sub">A power plant is a machine bought by the megawatt but paid back by the megawatt-hour. Capacity factor measures what fraction of a plant's theoretical maximum output it really delivers — and in Bangladesh, where installed capacity (~27–28 GW) sits far above the evening peak (~16 GW), low fleet capacity factor is a direct reason electricity costs what it does. Learn the concept, run a plant for a year yourself, and see the economics.</p>
+</header>
+
+<div class="modes" role="tablist" aria-label="Learning modes">
+  <button class="mode-btn" role="tab" id="tab-concept" aria-selected="true" onclick="setMode('concept')">1 · Concept</button>
+  <button class="mode-btn" role="tab" id="tab-factors" aria-selected="false" onclick="setMode('factors')">2 · Influencing Factors</button>
+  <button class="mode-btn" role="tab" id="tab-sim" aria-selected="false" onclick="setMode('sim')">3 · Run a Plant (Simulator)</button>
+  <button class="mode-btn" role="tab" id="tab-econ" aria-selected="false" onclick="setMode('econ')">4 · Utilization &amp; Economics</button>
+  <button class="mode-btn" role="tab" id="tab-quiz" aria-selected="false" onclick="setMode('quiz')">5 · Quiz</button>
+</div>
+
+<main>
+
+<!-- ============ 1. CONCEPT ============ -->
+<section id="mode-concept">
+  <h2>The definition <span class="formula">CF = actual energy ÷ (rated capacity × hours)</span></h2>
+  <p class="sub" style="margin:.4rem 0 0">Picture the plant's whole year as a rectangle: rated capacity tall, 8,760 hours wide. The energy it actually generates is the shaded area inside. <b>Capacity factor is simply the filled fraction of that rectangle.</b></p>
+
+  <div class="chart-box" style="margin-top:16px">
+    <svg class="chart" id="conceptChart" viewBox="0 0 760 300" role="img" aria-label="Rectangle representing rated capacity times 8760 hours, partially filled to show actual generation as the capacity factor"></svg>
+    <div class="legend">
+      <span><i style="background:var(--gen)"></i>Energy actually generated</span>
+      <span><i style="background:var(--maint)"></i>Planned maintenance</span>
+      <span><i style="background:var(--forced)"></i>Forced outage</span>
+      <span><i style="background:var(--idle)"></i>Available but idle / part-load gap</span>
+    </div>
+  </div>
+
+  <div class="def-grid">
+    <div class="dcard"><h4>Capacity factor (plant)</h4>
+      <div class="big">CF = E<sub>actual</sub> / (P<sub>rated</sub> × 8760 h)</div>
+      <p>Example: a 100 MW plant generating 350,400 MWh in a year → CF = 350,400 / 876,000 = <b>0.40</b>. It behaved like a 40 MW plant running flat out.</p></div>
+    <div class="dcard"><h4>Don't confuse it with load factor</h4>
+      <p><b>Load factor</b> describes the <em>demand</em> (average ÷ peak load — Module 06). <b>Capacity factor</b> describes the <em>plant</em>. A grid can have a decent load factor while individual plants sit idle — exactly Bangladesh's situation when gas-starved plants can't run.</p></div>
+    <div class="dcard"><h4>Related plant ratios</h4>
+      <p><b>Availability factor</b> = hours the plant <em>could</em> run ÷ total hours (outages excluded). <b>Utilization (use) factor</b> = energy ÷ (capacity × hours actually operated). A plant can be 95% available yet have a 12% capacity factor — nobody dispatched it.</p></div>
+    <div class="dcard"><h4>Typical values (illustrative)</h4>
+      <p>Nuclear ≈ 80–90% · large coal ≈ 60–75% · CCGT ≈ 40–60% · wind ≈ 25–35% · solar PV in Bangladesh ≈ 15–19% (the sun sets!) · HFO/diesel peakers ≈ 5–15%. Low CF is not always failure — for a peaker it is the <em>design intent</em>.</p></div>
+  </div>
+</section>
+
+<!-- ============ 2. FACTORS ============ -->
+<section id="mode-factors" class="hide">
+  <h2>What pushes capacity factor up or down?</h2>
+  <p class="sub" style="margin:.4rem 0 0">Some factors are inside the plant fence (availability, efficiency); the biggest ones are outside it (fuel, dispatch, demand, resource). Green raises CF; red drags it down.</p>
+  <div class="fac-grid">
+    <div class="fcard" style="--fc:var(--bad)"><span class="dir">▼ Lowers CF</span><h4>Fuel supply shortage</h4><p>The classic Bangladesh case: gas-fired plants sit idle or derated because gas allocation falls short. A perfectly healthy plant with no fuel has CF = 0.</p></div>
+    <div class="fcard" style="--fc:var(--bad)"><span class="dir">▼ Lowers CF</span><h4>System overcapacity</h4><p>When installed capacity (~27–28 GW) far exceeds the peak (~16 GW), the fleet-average CF is mathematically forced down — many plants must be idle at any moment.</p></div>
+    <div class="fcard" style="--fc:var(--bad)"><span class="dir">▼ Lowers CF</span><h4>Low merit-order position</h4><p>Expensive plants (HFO/diesel, open-cycle GT) are dispatched last, so they run only at the evening peak. High fuel cost per kWh → few operating hours.</p></div>
+    <div class="fcard" style="--fc:var(--bad)"><span class="dir">▼ Lowers CF</span><h4>Resource limits (solar, wind, hydro)</h4><p>Solar cannot exceed daylight; Bangladesh PV tops out around CF 15–19% however well maintained. Wind depends on wind speed; Kaptai hydro on reservoir inflow and season.</p></div>
+    <div class="fcard" style="--fc:var(--bad)"><span class="dir">▼ Lowers CF</span><h4>Outages — planned and forced</h4><p>Every maintenance day and every breakdown removes hours from the year. Poor maintenance culture converts a few planned days into many forced ones.</p></div>
+    <div class="fcard" style="--fc:var(--bad)"><span class="dir">▼ Lowers CF</span><h4>Peaky demand (low load factor)</h4><p>Module 06's lesson returns: a spiky load curve means lots of capacity exists only for a 3-hour evening peak — capacity that idles the other 21 hours.</p></div>
+    <div class="fcard" style="--fc:var(--good)"><span class="dir">▲ Raises CF</span><h4>High efficiency / low fuel cost</h4><p>A better heat rate moves the plant up the merit order, so the dispatcher calls it more hours per day. Efficiency buys operating hours.</p></div>
+    <div class="fcard" style="--fc:var(--good)"><span class="dir">▲ Raises CF</span><h4>Reliable fuel contracts &amp; logistics</h4><p>Firm gas allocation, LNG backup, adequate coal stockyards — fuel security converts installed MW into generated MWh.</p></div>
+    <div class="fcard" style="--fc:var(--good)"><span class="dir">▲ Raises CF</span><h4>Good maintenance &amp; availability</h4><p>Predictive maintenance, spares management and skilled O&amp;M crews shrink both planned and forced outage hours, expanding the runnable year.</p></div>
+    <div class="fcard" style="--fc:var(--good)"><span class="dir">▲ Raises CF</span><h4>Storage &amp; hybridization</h4><p>Batteries let a solar plant deliver stored energy after sunset, raising the energy sold per installed MW of the combined facility; flattening demand raises base-plant CF too.</p></div>
+    <div class="fcard" style="--fc:var(--good)"><span class="dir">▲ Raises CF</span><h4>Right-sized capacity planning</h4><p>Matching new capacity to realistic demand growth (and retiring obsolete plants) keeps the fleet busy instead of paying an ever-larger idle reserve.</p></div>
+    <div class="fcard" style="--fc:var(--good)"><span class="dir">▲ Raises CF</span><h4>Demand growth &amp; interconnection</h4><p>Growing industrial load, electrification, and cross-border trade give existing plants more hours to sell — more MWh from the same MW.</p></div>
+  </div>
+</section>
+
+<!-- ============ 3. SIMULATOR ============ -->
+<section id="mode-sim" class="hide">
+  <h2>Run a plant for a year</h2>
+  <p class="sub" style="margin:.4rem 0 0">Pick a plant, then decide its year with the sliders: how much maintenance, how often it breaks down, how many hours a day the dispatcher calls it, and how hard it runs when called. Watch where the 8,760 hours go — and what each kWh ends up costing.</p>
+
+  <div class="presets" id="presets"></div>
+  <div class="kpis" id="simKpis"></div>
+
+  <div class="sim-flex">
+    <div class="chart-box">
+      <svg class="chart" id="simChart" viewBox="0 0 760 320" role="img" aria-label="The plant year as a rectangle divided into generation, maintenance, forced outage and idle time"></svg>
+      <div class="legend">
+        <span><i style="background:var(--gen)"></i>Generating (energy = CF)</span>
+        <span><i style="background:var(--partload)"></i>Part-load gap (running below rated)</span>
+        <span><i style="background:var(--maint)"></i>Planned maintenance</span>
+        <span><i style="background:var(--forced)"></i>Forced outage</span>
+        <span><i style="background:var(--idle)"></i>Available but not dispatched</span>
+      </div>
+    </div>
+    <div class="sliders">
+      <label>Planned maintenance <output id="oMaint"></output></label>
+      <input type="range" id="sMaint" min="0" max="60" step="1">
+      <label>Forced outage rate <output id="oForced"></output></label>
+      <input type="range" id="sForced" min="0" max="15" step="0.5">
+      <label>Dispatched hours per day <output id="oDisp"></output></label>
+      <input type="range" id="sDisp" min="0" max="24" step="0.5">
+      <label>Average output when running <output id="oLoad"></output></label>
+      <input type="range" id="sLoad" min="20" max="100" step="1">
+      <p class="sim-note" id="simNote"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4. ECONOMICS ============ -->
+<section id="mode-econ" class="hide">
+  <h2>Utilization efficiency: fixed costs divided by fewer kWh</h2>
+  <p class="sub" style="margin:.4rem 0 0">The loan repayments, capacity payments, staff and insurance of a plant are owed whether it runs or not. Only its kWh can pay them. Slide the capacity factor and watch the fixed slice of each kWh balloon at low utilization.</p>
+
+  <div class="econ-flex">
+    <div class="chart-box">
+      <svg class="chart" id="econChart" viewBox="0 0 760 340" role="img" aria-label="Average generation cost per kWh versus capacity factor showing hyperbolic decline"></svg>
+      <div class="legend">
+        <span><i style="background:var(--violet)"></i>Fixed cost share of each kWh</span>
+        <span><i style="background:var(--warn)"></i>Variable (fuel) cost share</span>
+        <span><i style="background:var(--acc);height:4px;width:16px;border-radius:2px"></i>Total cost per kWh</span>
+      </div>
+    </div>
+    <div class="lf-slider-box">
+      <label>Drag the plant's capacity factor</label>
+      <input type="range" id="econSlider" min="5" max="95" step="1" value="45">
+      <p class="cost-read" id="econRead"></p>
+      <div class="cost-bars" id="econBars"></div>
+    </div>
+  </div>
+
+  <h3 class="mini">The same law, fleet-wide: typical capacity factors and what they do to cost</h3>
+  <div class="chart-box">
+    <svg class="chart" id="fleetChart" viewBox="0 0 760 340" role="img" aria-label="Bar chart of typical capacity factors by plant type with resulting fixed cost per kWh"></svg>
+    <div class="legend">
+      <span><i style="background:var(--gen)"></i>Typical capacity factor</span>
+      <span><i style="background:var(--violet)"></i>Resulting fixed cost carried by each kWh (illustrative)</span>
+    </div>
+  </div>
+
+  <h3 class="mini">Why Bangladesh feels this on every bill</h3>
+  <div class="ops-grid">
+    <div class="dcard"><h4>Capacity payments to idle plants</h4><p>Many independent power producers are paid a <b>capacity charge for being available</b>, even at zero generation. With installed capacity far above the peak and gas supply constrained, consumers effectively pay for megawatts that never become megawatt-hours — the purest cost of low utilization efficiency.</p></div>
+    <div class="dcard"><h4>Idle capital is expensive capital</h4><p>A plant financed at commercial interest must repay its loan from kWh sales (or capacity charges). At CF 15%, every kWh carries roughly <b>five times</b> the fixed cost it would carry at CF 75%. The machine doesn't get cheaper by resting.</p></div>
+    <div class="dcard"><h4>Utilization vs availability</h4><p>An efficient system needs both: plants that are <b>available</b> (well-maintained, fuelled) and a system that <b>uses</b> them (right-sized fleet, flat demand, good merit order). High availability with low dispatch is wasted readiness; high demand with poor availability is load-shedding.</p></div>
+    <div class="dcard"><h4>The virtuous loop with Module 06</h4><p>Raising the system <b>load factor</b> (flatter demand) raises the <b>capacity factor</b> of the fleet serving it — the same energy needs fewer installed MW, each working more hours. Flat curve → busy plants → fixed costs spread thin → <b>cheaper electricity per kWh</b>.</p></div>
+  </div>
+</section>
+
+<!-- ============ 5. QUIZ ============ -->
+<section id="mode-quiz" class="hide">
+  <h2>Check your understanding</h2>
+  <div id="quizBody">
+    <div class="quiz-meta">
+      <span class="qcount" id="qcount"></span>
+      <div class="progress" aria-hidden="true"><i id="qbar"></i></div>
+    </div>
+    <p class="qtext" id="qtext"></p>
+    <div class="opts" id="qopts"></div>
+    <div class="explain" id="qexplain"></div>
+    <div class="btnrow"><button class="btn" id="qnext" onclick="nextQ()" disabled>Next question</button></div>
+  </div>
+  <div id="quizDone" class="hide">
+    <div class="score-card">
+      <p class="tag">Result</p>
+      <p class="score-num" id="scoreNum"></p>
+      <p class="score-msg" id="scoreMsg"></p>
+      <button class="btn" onclick="restartQuiz()">Try again</button>
+      <button class="btn ghost" onclick="setMode('sim')">Back to the simulator</button>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer>BOUGHT BY THE MW · PAID BACK BY THE MWh · CAPACITY FACTOR IS THE RATIO OF THE TWO · FIGURES ILLUSTRATIVE</footer>
+</div>
+
+<script>
+/* ============ shared helpers ============ */
+const HOURS=8760;
+const fmt=n=>Math.round(n).toLocaleString();
+
+/* ============ 1. CONCEPT rectangle ============ */
+(function(){
+  const W=760,H=300,mL=58,mR=14,mT=30,mB=44;
+  const pw=W-mL-mR,ph=H-mT-mB;
+  /* example year: 30d maint, 4% forced, rest generating at 62% avg -> CF ~0.53 */
+  const maintH=30*24, forcedH=0.04*HOURS, opH=HOURS-maintH-forcedH, loading=0.62;
+  const segs=[
+    {h:opH,fill:'op'},{h:maintH,fill:'var(--maint)'},{h:forcedH,fill:'var(--forced)'}
+  ];
+  let s=`<rect x="${mL}" y="${mT}" width="${pw}" height="${ph}" fill="#F2F6F9" stroke="#14283C" stroke-width="2"/>`;
+  let x=mL;
+  segs.forEach(seg=>{
+    const w=pw*seg.h/HOURS;
+    if(seg.fill==='op'){
+      const gh=ph*loading;
+      s+=`<rect x="${x}" y="${mT+ph-gh}" width="${w}" height="${gh}" fill="var(--gen)"/>`;
+      s+=`<rect x="${x}" y="${mT}" width="${w}" height="${ph-gh}" fill="var(--idle)" fill-opacity=".45"/>`;
+      s+=`<text x="${x+w/2}" y="${mT+ph-gh/2+5}" text-anchor="middle" font-size="14" font-weight="700" fill="#fff" font-family="Chakra Petch">GENERATED ENERGY</text>`;
+    }else{
+      s+=`<rect x="${x}" y="${mT}" width="${w}" height="${ph}" fill="${seg.fill}" fill-opacity=".85"/>`;
+    }
+    x+=pw*seg.h/HOURS;
+  });
+  s+=`<text x="${mL-8}" y="${mT+10}" text-anchor="end" font-size="10" fill="#43596E" font-family="IBM Plex Mono">P rated</text>`;
+  s+=`<text x="${mL-8}" y="${mT+ph}" text-anchor="end" font-size="10" fill="#43596E" font-family="IBM Plex Mono">0</text>`;
+  s+=`<text x="${mL}" y="${H-16}" font-size="10" fill="#43596E" font-family="IBM Plex Mono">0 h</text>`;
+  s+=`<text x="${W-mR}" y="${H-16}" text-anchor="end" font-size="10" fill="#43596E" font-family="IBM Plex Mono">8,760 h</text>`;
+  const cf=opH*loading/HOURS;
+  s+=`<text x="${mL+6}" y="${mT-10}" font-size="12" font-weight="700" fill="#14283C" font-family="Chakra Petch">CF = green area ÷ whole rectangle = ${(cf*100).toFixed(0)}% in this example</text>`;
+  document.getElementById('conceptChart').innerHTML=s;
+})();
+
+/* ============ 3. SIMULATOR ============ */
+/* presets: [maint days, forced %, dispatch h/day, loading %, fixed BDT/kW-yr, var BDT/kWh, note] */
+const PRESETS=[
+ {id:'nuclear',name:'Nuclear',pc:'#6B4FA3',v:[30,3,24,95],cf:[40000,1.5],
+  note:'Base-load role: dispatched around the clock. Its CF is limited almost only by outages — which is why refuelling and maintenance planning dominate nuclear operations.'},
+ {id:'coal',name:'Coal (base)',pc:'#8C4A2F',v:[35,6,22,85],cf:[25000,4.5],
+  note:'High CF depends on coal logistics and boiler reliability. Try raising the forced outage rate — poor maintenance quickly erodes the economics.'},
+ {id:'ccgt',name:'Gas CCGT',pc:'#2E7D5B',v:[20,5,14,80],cf:[12000,6.5],
+  note:'Mid-merit: efficient, but in Bangladesh its dispatch hours are often set by GAS AVAILABILITY, not by demand. Slide "dispatched hours" down to 6 h to simulate a gas-starved plant.'},
+ {id:'hfo',name:'HFO / diesel peaker',pc:'#C2452A',v:[15,8,3,90],cf:[8000,14],
+  note:'Runs only at the evening peak. CF ~10% is the design intent — but note the cost per kWh. This is why peaker kWh are the most expensive on the grid.'},
+ {id:'solar',name:'Solar PV',pc:'#E3A008',v:[5,2,12,35],cf:[9000,0.2],
+  note:'"Dispatched hours" here means daylight, and "average output" reflects the sun\'s arc and weather — resource limits, not faults. Bangladesh PV settles near CF 15–19% no matter how good the O&M.'},
+ {id:'wind',name:'Wind',pc:'#1F8A8C',v:[8,3,24,32],cf:[12000,0.3],
+  note:'The turbine is "dispatched" whenever wind blows, but average output tracks the wind resource. Offshore or better sites raise the loading slider — and the CF.'}
+];
+let cur=0;
+const S={maint:document.getElementById('sMaint'),forced:document.getElementById('sForced'),
+         disp:document.getElementById('sDisp'),load:document.getElementById('sLoad')};
+const presetBox=document.getElementById('presets');
+PRESETS.forEach((p,i)=>{
+  const b=document.createElement('button');
+  b.className='preset';b.style.setProperty('--pc',p.pc);
+  b.textContent=p.name;b.setAttribute('aria-pressed',String(i===0));
+  b.onclick=()=>{cur=i;applyPreset();};
+  presetBox.appendChild(b);
+});
+function applyPreset(){
+  const p=PRESETS[cur];
+  [...presetBox.children].forEach((b,i)=>b.setAttribute('aria-pressed',String(i===cur)));
+  S.maint.value=p.v[0];S.forced.value=p.v[1];S.disp.value=p.v[2];S.load.value=p.v[3];
+  document.getElementById('simNote').textContent=p.note;
+  renderSim();
+}
+Object.values(S).forEach(inp=>inp.addEventListener('input',renderSim));
+function simCalc(){
+  const maintH=+S.maint.value*24;
+  const forcedH=+S.forced.value/100*HOURS;
+  const availH=Math.max(0,HOURS-maintH-forcedH);
+  const wantH=+S.disp.value*365;
+  const opH=Math.min(availH,wantH);
+  const idleH=availH-opH;
+  const loading=+S.load.value/100;
+  const cf=opH*loading/HOURS;
+  const af=availH/HOURS;
+  const p=PRESETS[cur];
+  const cost=cf>0.001? p.cf[0]/(HOURS*cf)+p.cf[1] : NaN;
+  return {maintH,forcedH,availH,opH,idleH,loading,cf,af,cost};
+}
+function renderSim(){
+  const r=simCalc(), p=PRESETS[cur];
+  document.getElementById('oMaint').textContent=S.maint.value+' days/yr';
+  document.getElementById('oForced').textContent=S.forced.value+' %';
+  document.getElementById('oDisp').textContent=S.disp.value+' h/day';
+  document.getElementById('oLoad').textContent=S.load.value+' % of rated';
+
+  /* KPIs */
+  const energy=r.cf*HOURS*100/1000; /* GWh per 100 MW installed */
+  document.getElementById('simKpis').innerHTML=`
+   <div class="kpi"><div class="v">${(r.cf*100).toFixed(1)}<small> %</small></div><div class="l">Capacity factor</div></div>
+   <div class="kpi"><div class="v">${(r.af*100).toFixed(1)}<small> %</small></div><div class="l">Availability factor</div></div>
+   <div class="kpi"><div class="v">${energy.toFixed(0)}<small> GWh</small></div><div class="l">Energy / 100 MW / yr</div></div>
+   <div class="kpi"><div class="v">${isNaN(r.cost)?'—':'৳ '+r.cost.toFixed(2)}</div><div class="l">Cost per kWh</div></div>`;
+
+  /* rectangle chart */
+  const W=760,H=320,mL=58,mR=14,mT=30,mB=44;
+  const pw=W-mL-mR,ph=H-mT-mB;
+  let s=`<rect x="${mL}" y="${mT}" width="${pw}" height="${ph}" fill="#F2F6F9" stroke="#14283C" stroke-width="2"/>`;
+  let x=mL;
+  const seg=(h,draw)=>{const w=pw*h/HOURS;if(w>0)draw(x,w);x+=w;};
+  /* operating segment first */
+  seg(r.opH,(x0,w)=>{
+    const gh=ph*r.loading;
+    s+=`<rect x="${x0}" y="${mT+ph-gh}" width="${w}" height="${gh}" fill="var(--gen)"/>`;
+    s+=`<rect x="${x0}" y="${mT}" width="${w}" height="${ph-gh}" fill="var(--partload)"/>`;
+    if(w>90)s+=`<text x="${x0+w/2}" y="${mT+ph-gh/2+5}" text-anchor="middle" font-size="13" font-weight="700" fill="#fff" font-family="Chakra Petch">GENERATING</text>`;
+  });
+  seg(r.idleH,(x0,w)=>{
+    s+=`<rect x="${x0}" y="${mT}" width="${w}" height="${ph}" fill="var(--idle)" fill-opacity=".6"/>`;
+    if(w>70)s+=`<text x="${x0+w/2}" y="${mT+ph/2+4}" text-anchor="middle" font-size="12" font-weight="600" fill="#43596E" font-family="Chakra Petch">IDLE</text>`;
+  });
+  seg(r.maintH,(x0,w)=>{
+    s+=`<rect x="${x0}" y="${mT}" width="${w}" height="${ph}" fill="var(--maint)" fill-opacity=".85"/>`;
+  });
+  seg(r.forcedH,(x0,w)=>{
+    s+=`<rect x="${x0}" y="${mT}" width="${w}" height="${ph}" fill="var(--forced)" fill-opacity=".85"/>`;
+  });
+  s+=`<text x="${mL-8}" y="${mT+10}" text-anchor="end" font-size="10" fill="#43596E" font-family="IBM Plex Mono">P rated</text>`;
+  s+=`<text x="${mL}" y="${H-16}" font-size="10" fill="#43596E" font-family="IBM Plex Mono">0 h</text>`;
+  s+=`<text x="${W-mR}" y="${H-16}" text-anchor="end" font-size="10" fill="#43596E" font-family="IBM Plex Mono">8,760 h</text>`;
+  s+=`<text x="${mL+6}" y="${mT-10}" font-size="12" font-weight="700" fill="#14283C" font-family="Chakra Petch">${p.name} — CF ${(r.cf*100).toFixed(1)}% = green area ÷ rectangle</text>`;
+  document.getElementById('simChart').innerHTML=s;
+}
+applyPreset();
+
+/* ============ 4. ECONOMICS ============ */
+const CF_FIX=20000, CF_VAR=5.0;  /* illustrative generic plant */
+const costAt=cf=>CF_FIX/(HOURS*cf)+CF_VAR;
+function renderEcon(){
+  const cf=+document.getElementById('econSlider').value/100;
+  const W=760,H=340,mL=58,mR=14,mT=16,mB=40;
+  const pw=W-mL-mR,ph=H-mT-mB;
+  const cfMin=0.05,cfMax=1.0,yMax=30;
+  const X=v=>mL+pw*(v-cfMin)/(cfMax-cfMin), Y=v=>mT+ph*(1-v/yMax);
+  let s='';
+  for(let v=0;v<=yMax;v+=5){
+    s+=`<line x1="${mL}" y1="${Y(v)}" x2="${W-mR}" y2="${Y(v)}" stroke="#DDE5EB"/>`;
+    s+=`<text x="${mL-8}" y="${Y(v)+4}" text-anchor="end" font-size="10" fill="#43596E" font-family="IBM Plex Mono">৳${v}</text>`;
+  }
+  for(let v=0.1;v<=1.001;v+=0.1){
+    s+=`<text x="${X(v)}" y="${H-12}" text-anchor="middle" font-size="10" fill="#43596E" font-family="IBM Plex Mono">${v.toFixed(1)}</text>`;
+  }
+  s+=`<text x="${W/2}" y="${H-1}" text-anchor="middle" font-size="10" fill="#43596E" font-family="IBM Plex Mono">CAPACITY FACTOR →</text>`;
+  s+=`<rect x="${mL}" y="${Y(CF_VAR)}" width="${pw}" height="${Y(0)-Y(CF_VAR)}" fill="var(--warn)" fill-opacity=".25"/>`;
+  let fa=`M ${X(cfMin)} ${Y(Math.min(costAt(cfMin),yMax))}`;
+  for(let v=cfMin;v<=cfMax+0.001;v+=0.01)fa+=` L ${X(v)} ${Y(Math.min(costAt(v),yMax))}`;
+  fa+=` L ${X(cfMax)} ${Y(CF_VAR)} L ${X(cfMin)} ${Y(CF_VAR)} Z`;
+  s+=`<path d="${fa}" fill="var(--violet)" fill-opacity=".22"/>`;
+  let d='';
+  for(let v=cfMin;v<=cfMax+0.001;v+=0.01){
+    d+=(d?' L':'M')+` ${X(v)} ${Y(Math.min(costAt(v),yMax))}`;
+  }
+  s+=`<path d="${d}" fill="none" stroke="var(--acc)" stroke-width="3"/>`;
+  const c=costAt(cf);
+  s+=`<line x1="${X(cf)}" y1="${mT}" x2="${X(cf)}" y2="${H-mB}" stroke="#14283C" stroke-dasharray="4 4"/>`;
+  s+=`<circle cx="${X(cf)}" cy="${Y(Math.min(c,yMax))}" r="7" fill="var(--acc)" stroke="#fff" stroke-width="2.5"/>`;
+  s+=`<text x="${X(cf)+(cf>0.75?-10:10)}" y="${Y(Math.min(c,yMax))-12}" text-anchor="${cf>0.75?'end':'start'}" font-size="12" font-weight="700" fill="#14283C" font-family="Chakra Petch">৳${c.toFixed(2)}/kWh @ CF ${cf.toFixed(2)}</text>`;
+  document.getElementById('econChart').innerHTML=s;
+
+  const fx=CF_FIX/(HOURS*cf);
+  document.getElementById('econRead').innerHTML=
+    `Generation cost <b>৳ ${c.toFixed(2)}</b> per kWh<br>
+     <span style="font-size:.8rem;color:var(--ink-soft)">Model: ৳${CF_FIX.toLocaleString()}/kW-yr fixed ÷ (8760 h × CF) + ৳${CF_VAR.toFixed(2)}/kWh fuel — illustrative.</span>`;
+  const maxW=200,scale=25;
+  document.getElementById('econBars').innerHTML=
+    `<div class="cbar"><i style="width:${Math.min(fx,scale)/scale*maxW}px;background:var(--violet)"></i>fixed ৳${fx.toFixed(2)}</div>
+     <div class="cbar"><i style="width:${CF_VAR/scale*maxW}px;background:var(--warn)"></i>fuel ৳${CF_VAR.toFixed(2)}</div>
+     <p style="font-size:.8rem;color:var(--ink-soft);margin-top:8px">${cf<0.2?'A plant this idle is mostly a loan with a chimney: nearly all of each kWh is repayment of capital that spends the year resting.':cf<0.55?'Utilization is improving — each extra operating hour dilutes the fixed cost across more kWh.':'A hard-working plant: fixed cost is a thin slice of each kWh. This is what utilization efficiency looks like.'}</p>`;
+}
+document.getElementById('econSlider').addEventListener('input',renderEcon);
+renderEcon();
+
+/* fleet comparison chart */
+(function(){
+  const data=[
+   {n:'Nuclear',cf:0.85,fix:40000,c:'#6B4FA3'},
+   {n:'Coal',cf:0.70,fix:25000,c:'#8C4A2F'},
+   {n:'CCGT',cf:0.50,fix:12000,c:'#2E7D5B'},
+   {n:'Wind',cf:0.30,fix:12000,c:'#1F8A8C'},
+   {n:'Solar PV',cf:0.17,fix:9000,c:'#E3A008'},
+   {n:'HFO peaker',cf:0.10,fix:8000,c:'#C2452A'}
+  ];
+  const W=760,H=340,mL=58,mR=14,mT=24,mB=56;
+  const pw=W-mL-mR,ph=H-mT-mB;
+  const n=data.length,bw=pw/n;
+  let s='';
+  for(let v=0;v<=1.001;v+=0.25){
+    s+=`<line x1="${mL}" y1="${mT+ph*(1-v)}" x2="${W-mR}" y2="${mT+ph*(1-v)}" stroke="#DDE5EB"/>`;
+    s+=`<text x="${mL-8}" y="${mT+ph*(1-v)+4}" text-anchor="end" font-size="10" fill="#43596E" font-family="IBM Plex Mono">${(v*100).toFixed(0)}%</text>`;
+  }
+  data.forEach((d,i)=>{
+    const x=mL+bw*i+bw*0.18, w=bw*0.42;
+    const h=ph*d.cf;
+    s+=`<rect x="${x}" y="${mT+ph-h}" width="${w}" height="${h}" rx="4" fill="${d.c}"/>`;
+    s+=`<text x="${x+w/2}" y="${mT+ph-h-8}" text-anchor="middle" font-size="11" font-weight="700" fill="#14283C" font-family="Chakra Petch">${(d.cf*100).toFixed(0)}%</text>`;
+    const fixkwh=d.fix/(HOURS*d.cf);
+    s+=`<text x="${mL+bw*i+bw/2}" y="${H-30}" text-anchor="middle" font-size="10.5" fill="#43596E" font-family="IBM Plex Sans">${d.n}</text>`;
+    s+=`<text x="${mL+bw*i+bw/2}" y="${H-14}" text-anchor="middle" font-size="10" font-weight="600" fill="var(--violet)" font-family="IBM Plex Mono">৳${fixkwh.toFixed(1)}/kWh fixed</text>`;
+  });
+  s+=`<text x="${mL}" y="${mT-8}" font-size="11" fill="#43596E" font-family="IBM Plex Mono">Same law for every technology: fixed ৳/kWh = (fixed ৳/kW-yr) ÷ (8760 × CF)</text>`;
+  document.getElementById('fleetChart').innerHTML=s;
+})();
+
+/* ============ 5. QUIZ ============ */
+const QUIZ=[
+ {q:'Capacity factor of a plant is defined as:',
+  o:['Peak load ÷ average load','Actual energy generated ÷ (rated capacity × total hours in the period)','Maximum demand ÷ connected load','Hours available ÷ total hours'],a:1,
+  e:'CF = E_actual / (P_rated × hours). The last option is the availability factor; the others are demand-side ratios.'},
+ {q:'A 100 MW plant generates 350,400 MWh in a year (8,760 h). Its capacity factor is:',
+  o:['0.35','0.40','0.50','0.62'],a:1,
+  e:'Maximum possible = 100 × 8760 = 876,000 MWh. CF = 350,400 / 876,000 = 0.40.'},
+ {q:'Which statement correctly separates load factor from capacity factor?',
+  o:['They are always equal','Load factor describes the demand curve; capacity factor describes an individual plant\'s utilization','Capacity factor applies only to solar plants','Load factor is measured in MW'],a:1,
+  e:'LF = average/peak of the DEMAND (Module 06). CF measures how much of a PLANT\'s potential output was actually produced.'},
+ {q:'A gas-fired plant in Bangladesh is fully maintained and available 95% of the year, yet its capacity factor is only 25%. The most likely explanation is:',
+  o:['Its turbine is broken','Fuel (gas) shortage or low dispatch — it is available but not run','Capacity factor cannot be below availability','Its rated capacity is wrong'],a:1,
+  e:'Availability ≠ utilization. A plant can stand ready all year, but without gas allocation or dispatch instructions it generates nothing — a defining problem of the Bangladesh fleet.'},
+ {q:'Solar PV in Bangladesh has a capacity factor of roughly 15–19% mainly because:',
+  o:['Panels are poorly manufactured','The sun shines only part of the day and irradiance varies — a resource limit, not a fault','Operators switch plants off','Grid voltage is too high'],a:1,
+  e:'Night hours and the sun\'s arc cap solar CF regardless of maintenance quality. Low CF here is physics, and it must be priced into solar economics.'},
+ {q:'If a plant\'s capacity factor rises from 20% to 60% (same fixed costs), the fixed cost carried by each kWh:',
+  o:['Triples','Stays the same','Falls to one-third','Becomes zero'],a:2,
+  e:'Fixed ৳/kWh = fixed ৳/(8760 × CF). Tripling CF divides the fixed slice of every kWh by three — the heart of utilization economics.'},
+ {q:'A very low capacity factor (~10%) is economically ACCEPTABLE for:',
+  o:['A nuclear plant','A peaking plant with low capital cost, built to run only a few hours daily','A base-load coal plant','Any plant, since CF does not affect cost'],a:1,
+  e:'Peakers trade high fuel cost for low capital cost precisely because they will rarely run. The same CF on a capital-heavy nuclear or coal plant would be ruinous.'},
+ {q:'Bangladesh\'s combination of ~27–28 GW installed capacity, a ~16 GW peak, and capacity payments means:',
+  o:['Electricity is free','Consumers effectively pay for idle plants, since capacity charges are owed even at zero generation','All plants run at 100% CF','No new plants can ever be built'],a:1,
+  e:'Overcapacity forces fleet CF down, while capacity charges keep the idle MW on the bill — the clearest national-scale lesson in utilization efficiency.'},
+ {q:'Which measure would raise the capacity factor of the existing Bangladeshi gas fleet most directly?',
+  o:['Painting the plants','Securing reliable gas/LNG supply so available plants can actually be dispatched','Adding more idle capacity','Reducing maintenance to zero'],a:1,
+  e:'Fuel security converts availability into generation. (Skipping maintenance backfires: forced outages rise and availability collapses.)'},
+ {q:'Which plant type typically achieves the HIGHEST capacity factor?',
+  o:['Solar PV','Open-cycle gas turbine peaker','Nuclear','Diesel'],a:2,
+  e:'Nuclear plants run near full output around the clock, stopping mainly for refuelling — CFs of 80–90% are typical, which their low fuel cost and base-load role demand.'}
+];
+let qi=0,score=0,answered=false;
+function renderQ(){
+  answered=false;
+  const q=QUIZ[qi];
+  document.getElementById('qcount').textContent=`Question ${qi+1} / ${QUIZ.length} · Score ${score}`;
+  document.getElementById('qbar').style.width=(qi/QUIZ.length*100)+'%';
+  document.getElementById('qtext').textContent=q.q;
+  const ex=document.getElementById('qexplain');ex.classList.remove('show');ex.textContent='';
+  const box=document.getElementById('qopts');box.innerHTML='';
+  q.o.forEach((opt,i)=>{
+    const b=document.createElement('button');b.className='opt';b.textContent=opt;
+    b.onclick=()=>answer(i,b);box.appendChild(b);
+  });
+  const nx=document.getElementById('qnext');
+  nx.disabled=true;nx.textContent=qi===QUIZ.length-1?'See result':'Next question';
+}
+function answer(i,btn){
+  if(answered)return;answered=true;
+  const q=QUIZ[qi];
+  const opts=[...document.getElementById('qopts').children];
+  opts.forEach(o=>o.disabled=true);
+  opts[q.a].classList.add('correct');
+  if(i===q.a)score++;else btn.classList.add('wrong');
+  document.getElementById('qcount').textContent=`Question ${qi+1} / ${QUIZ.length} · Score ${score}`;
+  const ex=document.getElementById('qexplain');ex.textContent=q.e;ex.classList.add('show');
+  document.getElementById('qnext').disabled=false;
+}
+function nextQ(){
+  if(qi<QUIZ.length-1){qi++;renderQ();}
+  else{
+    document.getElementById('quizBody').classList.add('hide');
+    document.getElementById('quizDone').classList.remove('hide');
+    document.getElementById('scoreNum').textContent=`${score} / ${QUIZ.length}`;
+    const pct=score/QUIZ.length;
+    document.getElementById('scoreMsg').textContent=
+      pct===1?'Perfect — you know exactly why idle megawatts cost money.':
+      pct>=0.7?'Strong grasp of capacity factor and utilization economics. Review what you missed.':
+      pct>=0.4?'Good start — replay the simulator in tab 3 and the cost slider in tab 4, then retry.':
+      'Work back through tabs 1–4, watching how CF and cost/kWh move together, then retry.';
+  }
+}
+function restartQuiz(){
+  qi=0;score=0;
+  document.getElementById('quizDone').classList.add('hide');
+  document.getElementById('quizBody').classList.remove('hide');
+  renderQ();
+}
+renderQ();
+
+/* ============ MODES ============ */
+function setMode(m){
+  ['concept','factors','sim','econ','quiz'].forEach(x=>{
+    document.getElementById('mode-'+x).classList.toggle('hide',x!==m);
+    document.getElementById('tab-'+x).setAttribute('aria-selected',String(x===m));
+  });
+}
+</script>
+</body>
+</html>

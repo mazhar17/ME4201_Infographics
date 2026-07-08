@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Plant Siting & Sustainability Simulator</title>
+    <style>
+        /* --- CSS VARIABLES & RESET --- */
+        :root {
+            --col-bg: #f4f6f9;
+            --col-panel: #ffffff;
+            --col-text: #333333;
+            --col-border: #dcdcdc;
+
+            /* Sustainability Pillars */
+            --col-social: #3498db;
+            --col-env: #2ecc71;
+            --col-econ: #f1c40f;
+            --col-econ-text: #b7950b;
+
+            /* UI Elements */
+            --col-highlight: #2c3e50;
+            --col-disabled: #bdc3c7;
+            --col-danger: #e74c3c;
+            --col-warn: #e67e22;
+            --col-ok: #27ae60;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+        body {
+            background-color: var(--col-bg);
+            color: var(--col-text);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden; /* Optimized for fixed 16:9 projection */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- HEADER --- */
+        header {
+            background: var(--col-highlight);
+            color: white;
+            padding: 0.8rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        header h1 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.5px; }
+        header .subtitle { font-size: 0.9rem; opacity: 0.8; font-weight: 400; }
+
+        /* --- MAIN LAYOUT (GRID) --- */
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 280px 1fr 380px; /* Controls | Map | Analysis */
+            gap: 15px;
+            padding: 15px;
+            overflow: hidden;
+        }
+
+        /* --- PANEL STYLING --- */
+        .panel {
+            background: var(--col-panel);
+            border-radius: 8px;
+            border: 1px solid var(--col-border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .panel-header {
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--col-border);
+            background: #fafafa;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .panel-content {
+            padding: 15px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* --- LEFT COLUMN: CONTROLS --- */
+        .control-group { margin-bottom: 16px; }
+        .control-label { display: block; font-size: 0.8rem; color: #666; margin-bottom: 6px; font-weight: 600; text-transform: uppercase; }
+
+        .btn-tech {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            border: 1px solid var(--col-border);
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.88rem;
+        }
+        .btn-tech:hover { background: #f0f0f0; border-color: #bbb; }
+        .btn-tech.active {
+            background: var(--col-highlight);
+            color: white;
+            border-color: var(--col-highlight);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .btn-tech i { width: 24px; margin-right: 10px; display: flex; justify-content: center; font-style: normal; }
+
+        .btn-reset {
+            width: 100%; padding: 8px; margin-top: 6px;
+            border: 1px dashed var(--col-border); background: #fafafa;
+            border-radius: 5px; cursor: pointer; font-size: 0.82rem; color: #666;
+        }
+        .btn-reset:hover { background: #f0f0f0; }
+
+        /* --- CENTER COLUMN: MAP --- */
+        #map-container {
+            position: relative;
+            background: #aaddff;
+            height: 100%;
+            width: 100%;
+            border-radius: 0 0 8px 8px;
+            overflow: hidden;
+        }
+        svg#game-map { width: 100%; height: 100%; display: block; }
+
+        .map-land { fill: #e8f5e9; stroke: #a5d6a7; stroke-width: 2; }
+        .map-mountain { fill: #d7ccc8; stroke: #a1887f; stroke-width: 1; }
+
+        .site-marker { cursor: pointer; }
+        .site-marker:hover circle.outer { stroke: var(--col-highlight); stroke-width: 3; }
+        .site-marker circle.outer {
+            fill: rgba(255,255,255,0.9);
+            stroke: #333;
+            stroke-width: 2;
+            transition: stroke 0.2s, stroke-width 0.2s, fill 0.2s;
+        }
+        .site-marker circle.inner { fill: #333; transition: fill 0.2s; }
+
+        /* Suitability colouring (applied when a technology is selected) */
+        .site-marker.rate-good circle.inner { fill: var(--col-ok); }
+        .site-marker.rate-good circle.outer { stroke: var(--col-ok); }
+        .site-marker.rate-warn circle.inner { fill: var(--col-warn); }
+        .site-marker.rate-warn circle.outer { stroke: var(--col-warn); }
+        .site-marker.rate-bad circle.inner { fill: var(--col-danger); }
+        .site-marker.rate-bad circle.outer { stroke: var(--col-danger); }
+
+        .site-marker.selected circle.outer { stroke-width: 5; fill: #fff; }
+
+        .site-marker text,
+        .site-marker circle.outer,
+        .site-marker circle.inner { pointer-events: none; }
+        .site-marker text {
+            font-size: 16px;
+            font-weight: 900;
+            fill: #000;
+            stroke: #fff;
+            stroke-width: 3px;
+            paint-order: stroke fill;
+            user-select: none;
+        }
+        .hitbox { fill: #ffffff; fill-opacity: 0; cursor: pointer; pointer-events: auto; }
+
+        /* Map legend */
+        #map-legend {
+            position: absolute; bottom: 10px; left: 10px;
+            background: rgba(255,255,255,0.92); border: 1px solid var(--col-border);
+            border-radius: 6px; padding: 6px 10px; font-size: 0.72rem; display: none;
+            line-height: 1.7;
+        }
+        #map-legend b { display:block; font-size: 0.7rem; text-transform: uppercase; color:#666; }
+        .lg-dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:5px; vertical-align: middle;}
+
+        /* Tooltip */
+        #tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.88);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.78rem;
+            pointer-events: none;
+            display: none;
+            z-index: 100;
+            max-width: 240px;
+            line-height: 1.5;
+        }
+
+        /* --- RIGHT COLUMN: ANALYSIS --- */
+        .pillar-card {
+            margin-bottom: 12px;
+            border-left: 4px solid #ccc;
+            padding: 10px;
+            background: #fafafa;
+        }
+        .pillar-social { border-color: var(--col-social); }
+        .pillar-env { border-color: var(--col-env); }
+        .pillar-econ { border-color: var(--col-econ); }
+        .pillar-title { font-weight: bold; font-size: 0.9rem; margin-bottom: 5px; display: flex; justify-content: space-between; }
+        .pillar-metrics { font-size: 0.8rem; color: #555; line-height: 1.4; }
+
+        .sdg-container { display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap; }
+        .sdg-badge {
+            width: 28px; height: 28px; border-radius: 4px;
+            color: white; font-size: 10px; font-weight: bold;
+            display: flex; align-items: center; justify-content: center; cursor: help;
+        }
+
+        .chart-wrapper { width: 100%; height: 210px; display: flex; justify-content: center; margin-bottom: 10px; }
+
+        /* Criteria checklist */
+        h3.section-title { font-size: 0.95rem; margin: 4px 0 8px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .crit-list { margin-bottom: 14px; }
+        .crit-row {
+            display: flex; gap: 8px; align-items: flex-start;
+            padding: 6px 8px; border-radius: 5px; margin-bottom: 4px;
+            font-size: 0.79rem; line-height: 1.4; background: #fafafa;
+            border: 1px solid #f0f0f0;
+        }
+        .crit-row .ic { flex: none; width: 18px; text-align: center; font-weight: bold; }
+        .crit-row.pass { border-left: 3px solid var(--col-ok); }
+        .crit-row.pass .ic { color: var(--col-ok); }
+        .crit-row.warn { border-left: 3px solid var(--col-warn); background: #fef9f3; }
+        .crit-row.warn .ic { color: var(--col-warn); }
+        .crit-row.fail { border-left: 3px solid var(--col-danger); background: #fdf3f2; }
+        .crit-row.fail .ic { color: var(--col-danger); }
+        .crit-row b { display: block; font-size: 0.78rem; }
+
+        /* --- STATUS BAR --- */
+        .status-message {
+            margin-top: 4px;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+            display: none;
+            line-height: 1.45;
+        }
+        .status-message.error { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+        .status-message.warn  { background: #fff3cd; color: #856404; border-color: #ffeeba; }
+        .status-message.success { background: #d4edda; color: #155724; border-color: #c3e6cb; }
+
+        /* --- RESPONSIVE FALLBACK (small screens) --- */
+        @media (max-width: 980px) {
+            body { height: auto; overflow: auto; }
+            main { display: flex; flex-direction: column; overflow: visible; }
+            #map-container { height: 340px; }
+            .panel { overflow: visible; }
+            .panel-content { overflow: visible; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div>
+            <h1>Power Plant Site Selection</h1>
+            <div class="subtitle">Sustainable Engineering Decision Support System — v2</div>
+        </div>
+        <div style="font-size: 0.8rem; text-align: right;">
+            Course: ME-401<br>Module: Sustainability
+        </div>
+    </header>
+
+    <main>
+        <!-- LEFT PANEL: CONTROLS -->
+        <section class="panel">
+            <div class="panel-header">1. Select Technology</div>
+            <div class="panel-content">
+                <div class="control-group">
+                    <label class="control-label">Base Load</label>
+                    <button class="btn-tech" onclick="selectPlant('coal')" id="btn-coal"><i>🏭</i> Coal Thermal</button>
+                    <button class="btn-tech" onclick="selectPlant('ccgt')" id="btn-ccgt"><i>🔥</i> Combined Cycle Gas</button>
+                    <button class="btn-tech" onclick="selectPlant('nuclear')" id="btn-nuclear"><i>☢️</i> Nuclear</button>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Peaking / Standby</label>
+                    <button class="btn-tech" onclick="selectPlant('gt')" id="btn-gt"><i>🌀</i> Gas Turbine (OC)</button>
+                    <button class="btn-tech" onclick="selectPlant('diesel')" id="btn-diesel"><i>⛽</i> Diesel / HFO</button>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Renewables</label>
+                    <button class="btn-tech" onclick="selectPlant('hydro')" id="btn-hydro"><i>💧</i> Hydropower</button>
+                    <button class="btn-tech" onclick="selectPlant('wind')" id="btn-wind"><i>💨</i> Wind Farm</button>
+                    <button class="btn-tech" onclick="selectPlant('solar')" id="btn-solar"><i>☀️</i> Solar PV</button>
+                </div>
+
+                <button class="btn-reset" onclick="resetAll()">↺ Reset selection</button>
+
+                <div style="margin-top: 14px; font-size: 0.78rem; color: #666; border-top: 1px solid #eee; padding-top: 10px; line-height:1.5;">
+                    <strong>Instruction:</strong> Select a technology — the map markers immediately colour by suitability
+                    (<span style="color:var(--col-ok)">●</span> suitable,
+                    <span style="color:var(--col-warn)">●</span> conditional,
+                    <span style="color:var(--col-danger)">●</span> infeasible).
+                    Then click a site (A–E) for the full criteria check and sustainability analysis.
+                </div>
+            </div>
+        </section>
+
+        <!-- CENTER PANEL: MAP -->
+        <section class="panel">
+            <div class="panel-header">2. Select Site Location</div>
+            <div id="map-container">
+                <svg id="game-map" viewBox="0 0 800 450" preserveAspectRatio="xMidYMid meet">
+                    <defs>
+                        <pattern id="urbanPattern" width="10" height="10" patternUnits="userSpaceOnUse">
+                            <rect width="10" height="10" fill="#cfd8dc"/>
+                            <path d="M0 0 L10 10 M10 0 L0 10" stroke="#b0bec5" stroke-width="0.5"/>
+                        </pattern>
+                        <linearGradient id="oceanGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#4fc3f7;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#81d4fa;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+
+                    <rect width="800" height="450" fill="url(#oceanGrad)" />
+                    <path d="M 150,0 L 800,0 L 800,450 L 100,450 C 100,450 180,300 120,200 C 60,100 150,0 150,0 Z" class="map-land" />
+
+                    <!-- Mountains (Top Right) -->
+                    <path d="M 600,50 L 650,150 L 550,150 Z" class="map-mountain" />
+                    <path d="M 640,30 L 700,160 L 580,160 Z" class="map-mountain" />
+                    <path d="M 700,60 L 750,140 L 650,140 Z" class="map-mountain" />
+
+                    <!-- River -->
+                    <path d="M 620,160 C 620,160 550,250 450,250 C 350,250 300,350 250,450" stroke="#4fc3f7" stroke-width="15" fill="none"/>
+
+                    <!-- Urban Area -->
+                    <polygon points="350,150 480,150 480,280 350,280" fill="url(#urbanPattern)" stroke="#90a4ae" stroke-width="2"/>
+                    <text x="415" y="220" font-size="14" fill="#546e7a" text-anchor="middle" font-weight="bold">CITY</text>
+
+                    <!-- Markers -->
+                    <g class="site-marker" id="site-A" transform="translate(130, 200)" onclick="selectSite('A')">
+                        <circle class="outer" r="12"/><circle class="inner" r="6"/>
+                        <text y="-20" text-anchor="middle">A</text><circle class="hitbox" r="30" cy="-10"/>
+                    </g>
+                    <g class="site-marker" id="site-B" transform="translate(360, 160)" onclick="selectSite('B')">
+                        <circle class="outer" r="12"/><circle class="inner" r="6"/>
+                        <text y="-20" text-anchor="middle">B</text><circle class="hitbox" r="30" cy="-10"/>
+                    </g>
+                    <g class="site-marker" id="site-C" transform="translate(450, 300)" onclick="selectSite('C')">
+                        <circle class="outer" r="12"/><circle class="inner" r="6"/>
+                        <text y="-20" text-anchor="middle">C</text><circle class="hitbox" r="30" cy="-10"/>
+                    </g>
+                    <g class="site-marker" id="site-D" transform="translate(620, 180)" onclick="selectSite('D')">
+                        <circle class="outer" r="12"/><circle class="inner" r="6"/>
+                        <text y="-20" text-anchor="middle">D</text><circle class="hitbox" r="30" cy="-10"/>
+                    </g>
+                    <g class="site-marker" id="site-E" transform="translate(700, 350)" onclick="selectSite('E')">
+                        <circle class="outer" r="12"/><circle class="inner" r="6"/>
+                        <text y="-20" text-anchor="middle">E</text><circle class="hitbox" r="30" cy="-10"/>
+                    </g>
+                </svg>
+                <div id="tooltip"></div>
+                <div id="map-legend">
+                    <b>Suitability for <span id="legend-tech"></span></b>
+                    <span class="lg-dot" style="background:var(--col-ok)"></span>Suitable
+                    <span class="lg-dot" style="background:var(--col-warn);margin-left:8px"></span>Conditional
+                    <span class="lg-dot" style="background:var(--col-danger);margin-left:8px"></span>Infeasible
+                </div>
+            </div>
+        </section>
+
+        <!-- RIGHT PANEL: ANALYSIS -->
+        <section class="panel">
+            <div class="panel-header">3. Criteria Check &amp; Sustainability Analysis</div>
+            <div class="panel-content">
+
+                <div id="decision-warning" class="status-message" style="margin-bottom:12px;"></div>
+
+                <h3 class="section-title">Site Selection Criteria Check</h3>
+                <div class="crit-list" id="crit-list">
+                    <div style="font-size:0.8rem;color:#888;">Select a technology and a site to run the criteria check.</div>
+                </div>
+
+                <div class="chart-wrapper">
+                    <canvas id="radarChart" width="300" height="210"></canvas>
+                </div>
+
+                <h3 class="section-title">Sustainability Pillar Breakdown</h3>
+
+                <div class="pillar-card pillar-social">
+                    <div class="pillar-title"><span>Social</span><span id="score-soc">--/100</span></div>
+                    <div class="pillar-metrics" id="text-soc">Select technology and site.</div>
+                    <div class="sdg-container" id="sdg-soc"></div>
+                </div>
+
+                <div class="pillar-card pillar-env">
+                    <div class="pillar-title"><span>Environmental</span><span id="score-env">--/100</span></div>
+                    <div class="pillar-metrics" id="text-env">Select technology and site.</div>
+                    <div class="sdg-container" id="sdg-env"></div>
+                </div>
+
+                <div class="pillar-card pillar-econ">
+                    <div class="pillar-title"><span>Economic</span><span id="score-econ">--/100</span></div>
+                    <div class="pillar-metrics" id="text-econ">Select technology and site.</div>
+                    <div class="sdg-container" id="sdg-econ"></div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // ==================== DATA MODEL v2 ====================
+        // Each site carries a physical attribute profile that the rule
+        // engine reads. Scales are 0 (none/poor) to 3 (abundant/excellent).
+        const sites = {
+            'A': { name: "Coastal Zone", 
+                   attrs: { seaWater:true, freshWater:1, pop:1, landCost:2, seismic:false, softSoil:false,
+                            port:true, gridDist:1, wind:3, sun:2.5, head:0, flood:3, agri:1, pipeline:1, ecoSens:2 },
+                   features: ["Unlimited seawater cooling", "Port & jetty logistics", "Strong coastal wind", "Cyclone / sea-level-rise exposure"],
+                   desc: "Seawater cooling and port access, but exposed to cyclones and sea-level rise." },
+            'B': { name: "Urban Outskirts",
+                   attrs: { seaWater:false, freshWater:1, pop:3, landCost:3, seismic:false, softSoil:false,
+                            port:false, gridDist:0, wind:1, sun:2, head:0, flood:1, agri:0, pipeline:3, ecoSens:0 },
+                   features: ["At the load center", "Dense population", "Gas network available", "Very high land cost"],
+                   desc: "Right at the load center with gas supply — but dense population and costly land." },
+            'C': { name: "River Bank (Plains)",
+                   attrs: { seaWater:false, freshWater:3, pop:2, landCost:2, seismic:false, softSoil:true,
+                            port:false, gridDist:1, wind:1, sun:2.5, head:0.5, flood:3, agri:3, pipeline:2, ecoSens:2 },
+                   features: ["Abundant fresh water", "Fertile farmland", "Alluvial (soft) soil", "Monsoon flood risk"],
+                   desc: "Plenty of river water, but farmland conflict, soft alluvial soil and flood risk." },
+            'D': { name: "Mountain Valley",
+                   attrs: { seaWater:false, freshWater:2, pop:0, landCost:1, seismic:true, softSoil:false,
+                            port:false, gridDist:3, wind:3, sun:1, head:3, flood:1, agri:0, pipeline:0, ecoSens:3 },
+                   features: ["High head & ridge wind", "Strong rock, seismically active", "Remote — long transmission", "Eco-sensitive forest"],
+                   desc: "High head and ridge winds, but seismic terrain, hard logistics and long transmission." },
+            'E': { name: "Rural Plains",
+                   attrs: { seaWater:false, freshWater:0, pop:0.5, landCost:0, seismic:false, softSoil:false,
+                            port:false, gridDist:3, wind:2, sun:3, head:0, flood:1, agri:1, pipeline:0, ecoSens:1 },
+                   features: ["Vast cheap flat land", "Excellent solar irradiance", "No water source", "Far from grid & pipelines"],
+                   desc: "Cheap, sunny, open land — but no water, no pipeline, and a long grid connection." }
+        };
+
+        // Base sustainability scores per technology (before site modifiers)
+        const plants = {
+            'coal':    { name:"Coal Thermal",        base:{ social:45, env:20, econ:80 },
+                         desc:"Reliable base load; heavy emissions, ash and water demand." },
+            'ccgt':    { name:"Combined Cycle Gas",  base:{ social:65, env:55, econ:75 },
+                         desc:"Efficient (~60%), cleaner than coal; needs firm gas supply and moderate cooling water." },
+            'nuclear': { name:"Nuclear",             base:{ social:55, env:85, econ:60 },
+                         desc:"Carbon-free base load; strict siting: exclusion zone, huge cooling water, stable geology." },
+            'gt':      { name:"Gas Turbine (Open Cycle)", base:{ social:70, env:50, econ:65 },
+                         desc:"Quick-start peaker; tiny land/water needs; best value at the load center." },
+            'diesel':  { name:"Diesel / HFO",        base:{ social:60, env:35, econ:55 },
+                         desc:"Small, fast, fuel-flexible; ideal for standby and remote loads; costly energy." },
+            'hydro':   { name:"Hydropower",          base:{ social:60, env:70, econ:80 },
+                         desc:"Renewable and dispatchable; entirely hostage to head, discharge and dam geology." },
+            'wind':    { name:"Wind Farm",           base:{ social:75, env:90, econ:65 },
+                         desc:"Zero-fuel energy; viability rises with the CUBE of wind speed (P ∝ v³)." },
+            'solar':   { name:"Solar PV",            base:{ social:80, env:95, econ:62 },
+                         desc:"Modular, silent, zero-fuel; land-hungry and daylight-only." }
+        };
+
+        // ==================== RULE ENGINE ====================
+        // Each rule returns: {c: criterion, s: 'pass'|'warn'|'fail', t: explanation,
+        //                     d: {social,env,econ} score deltas, p: pillar for message}
+        const R = (c,s,t,d,p) => ({c,s,t,d:d||{},p:p||null});
+
+        const RULES = {
+        // ---------- NUCLEAR: the strict one ----------
+        nuclear: a => [
+            a.pop>=3 ? R("Population & exclusion zone","fail",
+                "Dense population: the mandatory emergency planning / exclusion zone cannot be established. Regulatory rejection is certain — nuclear plants are NEVER licensed beside cities.",{},'social')
+          : a.pop>=2 ? R("Population & exclusion zone","warn",
+                "Nearby agricultural communities: exclusion zone possible but requires resettlement and emergency planning for the district.",{social:-15},'social')
+          : R("Population & exclusion zone","pass","Sparse population — exclusion zone and emergency planning zone achievable.",{social:+5}),
+
+            a.seaWater ? R("Cooling water (very large, assured)","pass",
+                "Unlimited seawater for condenser cooling — the ideal nuclear arrangement.",{econ:+5})
+          : a.freshWater>=3 ? R("Cooling water (very large, assured)","warn",
+                "Major river can supply cooling, but dry-season flow and thermal discharge limits must be verified.",{econ:-5,env:-5},'env')
+          : R("Cooling water (very large, assured)","fail",
+                "No large assured water source. A nuclear plant's condenser duty is the largest of any plant type — without sea or major river access the site is infeasible.",{},'econ'),
+
+            a.seismic ? R("Geology & seismic stability","fail",
+                "Seismically active terrain: nuclear licensing demands stable bedrock with very low seismic hazard. This site would fail the safety case.",{},'env')
+          : a.softSoil ? R("Geology & seismic stability","warn",
+                "Deep alluvial soil: reactor island needs massive piled foundations — large CapEx addition.",{econ:-15},'econ')
+          : R("Geology & seismic stability","pass","Stable foundation conditions for the reactor island.",{}),
+
+            a.port ? R("Heavy-component transport","pass",
+                "Port access allows delivery of reactor vessel and steam generators (single pieces of several hundred tonnes).",{econ:+5})
+          : R("Heavy-component transport","warn",
+                "No port: transporting the reactor vessel overland requires special corridors — cost and schedule risk.",{econ:-10},'econ'),
+
+            a.flood>=3 ? R("Flood / external hazards","warn",
+                "High flood or cyclone/sea-level exposure: platform raising and protective works required (post-Fukushima standard).",{econ:-10,env:-5},'econ')
+          : R("Flood / external hazards","pass","Manageable external-hazard profile.",{}),
+
+            R("Fuel logistics","pass",
+                "Nuclear fuel has ~10⁶ × the energy density of coal — a year of fuel is a few truckloads. Mine proximity is irrelevant.",{econ:+5})
+        ],
+
+        // ---------- COAL ----------
+        coal: a => [
+            a.pop>=3 ? R("Air quality & population","fail",
+                "Stack emissions (SOx, NOx, PM) over a dense city: environmental clearance would be refused. Thermal plants are sited away from and downwind of towns.",{},'social')
+          : a.pop>=2 ? R("Air quality & population","warn",
+                "Communities nearby: must site downwind with FGD and ESP emission controls.",{social:-20,env:-5},'social')
+          : R("Air quality & population","pass","Sparse population; downwind siting achievable.",{}),
+
+            (a.seaWater||a.freshWater>=3) ? R("Cooling & boiler water","pass",
+                "Abundant water for condenser cooling and boiler feed.",{})
+          : a.freshWater>=2 ? R("Cooling & boiler water","warn",
+                "Limited water: cooling towers with make-up constraints; efficiency penalty.",{econ:-10,env:-5},'econ')
+          : R("Cooling & boiler water","fail",
+                "No feasible water source for condenser cooling and boiler feed — a coal plant cannot run dry.",{},'econ'),
+
+            a.port ? R("Coal logistics (bulky fuel)","pass",
+                "Port allows economical coal import — thousands of tonnes per day arrive by ship.",{econ:+10},'econ')
+          : (a.gridDist<=1 && !a.seismic) ? R("Coal logistics (bulky fuel)","warn",
+                "No port: a dedicated rail corridor for daily trainloads of coal must be built.",{econ:-15},'econ')
+          : R("Coal logistics (bulky fuel)","fail",
+                "Remote mountainous/rural terrain with no rail or port: moving thousands of tonnes of coal daily is impractical.",{},'econ'),
+
+            a.softSoil ? R("Soil bearing & ash disposal","warn",
+                "Soft alluvial soil: heavy turbo-generator foundations need deep piling; ash ponds risk groundwater contamination on farmland.",{econ:-10,env:-15},'env')
+          : a.landCost>=3 ? R("Soil bearing & ash disposal","warn",
+                "Urban land prices make the large coal yard and ash disposal area prohibitively costly.",{econ:-20},'econ')
+          : R("Soil bearing & ash disposal","pass","Adequate land for plant, coal stockyard and ash disposal.",{}),
+
+            R("Carbon & climate","warn",
+                "Highest CO₂ intensity of any option here (~0.9–1.0 t/MWh) — a structural burden on SDG 13 wherever it is sited.",{env:-5},'env')
+        ],
+
+        // ---------- CCGT ----------
+        ccgt: a => [
+            a.pipeline>=3 ? R("Natural gas supply","pass",
+                "Existing gas network: firm pipeline supply available.",{econ:+5})
+          : a.pipeline>=2 ? R("Natural gas supply","warn",
+                "Pipeline spur required; long-term gas allocation must be contracted.",{econ:-10},'econ')
+          : a.pipeline>=1 ? R("Natural gas supply","warn",
+                "No pipeline, but coastal siting allows LNG import terminal — adds CapEx and fuel cost.",{econ:-15},'econ')
+          : R("Natural gas supply","fail",
+                "No pipeline and no LNG option: a gas plant with no gas is infeasible.",{},'econ'),
+
+            (a.seaWater||a.freshWater>=2) ? R("Cooling water (moderate)","pass",
+                "Sufficient cooling for the steam bottoming cycle.",{})
+          : R("Cooling water (moderate)","warn",
+                "Scarce water: air-cooled condenser needed — efficiency and cost penalty.",{econ:-10,env:-5},'econ'),
+
+            a.pop>=3 ? R("Proximity to load & emissions","warn",
+                "Close to the load center — excellent for efficiency of supply; gas is clean enough for near-urban siting, but noise walls and NOx controls required.",{social:-5,econ:+10},'econ')
+          : a.gridDist>=3 ? R("Proximity to load & emissions","warn",
+                "Far from the load center: long transmission erodes the efficiency advantage.",{econ:-10},'econ')
+          : R("Proximity to load & emissions","pass","Reasonable distance to load with clean combustion profile.",{}),
+
+            a.softSoil ? R("Foundations & flood","warn",
+                "Alluvial soil and flood plain: piling and platform raising required.",{econ:-5},'econ')
+          : R("Foundations & flood","pass","Standard civil works suffice.",{})
+        ],
+
+        // ---------- OPEN-CYCLE GT PEAKER ----------
+        gt: a => [
+            (a.pipeline>=2) ? R("Fuel supply (gas or liquid)","pass",
+                "Pipeline gas available; can also run on liquid distillate as backup.",{})
+          : R("Fuel supply (gas or liquid)","warn",
+                "No pipeline: liquid-fuel operation possible but raises fuel cost further.",{econ:-10},'econ'),
+
+            a.gridDist===0 ? R("Location vs load (peaker value)","pass",
+                "At the load center — exactly where a quick-start peaker earns its keep, supporting the evening peak and grid stability.",{econ:+15},'econ')
+          : a.gridDist<=1 ? R("Location vs load (peaker value)","pass",
+                "Near enough to the load center to provide peaking and reserve value.",{econ:+5})
+          : R("Location vs load (peaker value)","warn",
+                "A peaker parked far from the load center wastes its main advantage.",{econ:-15},'econ'),
+
+            R("Land & water footprint","pass",
+                "Minimal land and almost no water — the GT's siting superpower; even urban plots suffice.",{econ:+5}),
+
+            a.pop>=3 ? R("Noise & local emissions","warn",
+                "Dense neighbourhood: acoustic enclosures and stack dispersion study required.",{social:-10},'social')
+          : R("Noise & local emissions","pass","Adequate buffer for noise and exhaust.",{}),
+
+            R("Ambient derating","warn",
+                "Output falls on hot days — unfortunately the very days of peak demand. Rate the machine for site ambient conditions.",{econ:-5},'econ')
+        ],
+
+        // ---------- DIESEL / HFO ----------
+        diesel: a => [
+            (a.port||a.gridDist<=1) ? R("Fuel delivery logistics","pass",
+                "Road/tanker (or jetty) fuel delivery is straightforward.",{})
+          : R("Fuel delivery logistics","warn",
+                "Remote terrain: fuel convoys are costly but feasible — the classic remote/island solution.",{econ:-5},'econ'),
+
+            R("Land & water footprint","pass",
+                "A building-sized plot and minimal water — sits directly at the load.",{econ:+5}),
+
+            a.pop>=3 ? R("Noise & exhaust buffer","warn",
+                "Residential proximity: engine noise and exhaust need buffer distance and silencers.",{social:-15,env:-5},'social')
+          : R("Noise & exhaust buffer","pass","Sufficient distance from dwellings.",{}),
+
+            (a.gridDist>=3||a.pop<=0.5) ? R("Role fit (standby / remote)","pass",
+                "Ideal role: standby, emergency and off-grid supply where big plants can't reach.",{social:+10,econ:+5},'social')
+          : R("Role fit (standby / remote)","warn",
+                "In a grid-served area, diesel should be limited to standby duty — its energy is the most expensive on the grid.",{econ:-10},'econ')
+        ],
+
+        // ---------- HYDRO ----------
+        hydro: a => [
+            a.head>=3 ? R("Head & discharge (P ∝ ρgQH)","pass",
+                "High head with headwater flow — strong hydro resource.",{econ:+10})
+          : a.head>0 ? R("Head & discharge (P ∝ ρgQH)","warn",
+                "Low head on the plains: only a run-of-river design with modest, seasonal output.",{econ:-15},'econ')
+          : R("Head & discharge (P ∝ ρgQH)","fail",
+                "No head and no usable discharge: there is nothing here for water to fall through. Hydropower is impossible.",{},'econ'),
+
+            a.head>=3 ? (a.seismic ?
+                R("Dam foundation & seismic design","warn",
+                "Strong rock available but seismically active: dam must be designed for the safe-shutdown earthquake — significant CapEx.",{econ:-10},'econ')
+              : R("Dam foundation & seismic design","pass","Sound rock foundation for the dam.",{}))
+          : R("Dam foundation & seismic design","pass","Barrage-type structure on plains; standard foundations.",{}),
+
+            a.head>=3 ? R("Submergence & ecosystem","warn",
+                "Reservoir submerges eco-sensitive forest; habitat loss and downstream flow change need mitigation.",{env:-20},'env')
+          : a.agri>=3 ? R("Submergence & ecosystem","warn",
+                "Pondage floods riverside farmland; compensation and resettlement of farming communities required.",{social:-15},'social')
+          : R("Submergence & ecosystem","pass","Limited submergence impact.",{}),
+
+            a.gridDist>=3 ? R("Transmission distance","warn",
+                "Remote site: long EHV transmission line to the load center must be economical.",{econ:-10},'econ')
+          : R("Transmission distance","pass","Acceptable transmission distance.",{})
+        ],
+
+        // ---------- WIND ----------
+        wind: a => [
+            a.wind>=3 ? R("Wind resource (P ∝ v³)","pass",
+                "Strong, consistent wind (coast/ridge class). Because power rises with the cube of speed, this is the decisive criterion — satisfied.",{econ:+10})
+          : a.wind>=2 ? R("Wind resource (P ∝ v³)","warn",
+                "Borderline resource (~5–6 m/s): a 12-month met-mast measurement campaign must confirm viability before investment.",{econ:-10},'econ')
+          : R("Wind resource (P ∝ v³)","fail",
+                "Insufficient wind. At low speeds the v³ law is merciless — turbines here would mostly stand still. Infeasible.",{},'econ'),
+
+            a.pop>=3 ? R("Setbacks (noise, flicker, safety)","fail",
+                "Dense urban area: mandatory setback distances from dwellings cannot be met between buildings.",{},'social')
+          : a.pop>=2 ? R("Setbacks (noise, flicker, safety)","warn",
+                "Villages within the array area: noise/shadow-flicker setbacks will shrink the usable layout.",{social:-10},'social')
+          : R("Setbacks (noise, flicker, safety)","pass","Open land: setbacks easily met.",{}),
+
+            a.ecoSens>=2 ? R("Avian & ecological pathways","warn",
+                "Coastal flyway / forest habitat: bird and bat collision studies and curtailment protocols required.",{env:-10},'env')
+          : R("Avian & ecological pathways","pass","No major migration corridor identified.",{}),
+
+            (a.gridDist>=3) ? R("Access & grid connection","warn",
+                "Remote/ridge site: 60-metre blades on mountain roads plus a long grid connection — significant BoP cost.",{econ:-15},'econ')
+          : R("Access & grid connection","pass","Manageable transport and grid connection.",{})
+        ],
+
+        // ---------- SOLAR ----------
+        solar: a => [
+            a.sun>=3 ? R("Irradiance & shading","pass",
+                "Excellent irradiance with open horizons — prime PV resource.",{econ:+10})
+          : a.sun>=2 ? R("Irradiance & shading","pass",
+                "Good irradiance; regular panel cleaning will manage dust/haze.",{})
+          : R("Irradiance & shading","fail",
+                "Valley shadowing and steep slopes: the array would lose its mornings and evenings to the mountains. Utility-scale PV is infeasible here.",{},'econ'),
+
+            a.landCost>=3 ? R("Land (large, flat, low-cost)","fail",
+                "Utility-scale PV needs hectares per MW — impossible at urban land prices. (A rooftop-solar program is the urban alternative.)",{},'econ')
+          : a.agri>=3 ? R("Land (large, flat, low-cost)","warn",
+                "Fertile farmland: PV competes with food production — policy prefers barren land (or agrivoltaic designs).",{social:-10,env:-5},'social')
+          : a.landCost<=1 ? R("Land (large, flat, low-cost)","pass",
+                "Vast cheap non-agricultural land — the textbook solar site.",{econ:+10},'econ')
+          : R("Land (large, flat, low-cost)","pass","Adequate land at reasonable cost.",{}),
+
+            a.flood>=3 ? R("Flood & climate exposure","warn",
+                (a.seaWater? "Cyclone-rated mounting and anti-corrosion coating needed on the coast." :
+                             "Monsoon flooding: raised structures and drainage required."),{econ:-10},'econ')
+          : R("Flood & climate exposure","pass","Benign exposure for PV structures.",{}),
+
+            a.gridDist>=3 ? R("Grid evacuation","warn",
+                "Long connection to evacuate daytime generation — and remember: PV output ends before the evening peak, so storage may be demanded.",{econ:-10},'econ')
+          : R("Grid evacuation","pass","Grid connection within economical reach.",{})
+        ]
+        };
+
+        // ==================== SDG DATA ====================
+        const sdgs = {
+            3:{color:"#4C9F38",label:"Good Health"}, 6:{color:"#26BDE2",label:"Clean Water"},
+            7:{color:"#FCC30B",label:"Clean Energy"}, 8:{color:"#A21942",label:"Decent Work"},
+            9:{color:"#FD6925",label:"Infrastructure"}, 11:{color:"#FD9D24",label:"Cities"},
+            12:{color:"#BF8B2E",label:"Consumption"}, 13:{color:"#3F7E44",label:"Climate Action"},
+            14:{color:"#0A97D9",label:"Life Below Water"}, 15:{color:"#56C02B",label:"Life on Land"}
+        };
+        const plantSdgMap = {
+            'coal':   { soc:[7,8],  env:[],      econ:[8,9] },
+            'ccgt':   { soc:[7,8],  env:[],      econ:[9] },
+            'nuclear':{ soc:[7],    env:[13],    econ:[9] },
+            'gt':     { soc:[7],    env:[],      econ:[9] },
+            'diesel': { soc:[7,3],  env:[],      econ:[8] },
+            'hydro':  { soc:[7,11], env:[6,13],  econ:[7] },
+            'wind':   { soc:[7,3],  env:[13,15], econ:[7,12] },
+            'solar':  { soc:[7,3],  env:[13],    econ:[7,12] }
+        };
+
+        // ==================== STATE & DOM ====================
+        let state = { plant:null, site:null };
+        const tooltip = document.getElementById('tooltip');
+        const canvas = document.getElementById('radarChart');
+        const ctx = canvas.getContext('2d');
+
+        // ==================== CORE ENGINE ====================
+        function evaluate(plantId, siteId){
+            const a = sites[siteId].attrs;
+            const checks = RULES[plantId](a);
+            const scores = { ...plants[plantId].base };
+            const messages = { social:[], env:[], econ:[] };
+            let fails = 0, warns = 0;
+            checks.forEach(r=>{
+                if(r.s==='fail') fails++;
+                if(r.s==='warn') warns++;
+                ['social','env','econ'].forEach(k=>{ if(r.d[k]) scores[k]+=r.d[k]; });
+                if(r.p && (r.s!=='pass' || (r.d.econ>0||r.d.social>0||r.d.env>0)))
+                    messages[r.p==='env'?'env':r.p==='social'?'social':'econ'].push(r.t.split('.')[0]+'.');
+            });
+            ['social','env','econ'].forEach(k=>{ scores[k]=Math.max(0,Math.min(100,scores[k])); });
+            return { checks, scores, messages, feasible: fails===0, fails, warns };
+        }
+
+        function ratingClass(plantId, siteId){
+            const r = evaluate(plantId, siteId);
+            if(!r.feasible) return 'rate-bad';
+            if(r.warns>=3) return 'rate-warn';
+            return 'rate-good';
+        }
+
+        // ==================== INTERACTION ====================
+        function selectPlant(type){
+            state.plant = type;
+            document.querySelectorAll('.btn-tech').forEach(b=>b.classList.remove('active'));
+            document.getElementById(`btn-${type}`).classList.add('active');
+
+            // colour all markers by suitability — instant geographic feedback
+            Object.keys(sites).forEach(id=>{
+                const el = document.getElementById(`site-${id}`);
+                el.classList.remove('rate-good','rate-warn','rate-bad');
+                el.classList.add(ratingClass(type,id));
+            });
+            document.getElementById('legend-tech').innerText = plants[type].name;
+            document.getElementById('map-legend').style.display = 'block';
+
+            calculateAndRender();
+        }
+
+        function selectSite(siteId){
+            state.site = siteId;
+            document.querySelectorAll('.site-marker').forEach(m=>m.classList.remove('selected'));
+            document.getElementById(`site-${siteId}`).classList.add('selected');
+            calculateAndRender();
+        }
+
+        function resetAll(){
+            state = { plant:null, site:null };
+            document.querySelectorAll('.btn-tech').forEach(b=>b.classList.remove('active'));
+            document.querySelectorAll('.site-marker').forEach(m=>m.classList.remove('selected','rate-good','rate-warn','rate-bad'));
+            document.getElementById('map-legend').style.display='none';
+            document.getElementById('crit-list').innerHTML = '<div style="font-size:0.8rem;color:#888;">Select a technology and a site to run the criteria check.</div>';
+            ['soc','env','econ'].forEach(k=>{
+                document.getElementById(`score-${k}`).innerText='--/100';
+                document.getElementById(`text-${k}`).innerText='Select technology and site.';
+                document.getElementById(`sdg-${k}`).innerHTML='';
+            });
+            const w=document.getElementById('decision-warning'); w.style.display='none';
+            renderChart({social:0,env:0,econ:0});
+        }
+
+        // ==================== RENDER ====================
+        function calculateAndRender(){
+            if(!state.plant || !state.site) return;
+
+            const res = evaluate(state.plant, state.site);
+            const P = plants[state.plant], S = sites[state.site];
+
+            // Criteria checklist
+            const icon = s => s==='pass'?'✓':s==='warn'?'⚠':'✗';
+            document.getElementById('crit-list').innerHTML =
+                `<div style="font-size:0.78rem;color:#666;margin-bottom:6px;"><strong>${P.name}</strong> @ <strong>${S.name}</strong> — ${P.desc}</div>` +
+                res.checks.map(r=>
+                    `<div class="crit-row ${r.s}"><span class="ic">${icon(r.s)}</span><span><b>${r.c}</b>${r.t}</span></div>`
+                ).join('');
+
+            // Pillars + chart + SDGs
+            renderScores(res.scores, res.messages);
+            renderSDGs(res.scores);
+
+            // Decision banner
+            const warnBox = document.getElementById('decision-warning');
+            warnBox.style.display='block';
+            if(!res.feasible){
+                warnBox.className = "status-message error";
+                const firstFail = res.checks.find(r=>r.s==='fail');
+                warnBox.innerHTML = `<strong>⛔ INFEASIBLE:</strong> ${firstFail.t}`;
+                renderChart({social:0,env:0,econ:0});
+            } else if(res.warns>=3){
+                warnBox.className = "status-message warn";
+                warnBox.innerHTML = `<strong>⚠️ CONDITIONALLY FEASIBLE:</strong> ${res.warns} criteria need mitigation (see checklist). Compare with other sites before committing.`;
+                renderChart(res.scores);
+            } else {
+                warnBox.className = "status-message success";
+                warnBox.innerHTML = `<strong>✅ FEASIBLE:</strong> Site passes the hard criteria with ${res.warns} manageable caution${res.warns===1?'':'s'}. Review sustainability trade-offs below.`;
+                renderChart(res.scores);
+            }
+        }
+
+        function renderScores(scores, messages){
+            document.getElementById('score-soc').innerText = Math.round(scores.social)+"/100";
+            document.getElementById('text-soc').innerHTML = messages.social.length? messages.social.join("<br>") : "Standard social impact profile.";
+            document.getElementById('score-env').innerText = Math.round(scores.env)+"/100";
+            document.getElementById('text-env').innerHTML = messages.env.length? messages.env.join("<br>") : "Standard environmental profile.";
+            document.getElementById('score-econ').innerText = Math.round(scores.econ)+"/100";
+            document.getElementById('text-econ').innerHTML = messages.econ.length? messages.econ.join("<br>") : "Standard economic profile.";
+        }
+
+        function renderSDGs(scores){
+            const buildBadge = id => `<div class="sdg-badge" style="background:${sdgs[id].color}" title="SDG ${id}: ${sdgs[id].label}">${id}</div>`;
+            const mapping = plantSdgMap[state.plant];
+            let socHTML = mapping.soc.map(buildBadge).join('');
+            if(scores.social<40) socHTML += `<span style="font-size:10px;color:red;margin-left:5px;">(Risk to SDG 3 & 11)</span>`;
+            document.getElementById('sdg-soc').innerHTML = socHTML;
+            let envHTML = mapping.env.map(buildBadge).join('');
+            if(scores.env<40) envHTML += `<span style="font-size:10px;color:red;margin-left:5px;">(Risk to SDG 13/15)</span>`;
+            document.getElementById('sdg-env').innerHTML = envHTML;
+            document.getElementById('sdg-econ').innerHTML = mapping.econ.map(buildBadge).join('');
+        }
+
+        // ==================== RADAR CHART ====================
+        function renderChart(scores){
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            const cx = canvas.width/2, cy = canvas.height/2 + 8, radius = 78;
+            const angles = [-Math.PI/2, Math.PI/6, 5*Math.PI/6];
+
+            ctx.strokeStyle="#ddd"; ctx.lineWidth=1;
+            [0.25,0.5,0.75,1].forEach(scale=>{
+                ctx.beginPath();
+                angles.forEach((angle,i)=>{
+                    const x=cx+Math.cos(angle)*radius*scale, y=cy+Math.sin(angle)*radius*scale;
+                    if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+                });
+                ctx.closePath(); ctx.stroke();
+            });
+            ctx.beginPath();
+            angles.forEach(angle=>{
+                ctx.moveTo(cx,cy);
+                ctx.lineTo(cx+Math.cos(angle)*radius, cy+Math.sin(angle)*radius);
+            });
+            ctx.stroke();
+
+            ctx.font="bold 11px sans-serif"; ctx.fillStyle="#333"; ctx.textAlign="center";
+            ctx.fillText("Social", cx, cy-radius-8);
+            ctx.fillText("Environment", cx+Math.cos(angles[1])*radius+8, cy+Math.sin(angles[1])*radius+16);
+            ctx.fillText("Economic", cx+Math.cos(angles[2])*radius-8, cy+Math.sin(angles[2])*radius+16);
+
+            const getPoint=(score,i)=>({ x:cx+Math.cos(angles[i])*(score/100)*radius,
+                                          y:cy+Math.sin(angles[i])*(score/100)*radius });
+            const pSoc=getPoint(scores.social,0), pEnv=getPoint(scores.env,1), pEcon=getPoint(scores.econ,2);
+
+            ctx.beginPath();
+            ctx.moveTo(pSoc.x,pSoc.y); ctx.lineTo(pEnv.x,pEnv.y); ctx.lineTo(pEcon.x,pEcon.y);
+            ctx.closePath();
+            ctx.fillStyle="rgba(44,62,80,0.4)"; ctx.fill();
+            ctx.strokeStyle="#2c3e50"; ctx.lineWidth=2; ctx.stroke();
+
+            [pSoc,pEnv,pEcon].forEach((p,i)=>{
+                ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2);
+                ctx.fillStyle = i===0?"#3498db":i===1?"#2ecc71":"#f1c40f"; ctx.fill();
+            });
+        }
+
+        // ==================== TOOLTIPS ====================
+        document.querySelectorAll('.site-marker').forEach(marker=>{
+            const show = e=>{
+                const siteId = marker.id.split('-')[1];
+                const data = sites[siteId];
+                tooltip.innerHTML = `<strong>${data.name}</strong><br><span style="font-size:0.85em">• ${data.features.join("<br>• ")}</span>`;
+                tooltip.style.display='block';
+                position(e);
+            };
+            const position = e=>{
+                const box = document.getElementById('map-container').getBoundingClientRect();
+                let x = e.clientX - box.left + 14, y = e.clientY - box.top - 20;
+                if(x + 250 > box.width) x -= 270;
+                if(y < 0) y = 4;
+                tooltip.style.left = x+'px'; tooltip.style.top = y+'px';
+            };
+            marker.addEventListener('mouseenter', show);
+            marker.addEventListener('mousemove', position);
+            marker.addEventListener('mouseleave', ()=>{ tooltip.style.display='none'; });
+        });
+
+        // ==================== INIT ====================
+        renderChart({social:0,env:0,econ:0});
+    </script>
+</body>
+</html>

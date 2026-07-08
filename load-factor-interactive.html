@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Load Factor — Why a Flatter Curve Means Cheaper Electricity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDF1F4; --grid-line:rgba(20,40,60,.055);
+    --ink:#14283C; --ink-soft:#43596E; --line:#C9D4DD; --panel:#FFFFFF;
+    --acc:#1F5F7A; --good:#2E7D5B; --warn:#C98A12; --bad:#BF3B2B; --violet:#6B4FA3; --blue:#2272B5;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);
+    background-color:var(--paper);
+    background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);
+    background-size:28px 28px;line-height:1.55;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px 80px}
+  header{padding:40px 0 8px}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.14em;color:var(--ink-soft);text-transform:uppercase}
+  h1{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:clamp(1.6rem,4.4vw,2.5rem);line-height:1.12;margin:.35rem 0 .5rem}
+  .sub{color:var(--ink-soft);max-width:700px;font-size:.98rem}
+  h2{font-family:'Chakra Petch',sans-serif;font-size:1.2rem;font-weight:700}
+  h2 .formula{font-family:'IBM Plex Mono',monospace;font-size:.85rem;font-weight:500;color:var(--ink-soft)}
+  .tag{font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+
+  .modes{display:flex;gap:8px;margin:26px 0 0;border-bottom:2px solid var(--ink);flex-wrap:wrap}
+  .mode-btn{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:.88rem;background:transparent;border:none;color:var(--ink-soft);padding:10px 14px;cursor:pointer;border-radius:8px 8px 0 0}
+  .mode-btn[aria-selected="true"]{background:var(--ink);color:#fff}
+  .mode-btn:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+  main{background:var(--panel);border:2px solid var(--ink);border-top:none;border-radius:0 0 14px 14px;padding:26px 20px 34px}
+  @media(min-width:760px){main{padding:34px 32px 44px}}
+  .hide{display:none!important}
+
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:16px 0}
+  .kpi{border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;background:#FAFCFD}
+  .kpi .v{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.3rem}
+  .kpi .v small{font-size:.75rem;font-weight:500;color:var(--ink-soft)}
+  .kpi .l{font-family:'IBM Plex Mono',monospace;font-size:.62rem;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-soft)}
+  .kpi .d{font-family:'IBM Plex Mono',monospace;font-size:.7rem;margin-top:2px}
+  .d.up{color:var(--good)} .d.down{color:var(--bad)}
+
+  .chart-box{border:2px solid var(--ink);border-radius:14px;padding:14px 10px 8px;background:#fff;position:relative}
+  svg.chart{width:100%;height:auto;display:block}
+  .legend{display:flex;flex-wrap:wrap;gap:10px 16px;padding:12px 6px 4px;font-size:.78rem}
+  .legend span{display:inline-flex;align-items:center;gap:6px;color:var(--ink-soft)}
+  .legend i{width:16px;height:4px;border-radius:2px;display:inline-block}
+  .legend i.box{height:14px;width:14px;border-radius:4px}
+
+  /* definition cards */
+  .def-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:16px}
+  @media(min-width:720px){.def-grid{grid-template-columns:1fr 1fr}}
+  .dcard{border:1.5px solid var(--line);border-radius:12px;padding:14px 16px;background:#FAFCFD}
+  .dcard h4{font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;color:var(--acc);margin-bottom:7px}
+  .dcard p{font-size:.88rem}
+  .dcard .big{font-family:'IBM Plex Mono',monospace;background:#fff;border:1.5px dashed var(--line);border-radius:8px;padding:10px 12px;margin:8px 0;font-size:.85rem;text-align:center}
+
+  /* factor cards */
+  .fac-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-top:16px}
+  .fcard{border:1.5px solid var(--line);border-left:5px solid var(--fc);border-radius:12px;padding:13px 15px;background:#FAFCFD}
+  .fcard h4{font-family:'Chakra Petch',sans-serif;font-size:.95rem;margin-bottom:4px}
+  .fcard .dir{font-family:'IBM Plex Mono',monospace;font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;color:var(--fc);margin-bottom:6px;display:block}
+  .fcard p{font-size:.84rem;color:var(--ink-soft)}
+
+  /* measure toggles */
+  .measures{display:grid;grid-template-columns:1fr;gap:10px;margin:16px 0 18px}
+  @media(min-width:720px){.measures{grid-template-columns:1fr 1fr}}
+  .measure{display:flex;gap:12px;align-items:flex-start;border:2px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;cursor:pointer;text-align:left;font-family:'IBM Plex Sans',sans-serif}
+  .measure[aria-pressed="true"]{border-color:var(--good);background:#EAF5EF}
+  .measure:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+  .measure .sw{flex:none;width:40px;height:22px;border:2px solid var(--ink);border-radius:999px;position:relative;margin-top:2px;background:#fff}
+  .measure .sw::after{content:'';position:absolute;top:1px;left:1px;width:14px;height:14px;background:var(--ink);border-radius:50%;transition:left .15s}
+  .measure[aria-pressed="true"] .sw::after{left:19px;background:var(--good)}
+  .measure[aria-pressed="true"] .sw{border-color:var(--good)}
+  .measure b{font-family:'Chakra Petch',sans-serif;font-size:.92rem;display:block;color:var(--ink)}
+  .measure span{font-size:.8rem;color:var(--ink-soft)}
+
+  /* economics */
+  .econ-flex{display:grid;grid-template-columns:1fr;gap:20px;margin-top:16px}
+  @media(min-width:860px){.econ-flex{grid-template-columns:3fr 2fr}}
+  .lf-slider-box{border:1.5px solid var(--line);border-radius:12px;padding:16px;background:#FAFCFD}
+  .lf-slider-box label{font-family:'IBM Plex Mono',monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+  input[type=range]{width:100%;margin:12px 0;accent-color:var(--acc)}
+  .cost-read{font-size:.92rem}
+  .cost-read b{font-family:'Chakra Petch',sans-serif;font-size:1.4rem;color:var(--acc)}
+  .cost-bars{margin-top:10px}
+  .cbar{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:.76rem;font-family:'IBM Plex Mono',monospace}
+  .cbar i{height:16px;border-radius:4px;display:block}
+  .ops-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:18px}
+  @media(min-width:720px){.ops-grid{grid-template-columns:1fr 1fr}}
+
+  /* quiz */
+  .quiz-meta{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:6px 0 16px}
+  .progress{flex:1;min-width:160px;height:10px;border:2px solid var(--ink);border-radius:999px;overflow:hidden;background:#fff}
+  .progress i{display:block;height:100%;background:var(--ink);width:0%;transition:width .25s ease}
+  .qcount{font-family:'IBM Plex Mono',monospace;font-size:.78rem;color:var(--ink-soft)}
+  .qtext{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:1.1rem;margin-bottom:14px;max-width:740px}
+  .opts{display:grid;gap:9px;max-width:740px}
+  .opt{text-align:left;border:2px solid var(--line);background:#fff;border-radius:10px;padding:11px 14px;font-size:.92rem;cursor:pointer;color:var(--ink);font-family:'IBM Plex Sans',sans-serif}
+  .opt:hover:not(:disabled){border-color:var(--ink)}
+  .opt.correct{border-color:var(--good);background:#EAF5EF}
+  .opt.wrong{border-color:var(--bad);background:#FBEDEA}
+  .opt:disabled{cursor:default}
+  .opt:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+  .explain{max-width:740px;margin-top:14px;border-left:4px solid var(--ink);background:#F2F6F9;padding:12px 14px;font-size:.88rem;border-radius:0 10px 10px 0;display:none}
+  .explain.show{display:block}
+  .btnrow{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+  .btn{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:.92rem;background:var(--ink);color:#fff;border:2px solid var(--ink);border-radius:9px;padding:10px 20px;cursor:pointer}
+  .btn.ghost{background:#fff;color:var(--ink)}
+  .btn:disabled{opacity:.4;cursor:default}
+  .btn:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+  .score-card{max-width:560px;border:2px solid var(--ink);border-radius:14px;padding:26px;text-align:center;margin:10px auto}
+  .score-num{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:3rem;line-height:1}
+  .score-msg{color:var(--ink-soft);margin:8px 0 18px}
+  footer{margin-top:26px;font-family:'IBM Plex Mono',monospace;font-size:.68rem;color:var(--ink-soft);text-align:center;letter-spacing:.04em}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">Power Plant Engineering · Module 06 · Bangladesh Perspective</p>
+  <h1>Load Factor: Why a Flatter Curve Means Cheaper Electricity</h1>
+  <p class="sub">The grid must be <em>built</em> for the peak but is <em>paid</em> per kWh. Load factor measures how well the expensive machine is actually used — and it quietly sets the price of every unit of electricity. Learn the concept, see what pushes it up or down, then flatten the curve yourself and watch the cost per kWh fall.</p>
+</header>
+
+<div class="modes" role="tablist" aria-label="Learning modes">
+  <button class="mode-btn" role="tab" id="tab-concept" aria-selected="true" onclick="setMode('concept')">1 · Concept</button>
+  <button class="mode-btn" role="tab" id="tab-factors" aria-selected="false" onclick="setMode('factors')">2 · Influencing Factors</button>
+  <button class="mode-btn" role="tab" id="tab-improve" aria-selected="false" onclick="setMode('improve')">3 · Improve It (Simulator)</button>
+  <button class="mode-btn" role="tab" id="tab-econ" aria-selected="false" onclick="setMode('econ')">4 · Grid Efficiency &amp; Economics</button>
+  <button class="mode-btn" role="tab" id="tab-quiz" aria-selected="false" onclick="setMode('quiz')">5 · Quiz</button>
+</div>
+
+<main>
+
+<!-- ============ 1. CONCEPT ============ -->
+<section id="mode-concept">
+  <h2>The definition <span class="formula">LF = average load ÷ peak load</span></h2>
+  <p class="sub" style="margin:.4rem 0 0">Both curves below deliver the <b>same daily energy</b> (same area under the curve). The grid on the left needs ~15,800 MW of installed plant; the flatter one on the right could serve the same customers with far less. That difference is the load factor.</p>
+  <div class="chart-box" style="margin-top:16px">
+    <svg class="chart" id="conceptChart" viewBox="0 0 760 330" role="img" aria-label="Two load curves with equal energy: a peaky curve with low load factor and a flat curve with high load factor"></svg>
+    <div class="legend">
+      <span><i style="background:var(--bad)"></i>Peaky day — LF <b id="lfPeaky"></b></span>
+      <span><i style="background:var(--good)"></i>Flattened day — LF <b id="lfFlat"></b></span>
+      <span><i style="background:#14283C;height:2px"></i>Average load (same for both)</span>
+    </div>
+  </div>
+  <div class="def-grid">
+    <div class="dcard"><h4>Load factor</h4>
+      <div class="big">LF = P<sub>avg</sub> / P<sub>peak</sub> = Energy (kWh) / [P<sub>peak</sub> × hours]</div>
+      <p>Always ≤ 1. LF = 1 only for a perfectly flat load. Daily, monthly or annual LF use the same formula over different periods. A typical Bangladesh daily LF is around 0.7–0.8.</p></div>
+    <div class="dcard"><h4>Why it matters</h4>
+      <p>Generators, transformers and lines are sized for the <b>peak</b> — capital is spent on kW. Revenue comes from <b>energy</b> — kWh. Low LF means the same costly equipment produces fewer kWh, so each kWh must carry more of the fixed cost.</p></div>
+    <div class="dcard"><h4>Related ratios (don't confuse them)</h4>
+      <p><b>Demand factor</b> = max demand ÷ connected load (per consumer). <b>Diversity factor</b> = sum of individual max demands ÷ system max demand (≥ 1 — peaks don't coincide). <b>Plant capacity factor</b> = energy generated ÷ (installed capacity × hours).</p></div>
+    <div class="dcard"><h4>Quick example</h4>
+      <p>A feeder supplies 240,000 kWh in a day with a peak of 15,000 kW. Average = 240,000 / 24 = 10,000 kW, so <b>LF = 10,000 / 15,000 = 0.667</b>. If the peak were shaved to 12,000 kW at the same energy, LF would rise to 0.833.</p></div>
+  </div>
+</section>
+
+<!-- ============ 2. FACTORS ============ -->
+<section id="mode-factors" class="hide">
+  <h2>What pushes load factor up or down?</h2>
+  <p class="sub" style="margin:.4rem 0 0">Load factor is a property of <em>consumer behaviour</em> as much as engineering. Green cards raise LF; red cards drag it down.</p>
+  <div class="fac-grid">
+    <div class="fcard" style="--fc:var(--bad)"><span class="dir">▼ Lowers LF</span><h4>Dominance of residential load</h4><p>Homes use little power all day, then everything at once after sunset — the classic Bangladesh 19:00–21:00 lighting-and-fan spike. A residential-heavy grid is inherently peaky.</p></div>
+    <div class="fcard" style="--fc:var(--good)"><span class="dir">▲ Raises LF</span><h4>Large share of industrial load</h4><p>Continuous-process industries (textiles, steel, fertilizer, cement) draw steady power around the clock, filling the night valley and flattening the curve.</p></div>
+    <div class="fcard" style="--fc:var(--good)"><span class="dir">▲ Raises LF</span><h4>Diversity among consumers</h4><p>Offices peak at noon, homes in the evening, street lighting at night. The less these peaks coincide (higher diversity factor), the smaller the system peak relative to total energy.</p></div>
+    <div class="fcard" style="--fc:var(--bad)"><span class="dir">▼ Lowers LF</span><h4>Weather &amp; season</h4><p>A hot evening switches on millions of fans and ACs simultaneously; the Boro irrigation season (≈ Jan–May) adds huge pumping demand concentrated in certain hours.</p></div>
+    <div class="fcard" style="--fc:var(--bad)"><span class="dir">▼ Lowers LF</span><h4>Flat (time-blind) tariffs</h4><p>If a kWh costs the same at 03:00 and 19:00, consumers have no reason to move any load away from the peak.</p></div>
+    <div class="fcard" style="--fc:var(--good)"><span class="dir">▲ Raises LF</span><h4>Time-of-day pricing &amp; DSM</h4><p>Cheaper off-peak tariffs, peak-hour awareness campaigns and demand-side management shift flexible load (ironing, pumping, charging) into the valley.</p></div>
+    <div class="fcard" style="--fc:var(--good)"><span class="dir">▲ Raises LF</span><h4>Storage &amp; interconnection</h4><p>Batteries or pumped storage charge in the valley and discharge at the peak; cross-border interconnection lets non-coincident peaks help each other.</p></div>
+    <div class="fcard" style="--fc:var(--bad)"><span class="dir">▼ Lowers LF</span><h4>Single dominant peak driver</h4><p>When one activity (evening lighting, or festival/Eid patterns, or a heat wave) synchronises millions of consumers, the peak spikes while daily energy barely changes.</p></div>
+  </div>
+</section>
+
+<!-- ============ 3. IMPROVE (SIMULATOR) ============ -->
+<section id="mode-improve" class="hide">
+  <h2>Flatten the curve yourself</h2>
+  <p class="sub" style="margin:.4rem 0 0">Start from a typical Bangladesh day (dashed line). Switch measures on and watch the curve, the load factor, and the <b>average cost per kWh</b> respond. Every measure below is a real tool used by utilities.</p>
+
+  <div class="kpis" id="simKpis"></div>
+
+  <div class="chart-box">
+    <svg class="chart" id="simChart" viewBox="0 0 760 340" role="img" aria-label="Simulated daily load curve before and after improvement measures"></svg>
+    <div class="legend">
+      <span><i style="background:#9AA9B5"></i>Original curve</span>
+      <span><i style="background:var(--acc)"></i>Your improved curve</span>
+      <span><i class="box" style="background:#E6EEF3;border:1px solid #C9D4DD"></i>Valley filled / peak shaved</span>
+    </div>
+  </div>
+
+  <div class="measures" id="measures"></div>
+  <p class="sub" style="font-size:.85rem">Teaching point: <b>peak shaving</b> and <b>valley filling</b> both raise LF, but by different routes — shaving cuts the denominator (P<sub>peak</sub>), filling raises the numerator (P<sub>avg</sub>). <b>Load shifting</b> (tariffs, storage) does both at once, which is why it is the most powerful lever.</p>
+</section>
+
+<!-- ============ 4. ECONOMICS ============ -->
+<section id="mode-econ" class="hide">
+  <h2>The economics: fixed costs divided by fewer kWh</h2>
+  <p class="sub" style="margin:.4rem 0 0">Annual cost of supply = <b>fixed cost</b> (capital recovery, staff, maintenance — proportional to peak kW built) + <b>variable cost</b> (mostly fuel — proportional to kWh). Slide the load factor and watch the fixed slice of each kWh shrink.</p>
+
+  <div class="econ-flex">
+    <div class="chart-box">
+      <svg class="chart" id="econChart" viewBox="0 0 760 340" role="img" aria-label="Average cost per kWh versus load factor showing hyperbolic decline"></svg>
+      <div class="legend">
+        <span><i class="box" style="background:var(--violet)"></i>Fixed cost share of each kWh</span>
+        <span><i class="box" style="background:var(--warn)"></i>Variable (fuel) cost share</span>
+        <span><i style="background:var(--acc)"></i>Total cost per kWh</span>
+      </div>
+    </div>
+    <div class="lf-slider-box">
+      <label>Drag the system load factor</label>
+      <input type="range" id="econSlider" min="30" max="95" step="1" value="60">
+      <p class="cost-read" id="econRead"></p>
+      <div class="cost-bars" id="econBars"></div>
+    </div>
+  </div>
+
+  <h2 style="margin-top:26px">Operational efficiency: what a high LF does inside the grid</h2>
+  <div class="ops-grid">
+    <div class="dcard"><h4>Better plant efficiency</h4><p>With a flat load, efficient base plants (CCGT ~60%, modern coal, nuclear) run near their design point. A peaky load forces thermal units into <b>part-load operation, where heat rate worsens</b> — more fuel burned per kWh — and calls expensive open-cycle GT and HFO/diesel peakers into service.</p></div>
+    <div class="dcard"><h4>Less start-stop damage &amp; reserve churn</h4><p>Every daily start of a thermal unit consumes fuel producing nothing, stresses metal with thermal cycling, and shortens maintenance intervals. Higher LF means fewer starts, and less spinning reserve held ready purely for a brief evening spike.</p></div>
+    <div class="dcard"><h4>Better use of transmission &amp; lower loss share</h4><p>Lines, transformers and substations are sized for peak flow. At high LF the same network delivers more kWh, so the network cost <em>per kWh</em> drops; peaky operation also concentrates I²R losses into the high-current peak hours.</p></div>
+    <div class="dcard"><h4>Deferred capital investment</h4><p>If demand-side measures raise LF, the utility can serve demand growth <b>without building new peaking capacity</b> — capital that would sit idle 20+ hours a day. For Bangladesh, every MW of avoided peaker is capital freed for base plants, grid reinforcement, or renewables.</p></div>
+  </div>
+</section>
+
+<!-- ============ 5. QUIZ ============ -->
+<section id="mode-quiz" class="hide">
+  <h2>Check your understanding</h2>
+  <div id="quizBody">
+    <div class="quiz-meta">
+      <span class="qcount" id="qcount"></span>
+      <div class="progress" aria-hidden="true"><i id="qbar"></i></div>
+    </div>
+    <p class="qtext" id="qtext"></p>
+    <div class="opts" id="qopts"></div>
+    <div class="explain" id="qexplain"></div>
+    <div class="btnrow"><button class="btn" id="qnext" onclick="nextQ()" disabled>Next question</button></div>
+  </div>
+  <div id="quizDone" class="hide">
+    <div class="score-card">
+      <p class="tag">Result</p>
+      <p class="score-num" id="scoreNum"></p>
+      <p class="score-msg" id="scoreMsg"></p>
+      <button class="btn" onclick="restartQuiz()">Try again</button>
+      <button class="btn ghost" onclick="setMode('improve')">Back to the simulator</button>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer>BUILT FOR THE PEAK · PAID PER kWh · LOAD FACTOR IS THE BRIDGE BETWEEN THE TWO</footer>
+</div>
+
+<script>
+/* ================= shared curve data (typical BD day, MW) ================= */
+const BASE=[9500,9000,8700,8500,8600,9000,9800,10800,11800,12500,12800,13000,12700,12500,12800,12600,12400,12800,14500,15800,15500,14500,12500,10800];
+const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
+
+/* cost model: cost/kWh = Cf/(8760·LF) + cv  — illustrative BDT figures */
+const CF=15000;  /* fixed BDT per kW-year */
+const CV=6.0;    /* variable BDT per kWh */
+const costAt=lf=>CF/(8760*lf)+CV;
+
+/* ---------- generic axes helper ---------- */
+function axes(W,H,mL,mR,mT,mB,yMax,yStep,xLabels){
+  const pw=W-mL-mR,ph=H-mT-mB;
+  const X=f=>mL+pw*f, Y=v=>mT+ph*(1-v/yMax);
+  let s='';
+  for(let v=0;v<=yMax-yStep/2;v+=yStep){
+    s+=`<line x1="${mL}" y1="${Y(v)}" x2="${W-mR}" y2="${Y(v)}" stroke="#DDE5EB"/>`;
+    s+=`<text x="${mL-8}" y="${Y(v)+4}" text-anchor="end" font-size="10" fill="#43596E" font-family="IBM Plex Mono">${v>=1000?v/1000+'k':v}</text>`;
+  }
+  xLabels.forEach(([f,t])=>{s+=`<text x="${X(f)}" y="${H-12}" text-anchor="middle" font-size="10" fill="#43596E" font-family="IBM Plex Mono">${t}</text>`;});
+  return {s,X,Y};
+}
+const hourLabels=[...Array(9)].map((_,i)=>[i*3/23,String(i*3).padStart(2,'0')+':00']);
+
+/* ================= 1. CONCEPT chart ================= */
+(function(){
+  const W=760,H=330;
+  const flat=BASE.map(v=>avg(BASE)+(v-avg(BASE))*0.25); /* same energy, 75% flatter */
+  const yMax=17000;
+  const {s:ax,X,Y}=axes(W,H,58,14,16,36,yMax,4000,hourLabels);
+  let s=ax;
+  const line=(arr,color,wdt,dash)=>{
+    let d=`M ${X(0)} ${Y(arr[0])}`;
+    arr.forEach((v,h)=>{if(h)d+=` L ${X(h/23)} ${Y(v)}`;});
+    return `<path d="${d}" fill="none" stroke="${color}" stroke-width="${wdt}" ${dash?`stroke-dasharray="${dash}"`:''}/>`;
+  };
+  s+=line(BASE,'#BF3B2B',2.5)+line(flat,'#2E7D5B',2.5);
+  s+=`<line x1="${X(0)}" y1="${Y(avg(BASE))}" x2="${X(1)}" y2="${Y(avg(BASE))}" stroke="#14283C" stroke-width="1.6" stroke-dasharray="5 4"/>`;
+  s+=`<text x="${X(.02)}" y="${Y(avg(BASE))-6}" font-size="10" fill="#14283C" font-family="IBM Plex Mono">AVG ${Math.round(avg(BASE)).toLocaleString()} MW</text>`;
+  document.getElementById('conceptChart').innerHTML=s;
+  document.getElementById('lfPeaky').textContent=(avg(BASE)/Math.max(...BASE)).toFixed(2);
+  document.getElementById('lfFlat').textContent=(avg(flat)/Math.max(...flat)).toFixed(2);
+})();
+
+/* ================= 3. SIMULATOR ================= */
+const MEASURES=[
+ {id:'tod',title:'Time-of-day tariff',desc:'Off-peak kWh priced lower → consumers shift flexible evening load (ironing, water pumping, charging) to night. Shifts ~5% of the 18:00–22:00 load into 23:00–05:00.',
+  fx:c=>{let m=[...c],mv=0;for(let h=18;h<=22;h++){const d=m[h]*0.05;m[h]-=d;mv+=d;}const per=mv/7;[23,0,1,2,3,4,5].forEach(h=>m[h]+=per);return m;}},
+ {id:'stagger',title:'Stagger industrial shifts & weekly holidays',desc:'Industries move part of their day-shift load to a night shift; staggered weekly holidays desynchronise factory peaks. Moves ~600 MWh from 09:00–17:00 into 22:00–06:00.',
+  fx:null /* assigned below */},
+ {id:'ev',title:'Night-time EV & irrigation charging (valley filling)',desc:'EVs and scheduled irrigation pumping charge in the 23:00–05:00 valley. Adds ~700 MW of useful off-peak energy — average load rises while the peak is untouched.',
+  fx:c=>{let m=[...c];[23,0,1,2,3,4,5].forEach(h=>m[h]+=700);return m;}},
+ {id:'storage',title:'Battery / pumped storage (load shifting)',desc:'Storage charges 800 MW in the deepest valley (00:00–05:00, with losses) and discharges 800 MW across the 18:00–21:00 peak — shaving and filling simultaneously.',
+  fx:c=>{let m=[...c];[0,1,2,3,4,5].forEach(h=>m[h]+=800*4/6*1.15);[18,19,20,21].forEach(h=>m[h]-=800);return m;}},
+ {id:'dsm',title:'Peak-hour efficiency drive',desc:'Efficient LED lighting and fan replacement programs cut the coincident evening load. Removes ~500 MW from 18:00–22:00 (this one reduces energy too).',
+  fx:c=>{let m=[...c];for(let h=18;h<=22;h++)m[h]-=500;return m;}}
+];
+/* stagger-shift measure: move 600 MWh of daytime industrial load into the night */
+MEASURES[1].fx=c=>{
+  let m=[...c];
+  const perDay=600/9;               /* remove ~66.7 MW/h across 9 day hours = 600 MWh */
+  for(let h=9;h<=17;h++)m[h]-=perDay;
+  const nightH=[22,23,0,1,2,3,4,5,6];
+  nightH.forEach(h=>m[h]+=600/nightH.length);
+  return m;
+};
+let active=new Set();
+function currentCurve(){
+  let c=[...BASE];
+  MEASURES.forEach(m=>{if(active.has(m.id))c=m.fx(c);});
+  return c.map(v=>Math.max(0,v));
+}
+function renderSim(){
+  const cur=currentCurve();
+  const W=760,H=340,yMax=17000;
+  const {s:ax,X,Y}=axes(W,H,58,14,16,36,yMax,4000,hourLabels);
+  let s=ax;
+  /* difference shading */
+  let dArea=`M ${X(0)} ${Y(BASE[0])}`;
+  BASE.forEach((v,h)=>{if(h)dArea+=` L ${X(h/23)} ${Y(v)}`;});
+  for(let h=23;h>=0;h--)dArea+=` L ${X(h/23)} ${Y(cur[h])}`;
+  s+=`<path d="${dArea} Z" fill="#E6EEF3" stroke="none"/>`;
+  const line=(arr,color,wdt,dash)=>{
+    let d=`M ${X(0)} ${Y(arr[0])}`;
+    arr.forEach((v,h)=>{if(h)d+=` L ${X(h/23)} ${Y(v)}`;});
+    return `<path d="${d}" fill="none" stroke="${color}" stroke-width="${wdt}" ${dash?`stroke-dasharray="${dash}"`:''}/>`;
+  };
+  s+=line(BASE,'#9AA9B5',2,'6 4')+line(cur,'#1F5F7A',3);
+  document.getElementById('simChart').innerHTML=s;
+
+  const p0=Math.max(...BASE),a0=avg(BASE),lf0=a0/p0,c0=costAt(lf0);
+  const p1=Math.max(...cur),a1=avg(cur),lf1=a1/p1,c1=costAt(lf1);
+  const dPct=(x,y)=>((x-y)/y*100);
+  const kpi=(v,l,delta,goodWhenDown)=>{
+    let d='';
+    if(delta!==null && Math.abs(delta)>0.05){
+      const up=delta>0;
+      const good=goodWhenDown?!up:up;
+      d=`<div class="d ${good?'up':'down'}">${up?'▲':'▼'} ${Math.abs(delta).toFixed(1)}% vs original</div>`;
+    }
+    return `<div class="kpi"><div class="v">${v}</div><div class="l">${l}</div>${d}</div>`;
+  };
+  document.getElementById('simKpis').innerHTML=
+    kpi(Math.round(p1).toLocaleString()+' <small>MW</small>','Peak demand',dPct(p1,p0),true)+
+    kpi(Math.round(a1).toLocaleString()+' <small>MW</small>','Average load',dPct(a1,a0),false)+
+    kpi(lf1.toFixed(3),'Load factor',dPct(lf1,lf0),false)+
+    kpi('৳ '+c1.toFixed(2),'Avg cost / kWh',dPct(c1,c0),true);
+}
+const mbox=document.getElementById('measures');
+MEASURES.forEach(m=>{
+  const b=document.createElement('button');
+  b.className='measure';b.setAttribute('aria-pressed','false');
+  b.innerHTML=`<span class="sw" aria-hidden="true"></span><span><b>${m.title}</b><span>${m.desc}</span></span>`;
+  b.onclick=()=>{
+    if(active.has(m.id))active.delete(m.id);else active.add(m.id);
+    b.setAttribute('aria-pressed',String(active.has(m.id)));
+    renderSim();
+  };
+  mbox.appendChild(b);
+});
+renderSim();
+
+/* ================= 4. ECONOMICS ================= */
+function renderEcon(){
+  const lf=+document.getElementById('econSlider').value/100;
+  const W=760,H=340,mL=58,mR=14,mT=16,mB=40;
+  const pw=W-mL-mR,ph=H-mT-mB;
+  const lfMin=0.25,lfMax=1.0,yMax=14;
+  const X=v=>mL+pw*(v-lfMin)/(lfMax-lfMin), Y=v=>mT+ph*(1-v/yMax);
+  let s='';
+  for(let v=0;v<=yMax;v+=2){
+    s+=`<line x1="${mL}" y1="${Y(v)}" x2="${W-mR}" y2="${Y(v)}" stroke="#DDE5EB"/>`;
+    s+=`<text x="${mL-8}" y="${Y(v)+4}" text-anchor="end" font-size="10" fill="#43596E" font-family="IBM Plex Mono">৳${v}</text>`;
+  }
+  for(let v=0.3;v<=1.001;v+=0.1){
+    s+=`<text x="${X(v)}" y="${H-12}" text-anchor="middle" font-size="10" fill="#43596E" font-family="IBM Plex Mono">${v.toFixed(1)}</text>`;
+  }
+  s+=`<text x="${W/2}" y="${H-1}" text-anchor="middle" font-size="10" fill="#43596E" font-family="IBM Plex Mono">LOAD FACTOR →</text>`;
+  /* variable band */
+  s+=`<rect x="${mL}" y="${Y(CV)}" width="${pw}" height="${Y(0)-Y(CV)}" fill="var(--warn)" fill-opacity=".25"/>`;
+  /* fixed area between cv and total */
+  let fa=`M ${X(lfMin)} ${Y(Math.min(costAt(lfMin),yMax))}`;
+  for(let v=lfMin;v<=lfMax+0.001;v+=0.01)fa+=` L ${X(v)} ${Y(Math.min(costAt(v),yMax))}`;
+  fa+=` L ${X(lfMax)} ${Y(CV)} L ${X(lfMin)} ${Y(CV)} Z`;
+  s+=`<path d="${fa}" fill="var(--violet)" fill-opacity=".22"/>`;
+  /* total curve */
+  let d='';
+  for(let v=lfMin;v<=lfMax+0.001;v+=0.01){
+    const y=Y(Math.min(costAt(v),yMax));
+    d+=(d?' L':'M')+` ${X(v)} ${y}`;
+  }
+  s+=`<path d="${d}" fill="none" stroke="var(--acc)" stroke-width="3"/>`;
+  /* marker */
+  const c=costAt(lf);
+  s+=`<line x1="${X(lf)}" y1="${mT}" x2="${X(lf)}" y2="${H-mB}" stroke="#14283C" stroke-dasharray="4 4"/>`;
+  s+=`<circle cx="${X(lf)}" cy="${Y(c)}" r="7" fill="var(--acc)" stroke="#fff" stroke-width="2.5"/>`;
+  s+=`<text x="${X(lf)+(lf>0.8?-10:10)}" y="${Y(c)-12}" text-anchor="${lf>0.8?'end':'start'}" font-size="12" font-weight="700" fill="#14283C" font-family="Chakra Petch">৳${c.toFixed(2)}/kWh @ LF ${lf.toFixed(2)}</text>`;
+  document.getElementById('econChart').innerHTML=s;
+
+  const fx=CF/(8760*lf);
+  document.getElementById('econRead').innerHTML=
+    `Average cost <b>৳ ${c.toFixed(2)}</b> per kWh<br>
+     <span style="font-size:.8rem;color:var(--ink-soft)">Model: ৳${CF.toLocaleString()}/kW-yr fixed ÷ (8760 h × LF) + ৳${CV.toFixed(2)}/kWh fuel — illustrative figures.</span>`;
+  const maxW=220;
+  document.getElementById('econBars').innerHTML=
+    `<div class="cbar"><i style="width:${fx/14*maxW}px;background:var(--violet)"></i>fixed ৳${fx.toFixed(2)}</div>
+     <div class="cbar"><i style="width:${CV/14*maxW}px;background:var(--warn)"></i>fuel ৳${CV.toFixed(2)}</div>
+     <p style="font-size:.8rem;color:var(--ink-soft);margin-top:8px">${lf<0.55?'At low LF the fixed slice dominates — the plant sits idle but the loan repayments do not.':lf<0.8?'Raising LF keeps shrinking the fixed slice of every kWh.':'Near-flat load: fixed cost is spread over almost every possible kWh — close to the cheapest achievable supply.'}</p>`;
+}
+document.getElementById('econSlider').addEventListener('input',renderEcon);
+renderEcon();
+
+/* ================= 5. QUIZ ================= */
+const QUIZ=[
+ {q:'Load factor is defined as:',
+  o:['Peak load ÷ average load','Average load ÷ peak load','Connected load ÷ maximum demand','Energy generated ÷ installed capacity'],a:1,
+  e:'LF = average load ÷ peak load over a period (equivalently, energy ÷ [peak × hours]). The last option is the plant capacity factor — a different ratio.'},
+ {q:'A system consumes 240,000 kWh in a day with a maximum demand of 15,000 kW. Its daily load factor is:',
+  o:['0.50','0.667','0.75','1.50'],a:1,
+  e:'Average = 240,000/24 = 10,000 kW. LF = 10,000/15,000 = 0.667.'},
+ {q:'If load factor rises while total energy stays the same, the average cost per kWh will:',
+  o:['Rise, because more plant runs','Stay exactly the same','Fall, because fixed costs are spread over the same kWh from less peak capacity','Become zero'],a:2,
+  e:'Cost/kWh = fixed/(8760·LF) + variable. A higher LF means the same energy needs less peak capacity, so each kWh carries a smaller fixed-cost slice.'},
+ {q:'Which change would LOWER a system\'s load factor?',
+  o:['Adding a continuous-process steel mill','A heat wave that switches on millions of ACs during the evening peak','Night-time EV charging programs','Battery storage discharging at the peak'],a:1,
+  e:'Coincident AC load raises the peak far more than the average, so LF falls. The other three either fill the valley or shave the peak.'},
+ {q:'"Valley filling" improves load factor by:',
+  o:['Reducing the peak (denominator)','Raising the average load (numerator) with useful off-peak consumption','Reducing total energy','Disconnecting consumers'],a:1,
+  e:'Adding useful off-peak load (EVs, scheduled irrigation) raises average load while leaving the peak untouched — LF = avg/peak rises.'},
+ {q:'Why is load shifting (e.g. storage, time-of-day tariffs) the most powerful LF lever?',
+  o:['It reduces energy sales','It shaves the peak AND fills the valley simultaneously','It only affects industry','It requires no investment'],a:1,
+  e:'Moving the same kWh from peak to valley cuts the denominator and supports the numerator at once — a double effect on LF.'},
+ {q:'A higher diversity factor among consumer groups tends to:',
+  o:['Lower the system load factor','Raise the system load factor, since individual peaks do not coincide','Have no effect','Increase the system peak'],a:1,
+  e:'When offices, homes and street lighting peak at different times, the system peak is smaller relative to total energy — a flatter curve and higher LF.'},
+ {q:'At low load factor, thermal plant operating efficiency suffers mainly because:',
+  o:['Fuel quality changes','Units run at part load with worse heat rate, and peakers with high fuel cost must run','Transformers stop working','Water becomes scarce'],a:1,
+  e:'Peaky demand forces efficient units into part-load operation (higher heat rate) and calls expensive open-cycle GT/HFO peakers — more fuel and money per kWh.'},
+ {q:'The purpose of a time-of-day (ToD) tariff is to:',
+  o:['Collect more money at night','Encourage consumers to move flexible load away from peak hours','Measure energy more accurately','Penalise industrial consumers'],a:1,
+  e:'Cheaper off-peak prices give consumers a financial reason to shift flexible loads into the valley, flattening the curve and raising LF.'},
+ {q:'For a utility, raising load factor through demand-side measures can defer:',
+  o:['All maintenance forever','Construction of new peaking capacity that would sit idle most of the day','Payment of staff salaries','Fuel purchases entirely'],a:1,
+  e:'If the peak stops growing, no new peakers are needed even as energy grows — capital is freed for base plants, network reinforcement, or renewables.'}
+];
+let qi=0,score=0,answered=false;
+function renderQ(){
+  answered=false;
+  const q=QUIZ[qi];
+  document.getElementById('qcount').textContent=`Question ${qi+1} / ${QUIZ.length} · Score ${score}`;
+  document.getElementById('qbar').style.width=(qi/QUIZ.length*100)+'%';
+  document.getElementById('qtext').textContent=q.q;
+  const ex=document.getElementById('qexplain');ex.classList.remove('show');ex.textContent='';
+  const box=document.getElementById('qopts');box.innerHTML='';
+  q.o.forEach((opt,i)=>{
+    const b=document.createElement('button');b.className='opt';b.textContent=opt;
+    b.onclick=()=>answer(i,b);box.appendChild(b);
+  });
+  const nx=document.getElementById('qnext');
+  nx.disabled=true;nx.textContent=qi===QUIZ.length-1?'See result':'Next question';
+}
+function answer(i,btn){
+  if(answered)return;answered=true;
+  const q=QUIZ[qi];
+  const opts=[...document.getElementById('qopts').children];
+  opts.forEach(o=>o.disabled=true);
+  opts[q.a].classList.add('correct');
+  if(i===q.a)score++;else btn.classList.add('wrong');
+  document.getElementById('qcount').textContent=`Question ${qi+1} / ${QUIZ.length} · Score ${score}`;
+  const ex=document.getElementById('qexplain');ex.textContent=q.e;ex.classList.add('show');
+  document.getElementById('qnext').disabled=false;
+}
+function nextQ(){
+  if(qi<QUIZ.length-1){qi++;renderQ();}
+  else{
+    document.getElementById('quizBody').classList.add('hide');
+    document.getElementById('quizDone').classList.remove('hide');
+    document.getElementById('scoreNum').textContent=`${score} / ${QUIZ.length}`;
+    const pct=score/QUIZ.length;
+    document.getElementById('scoreMsg').textContent=
+      pct===1?'Perfect — you understand exactly why utilities obsess over the load factor.':
+      pct>=0.7?'Strong grasp of load factor and its economics. Review the ones you missed.':
+      pct>=0.4?'Good start — replay the simulator in tab 3 and the cost slider in tab 4, then retry.':
+      'Work back through tabs 1–4, watching how LF and cost/kWh move together, then retry.';
+  }
+}
+function restartQuiz(){
+  qi=0;score=0;
+  document.getElementById('quizDone').classList.add('hide');
+  document.getElementById('quizBody').classList.remove('hide');
+  renderQ();
+}
+renderQ();
+
+/* ================= MODES ================= */
+function setMode(m){
+  ['concept','factors','improve','econ','quiz'].forEach(x=>{
+    document.getElementById('mode-'+x).classList.toggle('hide',x!==m);
+    document.getElementById('tab-'+x).setAttribute('aria-selected',String(x===m));
+  });
+}
+</script>
+</body>
+</html>
