@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solar Net-Metering Entrepreneur's Playbook — ME4201 (Interactive)</title>
+<meta name="description" content="Interactive entrepreneurship module for ME4201 Power Plant Engineering — how to evaluate and launch a rooftop-solar net-metering venture under Bangladesh's Net Metering Guideline 2025. Prof. Dr. Mazharul Islam, AUST.">
+<style>
+  :root{
+    color-scheme: light;
+    --maroon:#7a1015; --maroon-deep:#4d0509; --maroon-mid:#96262b; --maroon-soft:#b5484d;
+    --maroon-tint:#f8eeee; --maroon-tint2:#f2e2e2;
+    --page:#f4f2ef; --surface:#fcfcfb; --card:#ffffff;
+    --ink:#1a1a1a; --ink-2:#52514e; --ink-3:#898781;
+    --grid:#e1e0d9; --axis:#c3c2b7; --ring:rgba(11,11,11,.10);
+    --s-blue:#2a78d6; --s-green:#008300; --s-yellow:#eda100; --s-red:#e34948; --s-aqua:#1baf7a; --s-violet:#4a3aa7; --s-orange:#eb6834;
+    --seq-100:#cde2fb; --seq-250:#86b6ef; --seq-450:#2a78d6; --seq-550:#1c5cab; --seq-650:#104281;
+    --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+    --good-text:#006300;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(20,10,10,.06),0 8px 24px rgba(20,10,10,.07);
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --serif:Georgia,"Times New Roman",serif;
+    --appbar-h:56px; --tabbar-h:52px;
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --maroon:#c96a6f; --maroon-deep:#2b0406; --maroon-mid:#b5484d; --maroon-soft:#d98a8e;
+    --maroon-tint:#2a1516; --maroon-tint2:#341a1b;
+    --page:#0b0b0b; --surface:#1a1a19; --card:#201f1f;
+    --ink:#f5f4f2; --ink-2:#c3c2b7; --ink-3:#898781;
+    --grid:#2c2c2a; --axis:#383835; --ring:rgba(255,255,255,.12);
+    --s-blue:#3987e5; --s-green:#3fae3f; --s-yellow:#c98500; --s-red:#e66767; --s-aqua:#199e70; --s-violet:#9085e9; --s-orange:#d95926;
+    --seq-100:#0d366b; --seq-250:#184f95; --seq-450:#3987e5; --seq-550:#5598e7; --seq-650:#86b6ef;
+    --good-text:#0ca30c;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);background:var(--page);color:var(--ink);line-height:1.55;font-size:16px}
+  .skip-link{position:absolute;left:-999px;top:0;background:var(--maroon);color:#fff;padding:8px 14px;z-index:99}
+  .skip-link:focus{left:8px}
+  a{color:var(--maroon)}
+
+  .app{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
+  .appbar{flex:0 0 auto;height:var(--appbar-h);display:flex;align-items:center;gap:12px;padding:0 16px;background:linear-gradient(100deg,#5d090d,#7a1015 60%,#4d0509);color:#fff;position:relative;z-index:20}
+  .appbar .code{font-weight:800;font-size:.95rem;letter-spacing:.02em;color:#ffd98a}
+  .appbar .ttl{font-family:var(--serif);font-size:1.02rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .appbar .ttl small{font-weight:400;color:#f0d5d5;font-family:var(--sans);font-size:.78rem}
+  .appbar .spacer{flex:1}
+  .prog-wrap{display:flex;align-items:center;gap:8px;font-size:.72rem;color:#f0d5d5;white-space:nowrap}
+  .prog-track{width:120px;height:6px;border-radius:3px;background:rgba(255,255,255,.22);overflow:hidden}
+  .prog-fill{height:100%;width:10%;background:linear-gradient(90deg,#ffd98a,#f0a500);border-radius:3px;transition:width .35s ease}
+  .theme-btn{border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.2);color:#fff;border-radius:999px;padding:6px 12px;font-size:.78rem;cursor:pointer}
+  .theme-btn:hover{background:rgba(0,0,0,.38)}
+
+  .tabbar{flex:0 0 auto;height:var(--tabbar-h);display:flex;align-items:center;gap:5px;padding:0 12px;background:var(--surface);border-bottom:1px solid var(--ring);overflow-x:auto;scrollbar-width:thin;z-index:15}
+  .tabbar button{flex:0 0 auto;border:1px solid transparent;background:transparent;color:var(--ink-2);font-size:.8rem;font-weight:600;padding:7px 12px;border-radius:999px;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap}
+  .tabbar button:hover{background:var(--maroon-tint);color:var(--maroon)}
+  .tabbar button.active{background:var(--maroon);color:#fff;border-color:var(--maroon)}
+  .tabbar button .tnum{font-size:.66rem;opacity:.7}
+
+  .stage{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth;background:var(--page)}
+  .panel{display:none;max-width:1060px;margin:0 auto;padding:26px 22px 40px;animation:fade .35s ease}
+  .panel.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  .panel-nav{display:flex;justify-content:space-between;gap:12px;margin-top:30px;padding-top:18px;border-top:1px solid var(--ring)}
+  .pn-btn{border:1px solid var(--ring);background:var(--card);color:var(--ink);border-radius:10px;padding:10px 18px;font-size:.9rem;font-weight:700;cursor:pointer;box-shadow:var(--shadow)}
+  .pn-btn:hover{border-color:var(--maroon-soft);color:var(--maroon)}
+  .pn-btn.primary{background:var(--maroon);color:#fff;border-color:var(--maroon)}
+  .pn-btn.primary:hover{background:var(--maroon-mid);color:#fff}
+  .pn-btn:disabled{opacity:.35;cursor:default}
+
+  .p-head{display:flex;align-items:baseline;gap:12px;border-bottom:3px solid var(--maroon);padding-bottom:9px;margin-bottom:18px;flex-wrap:wrap}
+  .p-head .pn{background:var(--maroon);color:#fff;font-weight:800;border-radius:9px;padding:3px 11px;font-size:.95rem}
+  .p-head h2{font-family:var(--serif);color:var(--maroon);font-size:clamp(1.2rem,2.4vw,1.55rem);font-weight:700}
+  .p-head .tag{margin-left:auto;font-size:.72rem;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em}
+  .lead{color:var(--ink-2);max-width:850px;margin-bottom:16px}
+  h3.sh{font-family:var(--serif);color:var(--maroon);margin:22px 0 12px;font-size:1.1rem}
+
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  .g4{grid-template-columns:repeat(auto-fit,minmax(175px,1fr))}
+  .card{background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+
+  .callout{border-left:5px solid var(--maroon);background:var(--maroon-tint);border-radius:0 var(--radius) var(--radius) 0;padding:15px 17px;color:var(--ink)}
+  .callout.quote{font-family:var(--serif);font-style:italic;font-size:1.02rem}
+  .callout.good{border-left-color:var(--good);background:color-mix(in srgb,var(--good) 10%,var(--surface))}
+  .callout.warn{border-left-color:var(--warning);background:color-mix(in srgb,var(--warning) 12%,var(--surface))}
+  .callout .src{display:block;margin-top:8px;font-size:.8rem;color:var(--ink-3);font-style:normal;font-family:var(--sans)}
+
+  .icon-card{display:flex;gap:13px;align-items:flex-start;background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);padding:15px;box-shadow:var(--shadow)}
+  .icon-card .ic{flex:0 0 42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;background:var(--maroon-tint);color:var(--maroon)}
+  .icon-card h4{font-size:.95rem;margin-bottom:3px}
+  .icon-card p{font-size:.84rem;color:var(--ink-2)}
+  .num-badge{flex:0 0 38px;height:38px;border-radius:50%;background:var(--maroon);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:.95rem}
+
+  .chip-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .chip{background:var(--maroon-tint);color:var(--maroon);border-radius:999px;padding:6px 13px;font-size:.82rem;font-weight:600}
+  .statmini{background:var(--card);border:1px solid var(--ring);border-radius:12px;padding:14px;text-align:center;box-shadow:var(--shadow)}
+  .statmini .v{font-size:1.35rem;font-weight:800;color:var(--maroon)}
+  .statmini .l{font-size:.76rem;color:var(--ink-2);margin-top:2px}
+
+  .widget{background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
+  .widget h3{font-family:var(--serif);color:var(--maroon);font-size:1.1rem;margin-bottom:5px}
+  .widget .note{font-size:.8rem;color:var(--ink-3);margin-bottom:12px}
+  .ctrl{margin:12px 0}
+  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;font-weight:600;color:var(--ink-2);margin-bottom:5px;gap:8px}
+  .ctrl label output{color:var(--maroon);font-weight:800;font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--maroon-mid);height:26px;cursor:pointer}
+  .formula{font-family:var(--serif);background:var(--maroon-tint);border:1px dashed var(--maroon-soft);border-radius:10px;padding:11px 15px;text-align:center;font-size:1.02rem;overflow-x:auto}
+  .formula sub,.formula sup{font-size:.7em}
+  .big-out{margin-top:12px;background:var(--maroon);color:#fff;border-radius:12px;padding:13px 17px;text-align:center}
+  .big-out .v{font-size:1.7rem;font-weight:800;color:#ffd98a;font-variant-numeric:tabular-nums}
+  .big-out .l{font-size:.76rem;text-transform:uppercase;letter-spacing:.08em;color:#f3d9d9}
+  .mini-outs{display:flex;gap:9px;margin-top:9px;flex-wrap:wrap}
+  .mini-out{flex:1;min-width:96px;background:var(--maroon-tint);border-radius:10px;padding:8px 11px;text-align:center}
+  .mini-out .v{font-weight:800;color:var(--maroon);font-variant-numeric:tabular-nums}
+  .mini-out .l{font-size:.7rem;color:var(--ink-2)}
+  .seg{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
+  .seg button{border:1.5px solid var(--ring);background:var(--surface);border-radius:10px;padding:8px 13px;cursor:pointer;font-size:.84rem;font-weight:600;color:var(--ink)}
+  .seg button:hover{border-color:var(--maroon-soft)} .seg button.active{background:var(--maroon-tint);border-color:var(--maroon);color:var(--maroon)}
+  svg text{font-family:var(--sans)}
+  .axis-lbl{font-size:11px;fill:var(--ink-3)}
+  .verdict-box{margin-top:12px;border-radius:12px;padding:13px 15px;border:1px solid var(--ring);background:var(--surface);font-size:.88rem}
+  .verdict-box b{color:var(--maroon)}
+
+  /* net-position bars */
+  .netbar-row{display:flex;align-items:center;gap:10px;margin:8px 0}
+  .netbar-row .nl{flex:0 0 118px;font-size:.82rem;font-weight:600}
+  .netbar-track{flex:1;height:24px;background:var(--grid);border-radius:6px;overflow:hidden;position:relative}
+  .netbar-track span{position:absolute;left:0;top:0;bottom:0;border-radius:6px;transition:width .35s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:7px;color:#fff;font-size:.72rem;font-weight:700}
+  .netpos{display:inline-block;padding:4px 12px;border-radius:999px;font-weight:800;font-size:.85rem}
+  .netpos.imp{background:color-mix(in srgb,var(--critical) 15%,var(--surface));color:var(--critical)}
+  .netpos.exp{background:color-mix(in srgb,var(--good) 15%,var(--surface));color:var(--good-text)}
+  .netpos.zero{background:var(--maroon-tint);color:var(--maroon)}
+
+  /* CAPEX/OPEX compare */
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:680px){.compare{grid-template-columns:1fr}}
+  .model-card{border:2px solid var(--ring);border-radius:14px;padding:18px;box-shadow:var(--shadow);background:var(--card)}
+  .model-card.capex{border-top:5px solid var(--s-blue)} .model-card.opex{border-top:5px solid var(--s-orange)}
+  .model-card h4{font-size:1.05rem;margin-bottom:3px} .model-card .sub{font-size:.78rem;color:var(--ink-3);margin-bottom:10px}
+  .model-card ul{list-style:none;display:grid;gap:7px}
+  .model-card li{font-size:.85rem;display:flex;gap:8px;align-items:flex-start;color:var(--ink-2)}
+  .model-card li b{color:var(--ink)}
+  .model-card.rec{outline:3px solid var(--maroon);outline-offset:2px}
+  .rec-flag{display:none;margin-top:10px;background:var(--maroon);color:#fff;border-radius:8px;padding:4px 10px;font-size:.72rem;font-weight:800;text-align:center}
+  .model-card.rec .rec-flag{display:block}
+
+  /* stepper (roadmap) */
+  .stepper{position:relative;margin-left:8px}
+  .step{position:relative;padding:0 0 4px 46px;margin-bottom:10px}
+  .step::before{content:"";position:absolute;left:16px;top:34px;bottom:-10px;width:2px;background:var(--grid)}
+  .step:last-child::before{display:none}
+  .step-btn{width:100%;text-align:left;background:var(--card);border:1px solid var(--ring);border-radius:12px;padding:12px 15px;cursor:pointer;box-shadow:var(--shadow);font-family:var(--sans);color:var(--ink)}
+  .step-btn:hover{border-color:var(--maroon-soft)}
+  .step-dot{position:absolute;left:0;top:8px;width:34px;height:34px;border-radius:50%;background:var(--maroon-tint);color:var(--maroon);display:flex;align-items:center;justify-content:center;font-weight:800;border:2px solid var(--maroon-soft);z-index:1}
+  .step.open .step-dot{background:var(--maroon);color:#fff}
+  .step-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .step-head .st{font-weight:700;font-size:.95rem}
+  .step-head .stime{font-size:.72rem;font-weight:800;color:var(--good-text);background:color-mix(in srgb,var(--good) 12%,var(--surface));border-radius:999px;padding:2px 9px;white-space:nowrap}
+  .step-body{display:none;margin-top:9px;font-size:.85rem;color:var(--ink-2)}
+  .step.open .step-body{display:block}
+  .step-body ul{margin:6px 0 0 18px}
+
+  table.dt{width:100%;border-collapse:collapse;font-size:.82rem}
+  table.dt th{text-align:left;border-bottom:2px solid var(--maroon);padding:7px 9px;color:var(--maroon)}
+  table.dt td{border-bottom:1px solid var(--grid);padding:7px 9px}
+  table.dt td:last-child,table.dt th:last-child{text-align:right;font-variant-numeric:tabular-nums}
+  table.dt tr.tot td{font-weight:800;border-top:2px solid var(--axis)}
+
+  .quiz-q{background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+  .quiz-q h4{font-size:.96rem;margin-bottom:11px} .quiz-q h4 .qn{color:var(--maroon)}
+  .qtype{display:inline-block;font-size:.66rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;background:var(--maroon-tint);color:var(--maroon);border-radius:999px;padding:2px 9px;margin-left:8px;vertical-align:middle}
+  .opts{display:grid;gap:8px}
+  .opt{text-align:left;border:1.5px solid var(--ring);background:var(--surface);border-radius:10px;padding:9px 13px;font-size:.88rem;cursor:pointer;color:var(--ink);font-family:var(--sans)}
+  .opt:hover{border-color:var(--maroon-soft)}
+  .opt.correct{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--surface));font-weight:700}
+  .opt.wrong{border-color:var(--critical);background:color-mix(in srgb,var(--critical) 10%,var(--surface))}
+  .opt:disabled{cursor:default;opacity:.92}
+  .tf-row{display:flex;gap:10px}
+  .tf-row .opt{flex:1;text-align:center;font-weight:700}
+  .blank-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .blank-row input[type=text]{flex:1;min-width:160px;border:1.5px solid var(--ring);background:var(--surface);border-radius:10px;padding:9px 13px;font-size:.92rem;color:var(--ink);font-family:var(--sans)}
+  .blank-row input[type=text]:focus{outline:2px solid var(--maroon-soft);border-color:var(--maroon)}
+  .blank-row input.correct{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--surface))}
+  .blank-row input.wrong{border-color:var(--critical);background:color-mix(in srgb,var(--critical) 10%,var(--surface))}
+  .blank-submit{border:none;background:var(--maroon);color:#fff;border-radius:10px;padding:9px 18px;font-weight:700;font-size:.86rem;cursor:pointer}
+  .blank-submit:hover{background:var(--maroon-mid)} .blank-submit:disabled{opacity:.4;cursor:default}
+  .fb{margin-top:9px;font-size:.85rem;display:none;border-radius:8px;padding:9px 11px}
+  .fb.show{display:block}
+  .fb.good{background:color-mix(in srgb,var(--good) 12%,var(--surface));color:var(--good-text)}
+  .fb.bad{background:color-mix(in srgb,var(--critical) 10%,var(--surface));color:var(--critical)}
+  #preScore,#quizscore{font-weight:800;color:var(--maroon)}
+  .diag-note{font-size:.78rem;color:var(--ink-3);background:var(--maroon-tint2);border-radius:8px;padding:8px 12px;margin-bottom:16px;display:inline-block}
+
+  .sum-list{list-style:none;display:grid;gap:9px}
+  .sum-list li{display:flex;gap:11px;align-items:flex-start;background:var(--card);border:1px solid var(--ring);border-radius:12px;padding:11px 15px;box-shadow:var(--shadow);font-size:.9rem}
+  .sum-list li .tick{color:var(--good-text);font-weight:800;flex:0 0 auto}
+  .refbox{background:var(--card);border:1px solid var(--ring);border-radius:12px;padding:13px 17px;font-size:.84rem;color:var(--ink-2);box-shadow:var(--shadow)}
+  .refbox p{margin:5px 0}
+  .foot-note{margin-top:22px;font-size:.76rem;color:var(--ink-3);border-top:1px solid var(--ring);padding-top:14px}
+  .foot-note a{color:var(--maroon)}
+
+  @media (max-width:760px){
+    .app{height:auto;min-height:100vh;overflow:visible}
+    .stage{overflow:visible}
+    .appbar{position:sticky;top:0} .tabbar{position:sticky;top:var(--appbar-h)}
+    .appbar .ttl small{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#stage">Skip to content</a>
+<div class="app">
+  <div class="appbar">
+    <span class="code">ME 4201</span>
+    <span class="ttl">Solar Net-Metering Entrepreneur's Playbook&nbsp;<small>Net Metering Guideline 2025 · Bangladesh</small></span>
+    <span class="spacer"></span>
+    <div class="prog-wrap"><span id="progLabel">Module 1 / 10</span><div class="prog-track"><div class="prog-fill" id="progFill"></div></div></div>
+    <button class="theme-btn" id="themeToggle" aria-pressed="false">🌙</button>
+  </div>
+  <nav class="tabbar" id="tabbar" aria-label="Module sections"></nav>
+  <div class="stage" id="stage"><div id="panels">
+
+    <!-- ===== 1 START ===== -->
+    <section class="panel active" id="tab-start" data-title="Start" data-emoji="🚀" data-boppps="Bridge-in · Objectives">
+      <div class="p-head"><span class="pn">1</span><h2>The Solar Net-Metering Entrepreneur's Playbook</h2><span class="tag">Bridge-in · Objectives</span></div>
+
+      <div class="callout quote">"You're a mechanical engineer, not a banker. Yet on a factory roof in Bangladesh sits an untapped power plant — and a business. Under the Net Metering Guideline 2025 you can build it, or build a company that builds it for others. Where would you start?"
+        <span class="src">🌉 Bridge-in — this module turns the 2025 guideline into an entrepreneur's toolkit: how net metering pays, which business model to pick, how to size and cost a system, and how to launch one.</span></div>
+
+      <p class="lead" style="margin-top:16px">An interactive infographic for <b>ME4201 — Power Plant Engineering</b>, built on Bangladesh's <b>Net Metering Guideline – 2025</b> (SREDA). Prepared by <b>Prof. Dr. Mazharul Islam, P.Eng.</b> (Alberta, Canada), Department of Mechanical and Production Engineering, Ahsanullah University of Science and Technology (AUST), Dhaka, Bangladesh.</p>
+
+      <h3 class="sh">🎯 What you'll be able to do (Objectives)</h3>
+      <div class="grid g2">
+        <div class="icon-card"><div class="ic">⚡</div><div><h4>Explain how net metering creates value</h4><p>Trace how a rooftop prosumer's exported energy is netted, credited and settled — and why it slashes the electricity bill.</p></div></div>
+        <div class="icon-card"><div class="ic">🏢</div><div><h4>Choose a business model</h4><p>Decide between the <b>CAPEX</b> (self-invest) and <b>OPEX</b> (third-party developer) models — the heart of the solar-energy venture.</p></div></div>
+        <div class="icon-card"><div class="ic">📐</div><div><h4>Size, cost &amp; evaluate a project</h4><p>Apply the guideline's capacity limits and run the feasibility (RoI, payback) of a real net-metering system.</p></div></div>
+        <div class="icon-card"><div class="ic">🗺️</div><div><h4>Launch it</h4><p>Follow the official application roadmap end-to-end, from portal submission to Commercial Operation Date.</p></div></div>
+      </div>
+
+      <h3 class="sh">📊 The market you're entering (as of the 2025 guideline)</h3>
+      <div class="grid g4">
+        <div class="statmini"><div class="v">3,763</div><div class="l">net-metered rooftop systems connected</div></div>
+        <div class="statmini"><div class="v">≈185 MW</div><div class="l">combined capacity across 6 DISCOs</div></div>
+        <div class="statmini"><div class="v">1,350 MW</div><div class="l">total solar installed nationally</div></div>
+        <div class="statmini"><div class="v">20% → 30%</div><div class="l">renewable-electricity target, 2030 → 2040</div></div>
+      </div>
+      <p class="lead" style="margin-top:14px">Move with the tabs, the <b>Next ▸</b> button, or the <b>← / →</b> arrow keys. Six interactive tools let you simulate the bill, compare business models, size a system, and cost a venture — drive them all.</p>
+    </section>
+
+    <!-- ===== 2 PRE-ASSESSMENT ===== -->
+    <section class="panel" id="tab-pre" data-title="Pre-Assessment" data-emoji="📝" data-boppps="Pre-assessment">
+      <div class="p-head"><span class="pn">2</span><h2>Pre-Assessment — Test Your Instincts</h2><span class="tag">Diagnostic · not graded</span></div>
+      <p class="lead">A <b>warm-up, not a test</b> — no penalty for guessing, and this score counts toward nothing. It surfaces your business instincts before the details. Answer instinctively, then watch your reasoning sharpen through the module.</p>
+      <div class="diag-note">🔎 Diagnostic only — this score is <b>not</b> added to your Post-Assessment result.</div>
+      <div id="prebox"></div>
+      <div class="callout good" id="preSummary" style="display:none;margin-top:8px"></div>
+    </section>
+
+    <!-- ===== 3 HOW NET METERING WORKS ===== -->
+    <section class="panel" id="tab-how" data-title="How It Works" data-emoji="🔁" data-boppps="Participatory learning">
+      <div class="p-head"><span class="pn">3</span><h2>How Net Metering Works</h2><span class="tag">Guideline §2.2, §3.4</span></div>
+      <p class="lead">A <b>prosumer</b> installs a renewable system on their own premises, uses what they need, and exports the surplus to the grid. A <b>bi-directional meter</b> records import and export separately. Each billing period the bill is based on the <i>net</i>: imported − exported − previous credit. Surplus credits carry forward and are cashed out each quarter.</p>
+
+      <div class="formula" style="margin-bottom:16px">Billing Units (BU) = Import (I) − Export (E) − Previous Credit (C)</div>
+
+      <div class="grid g2">
+        <div class="widget">
+          <h3>🔁 Net-Position Simulator</h3>
+          <p class="note">Set a month's grid import, solar export and carried-over credit. See whether you're a net importer, net exporter or net-zero — and what happens to your credit. (A 10% Distribution System Maintenance Charge applies to net export.)</p>
+          <div class="ctrl"><label>Electricity imported from grid, I <output id="npI">500 kWh</output></label><input type="range" id="npIR" min="0" max="3000" step="10" value="500"></div>
+          <div class="ctrl"><label>Solar electricity exported, E <output id="npE">350 kWh</output></label><input type="range" id="npER" min="0" max="3000" step="10" value="350"></div>
+          <div class="ctrl"><label>Previous month's credit, C <output id="npC">0 kWh</output></label><input type="range" id="npCR" min="0" max="3000" step="10" value="0"></div>
+          <div style="text-align:center;margin:6px 0"><span class="netpos" id="npPos">Net importer</span></div>
+          <div class="netbar-row"><div class="nl">Import (I)</div><div class="netbar-track"><span id="npBarI" style="background:var(--critical)"></span></div></div>
+          <div class="netbar-row"><div class="nl">Export (E)</div><div class="netbar-track"><span id="npBarE" style="background:var(--good)"></span></div></div>
+          <div class="mini-outs">
+            <div class="mini-out"><div class="v" id="npBU">150 kWh</div><div class="l">Billing units (payable)</div></div>
+            <div class="mini-out"><div class="v" id="npCf">0 kWh</div><div class="l">Credit carried forward</div></div>
+          </div>
+          <div class="verdict-box" id="npVerdict"></div>
+        </div>
+        <div class="widget">
+          <h3>📟 The metering set-up</h3>
+          <p class="note">Guideline Figure 3 — an "indirect" grid connection. The bi-directional Net Meter (M1) is the one that matters for billing.</p>
+          <svg viewBox="0 0 440 250" width="100%" role="img" aria-label="Schematic of net metering connection with bi-directional meter">
+            <rect x="20" y="150" width="78" height="40" rx="6" fill="none" stroke="var(--s-yellow)" stroke-width="2"/><text x="59" y="166" text-anchor="middle" style="font-size:10px;fill:var(--ink-2)">Solar PV</text><text x="59" y="180" text-anchor="middle" style="font-size:10px;fill:var(--ink-2)">array</text>
+            <rect x="118" y="150" width="70" height="40" rx="6" fill="none" stroke="var(--axis)" stroke-width="1.6"/><text x="153" y="166" text-anchor="middle" style="font-size:9.5px;fill:var(--ink-2)">Inverter</text><text x="153" y="180" text-anchor="middle" style="font-size:9.5px;fill:var(--ink-2)">(PCU)</text>
+            <circle cx="210" cy="170" r="15" fill="none" stroke="var(--s-blue)" stroke-width="1.6"/><text x="210" y="174" text-anchor="middle" style="font-size:10px;font-weight:700;fill:var(--s-blue)">M3</text>
+            <rect x="242" y="150" width="80" height="40" rx="6" fill="none" stroke="var(--axis)" stroke-width="1.6"/><text x="282" y="166" text-anchor="middle" style="font-size:9.5px;fill:var(--ink-2)">Consumer</text><text x="282" y="180" text-anchor="middle" style="font-size:9.5px;fill:var(--ink-2)">DB</text>
+            <circle cx="345" cy="170" r="15" fill="none" stroke="var(--s-blue)" stroke-width="1.6"/><text x="345" y="174" text-anchor="middle" style="font-size:10px;font-weight:700;fill:var(--s-blue)">M2</text>
+            <rect x="368" y="150" width="60" height="40" rx="6" fill="none" stroke="var(--axis)" stroke-width="1.6"/><text x="398" y="166" text-anchor="middle" style="font-size:9.5px;fill:var(--ink-2)">Loads</text>
+            <line x1="98" y1="170" x2="118" y2="170" stroke="var(--axis)"/><line x1="188" y1="170" x2="195" y2="170" stroke="var(--axis)"/><line x1="225" y1="170" x2="242" y2="170" stroke="var(--axis)"/><line x1="322" y1="170" x2="330" y2="170" stroke="var(--axis)"/><line x1="360" y1="170" x2="368" y2="170" stroke="var(--axis)"/>
+            <circle cx="282" cy="90" r="20" fill="var(--maroon-tint)" stroke="var(--maroon)" stroke-width="2.2"/><text x="282" y="88" text-anchor="middle" style="font-size:11px;font-weight:800;fill:var(--maroon)">M1</text><text x="282" y="100" text-anchor="middle" style="font-size:7.5px;fill:var(--maroon)">bi-dir</text>
+            <line x1="282" y1="150" x2="282" y2="110" stroke="var(--maroon)" stroke-width="2"/>
+            <line x1="180" y1="45" x2="384" y2="45" stroke="var(--axis)" stroke-width="2"/><text x="384" y="38" text-anchor="end" style="font-size:10px;fill:var(--ink-2)">Utility grid</text>
+            <line x1="282" y1="70" x2="282" y2="45" stroke="var(--maroon)" stroke-width="2"/>
+            <text x="300" y="130" style="font-size:9px;fill:var(--ink-3)">↑ export / ↓ import</text>
+          </svg>
+          <p class="note" style="margin-top:6px">M1 = Net Meter (bi-directional, billing); M2 = self-consumption meter (optional); M3 = RE/Solar accounting meter (mandatory). The consumer bears the Net Meter cost.</p>
+        </div>
+      </div>
+
+      <h3 class="sh">Four things every prosumer should know</h3>
+      <div class="grid g4">
+        <div class="icon-card"><div class="ic">🔀</div><div><h4>Net, not gross</h4><p>You pay only for net imported energy; surplus becomes credit.</p></div></div>
+        <div class="icon-card"><div class="ic">📅</div><div><h4>Quarterly settlement</h4><p>Left-over credit is settled after Mar, Jun, Sep, Dec — paid at the bulk rate.</p></div></div>
+        <div class="icon-card"><div class="ic">✂️</div><div><h4>10% + 5% charges</h4><p>10% of net export is a Distribution System Maintenance Charge; feeders exporting to the national grid also carry a 5% Grid charge.</p></div></div>
+        <div class="icon-card"><div class="ic">💳</div><div><h4>Fixed charges remain</h4><p>Even a net exporter still pays demand, meter and other fixed charges.</p></div></div>
+      </div>
+    </section>
+
+    <!-- ===== 4 BUSINESS MODELS ===== -->
+    <section class="panel" id="tab-models" data-title="Business Models" data-emoji="🏢" data-boppps="Participatory learning">
+      <div class="p-head"><span class="pn">4</span><h2>Two Business Models: CAPEX vs. OPEX</h2><span class="tag">Guideline §2.2, Annex-6</span></div>
+      <p class="lead">This is the entrepreneurial fork in the road. Under the guideline a net-metering system can be built under two ownership models. One makes <i>you the rooftop owner</i> the investor; the other makes <i>you the developer</i> the investor — installing on someone else's roof and selling them power below the retail tariff. Answer the questions to see which fits.</p>
+
+      <div class="widget" style="margin-bottom:16px">
+        <h3>🧭 Which model fits you?</h3>
+        <p class="note">Pick where you stand — the recommendation and the cash-flow logic update live.</p>
+        <div style="margin:6px 0"><b style="font-size:.85rem">1 · Do you have the capital to buy the system up-front?</b><div class="seg" id="q-capital"><button data-v="yes" class="active">Yes, I can fund it</button><button data-v="no">No / prefer not to</button></div></div>
+        <div style="margin:6px 0"><b style="font-size:.85rem">2 · Do you want to own the asset and keep the full benefit?</b><div class="seg" id="q-own"><button data-v="yes" class="active">Yes, own it</button><button data-v="no">No, just want cheaper power</button></div></div>
+        <div style="margin:6px 0"><b style="font-size:.85rem">3 · Your role in the venture?</b><div class="seg" id="q-role"><button data-v="host" class="active">Rooftop / facility owner</button><button data-v="dev">Energy developer / investor</button></div></div>
+        <div class="verdict-box" id="modelVerdict"></div>
+      </div>
+
+      <div class="compare">
+        <div class="model-card capex" id="card-capex">
+          <h4>🔵 CAPEX Model</h4><div class="sub">The consumer self-invests &amp; self-manages</div>
+          <ul>
+            <li>💰 <span><b>Who pays:</b> the consumer funds the whole system up-front.</span></li>
+            <li>🏠 <span><b>Who owns/operates:</b> the consumer — full control and maintenance.</span></li>
+            <li>🎁 <span><b>Who benefits:</b> the consumer keeps the <b>full</b> net-metering benefit (bill savings + settlement).</span></li>
+            <li>⚠️ <span><b>Who bears risk:</b> the consumer (capital, performance, O&amp;M).</span></li>
+            <li>📄 <span><b>Agreement:</b> bilateral, consumer ↔ distribution utility (Annex-4).</span></li>
+          </ul>
+          <div class="rec-flag">✔ Recommended for you</div>
+        </div>
+        <div class="model-card opex" id="card-opex">
+          <h4>🟠 OPEX Model</h4><div class="sub">A third-party investor installs &amp; operates</div>
+          <ul>
+            <li>💰 <span><b>Who pays:</b> the OPEX investor funds and installs — the consumer pays <b>no capital</b>.</span></li>
+            <li>🏢 <span><b>Who owns/operates:</b> the investor; all install, O&amp;M and risk sit with them.</span></li>
+            <li>🎁 <span><b>Who benefits:</b> the consumer buys the solar output at an agreed tariff, <b>generally lower than the retail tariff</b>; the investor earns the margin.</span></li>
+            <li>🤝 <span><b>Agreement:</b> <b>tripartite</b> — consumer + utility + OPEX investor (Annex-4 + OPEX contract Annex-6).</span></li>
+            <li>⏳ <span><b>Terms:</b> fixed term, clear tariff (flat or year-wise), ≥12-month security, and an end-of-term exit plan.</span></li>
+          </ul>
+          <div class="rec-flag">✔ Recommended for you</div>
+        </div>
+      </div>
+
+      <div class="callout" style="margin-top:16px"><b>The startup angle.</b> The OPEX model <i>is</i> a business: as an energy developer you invest in panels on a factory, hospital, mall or campus roof, sell them electricity below the grid tariff, and pocket the difference over a fixed-term contract. The guideline even lets distribution utilities act as OPEX investors and target universities, hospitals, shopping malls and industry. Your engineering skill — sizing, yield, O&amp;M — is the moat.</div>
+    </section>
+
+    <!-- ===== 5 ELIGIBILITY & SIZING ===== -->
+    <section class="panel" id="tab-sizing" data-title="Eligibility &amp; Sizing" data-emoji="📐" data-boppps="Participatory learning">
+      <div class="p-head"><span class="pn">5</span><h2>Eligibility &amp; System Sizing</h2><span class="tag">Guideline §3.1–3.3</span></div>
+      <p class="lead">Before costing anything, check who qualifies and how big a system the rules allow. The two hard limits: the system's <b>AC output must not exceed the sanctioned load</b>, and for medium/high-voltage consumers it must not exceed <b>80% of the transformer capacity</b>.</p>
+
+      <div class="grid g2">
+        <div class="widget">
+          <h3>📐 System-Sizing Calculator</h3>
+          <p class="note">Enter the connection and roof, and see the largest compliant system — and which limit binds.</p>
+          <div class="ctrl"><label>Sanctioned load <output id="szLoad">50 kW</output></label><input type="range" id="szLoadR" min="2" max="2000" step="1" value="50"></div>
+          <div class="seg" id="szVolt"><button data-v="lt" class="active">LT (230/400 V)</button><button data-v="mt">MT (11 kV)</button><button data-v="ht">HT (33 kV)</button></div>
+          <div class="ctrl" id="szTxWrap" style="display:none"><label>Transformer capacity <output id="szTx">100 kVA</output></label><input type="range" id="szTxR" min="25" max="5000" step="25" value="100"></div>
+          <div class="ctrl"><label>Available roof area <output id="szRoof">600 m²</output></label><input type="range" id="szRoofR" min="20" max="10000" step="10" value="600"></div>
+          <div class="big-out"><div class="v" id="szMax">50 kW</div><div class="l">Maximum compliant AC capacity</div></div>
+          <div class="mini-outs">
+            <div class="mini-out"><div class="v" id="szKwp">60 kWp</div><div class="l">Panel size (DC, ≈1.2×)</div></div>
+            <div class="mini-out"><div class="v" id="szGen">75,000</div><div class="l">Est. annual output (kWh)</div></div>
+          </div>
+          <div class="verdict-box" id="szVerdict"></div>
+        </div>
+        <div class="widget">
+          <h3>✅ Eligibility checklist (§3.1)</h3>
+          <p class="note">A consumer qualifies for net metering when all of these hold:</p>
+          <ul class="sum-list" style="gap:7px">
+            <li><span class="tick">✔</span><span>A legitimate consumer of the local distribution utility, with <b>no outstanding arrears</b>.</span></li>
+            <li><span class="tick">✔</span><span>Electricity produced <b>only from renewable sources</b>.</span></li>
+            <li><span class="tick">✔</span><span>Owner of, or has written permission for, the roof/space (building roof, façade, parking, boundary wall, or suitable land).</span></li>
+            <li><span class="tick">✔</span><span>Consumes the generated energy first, then supplies the surplus to the grid.</span></li>
+            <li><span class="tick">✔</span><span>Meets the capacity &amp; interconnection rules of §3.3 and the utility.</span></li>
+          </ul>
+          <p class="note" style="margin-top:10px">Eligible consumer classes span <b>LT, MT, HT and EHV</b> — residential, commercial, industrial, irrigation, educational, hospitals and more. Legacy rooftop systems can convert with relaxed module-standard requirements.</p>
+        </div>
+      </div>
+      <div class="callout warn" style="margin-top:16px"><b>Sizing rules that bind (§3.3).</b> (B) AC output of the renewable converter ≤ the consumer's sanctioned load. (C) For medium- to extra-high-voltage consumers, capacity ≤ <b>80% of the transformer's rated capacity</b>. (D) To exceed the contracted load, a separate application goes to the utility and the Grid Stability Committee (Annex-9).</div>
+    </section>
+
+    <!-- ===== 6 THE MONEY ===== -->
+    <section class="panel" id="tab-money" data-title="The Money" data-emoji="💵" data-boppps="Participatory learning">
+      <div class="p-head"><span class="pn">6</span><h2>The Money — Billing &amp; Savings</h2><span class="tag">Guideline Annex-5</span></div>
+      <p class="lead">Here's where net metering pays. Because you're billed on <b>net</b> units against a <b>rising slab tariff</b>, cutting your grid import pushes you down into cheaper slabs — so the saving is bigger than the energy you offset. This calculator reproduces the guideline's residential example (LT-A tariff).</p>
+
+      <div class="grid g2">
+        <div class="widget">
+          <h3>💡 Net-Metering Bill &amp; Savings Calculator</h3>
+          <p class="note">Guideline default (Ms. Rafia Begum, LT-A residential, 10 kW): grid import 500 kWh, solar export 350 kWh → bill drops from Tk 4,770 to ≈ Tk 1,423, a ~70% cut.</p>
+          <div class="ctrl"><label>Grid import this month, I <output id="mnI">500 kWh</output></label><input type="range" id="mnIR" min="50" max="1200" step="10" value="500"></div>
+          <div class="ctrl"><label>Solar export this month, E <output id="mnE">350 kWh</output></label><input type="range" id="mnER" min="0" max="1200" step="10" value="350"></div>
+          <div class="ctrl"><label>Sanctioned load (for demand charge) <output id="mnLoad">10 kW</output></label><input type="range" id="mnLoadR" min="2" max="30" step="1" value="10"></div>
+          <div class="big-out"><div class="v" id="mnSave">Tk 3,347</div><div class="l">Monthly saving vs. no solar</div></div>
+          <div class="mini-outs">
+            <div class="mini-out"><div class="v" id="mnBefore">Tk 4,770</div><div class="l">Bill before solar</div></div>
+            <div class="mini-out"><div class="v" id="mnAfter">Tk 1,423</div><div class="l">Bill after solar</div></div>
+            <div class="mini-out"><div class="v" id="mnPct">70%</div><div class="l">Bill reduction</div></div>
+          </div>
+        </div>
+        <div class="widget">
+          <h3>🧾 Bill breakdown</h3>
+          <p class="note">Net billing units = I − E − credit, charged up the LT-A slabs, plus demand charge and 5% VAT.</p>
+          <table class="dt" id="mnTable"></table>
+          <p class="note" style="margin-top:10px">LT-A slabs (BDT/kWh): 0–75 = 5.26 · 76–200 = 7.20 · 201–300 = 7.59 · 301–400 = 8.02 · 401–600 = 12.67 · &gt;600 = 14.61. Demand charge Tk 42/kW/month.</p>
+        </div>
+      </div>
+
+      <div class="callout good" style="margin-top:16px"><b>When the utility pays YOU.</b> If you export more than you import over a quarter, you become a net exporter. Guideline Annex-5(d): Ms. Aditi Chowdhury (DPDC, 50 kW small industry) accumulated 1,500 surplus units in a settlement period; at the DPDC bulk rate of Tk 8.56/unit that's Tk 12,840 — after fixed charges and VAT the utility pays her a <b>net Tk 9,918</b>, via bank, mobile financial service or cheque. Settlement runs every quarter (Mar, Jun, Sep, Dec).</div>
+      <div class="callout warn" style="margin-top:12px"><b>Remember the charges.</b> 10% of net exported energy is retained as the Distribution System Maintenance Charge (you keep 90% as credit); feeders that push power to the national grid also carry a 5% Grid System Maintenance Charge. Settlement credit is paid at the <b>bulk</b> rate, not the retail rate — so self-consumption is worth more than export.</div>
+    </section>
+
+    <!-- ===== 7 FEASIBILITY ===== -->
+    <section class="panel" id="tab-feas" data-title="Venture Feasibility" data-emoji="📈" data-boppps="Participatory learning">
+      <div class="p-head"><span class="pn">7</span><h2>Venture Feasibility — RoI &amp; Payback</h2><span class="tag">Investment decision</span></div>
+      <p class="lead">Now put on the investor's hat. Whether you're the rooftop owner (CAPEX) or the developer (OPEX), two numbers decide the deal: how many years until the money comes back (<b>Simple Payback Period</b>), and how much it earns over its life (<b>Return on Investment</b>).</p>
+      <div class="formula" style="margin-bottom:16px">SPP = <span style="display:inline-block;text-align:center;vertical-align:middle"><span style="display:block;border-bottom:1.5px solid currentColor;padding:0 6px">Investment</span><span style="display:block;padding:0 6px">Annual saving</span></span> &nbsp;·&nbsp; RoI = <span style="display:inline-block;text-align:center;vertical-align:middle"><span style="display:block;border-bottom:1.5px solid currentColor;padding:0 6px">Lifetime net profit</span><span style="display:block;padding:0 6px">Investment</span></span> × 100</div>
+
+      <div class="widget">
+        <h3>📊 Rooftop-Solar Venture Calculator</h3>
+        <p class="note">Size a system, set the install cost and the value of each generated kWh (retail offset for self-consumption), and read the venture economics.</p>
+        <div class="grid g2">
+          <div>
+            <div class="ctrl"><label>System size <output id="fsKw">20 kW</output></label><input type="range" id="fsKwR" min="1" max="500" step="1" value="20"></div>
+            <div class="ctrl"><label>Installed cost per kW <output id="fsCost">Tk 55,000</output></label><input type="range" id="fsCostR" min="30000" max="90000" step="1000" value="55000"></div>
+            <div class="ctrl"><label>Annual generation per kW <output id="fsGen">1500 kWh</output></label><input type="range" id="fsGenR" min="1000" max="2000" step="50" value="1500"></div>
+            <div class="ctrl"><label>Value of each kWh (bill offset) <output id="fsTar">Tk 9.0</output></label><input type="range" id="fsTarR" min="4" max="18" step="0.5" value="9"></div>
+            <div class="ctrl"><label>Project life <output id="fsLife">20 years</output></label><input type="range" id="fsLifeR" min="5" max="30" step="1" value="20"></div>
+          </div>
+          <div>
+            <div class="big-out"><div class="v" id="fsSpp">4.1 years</div><div class="l">Simple Payback Period</div></div>
+            <div class="big-out" style="background:var(--maroon-mid)"><div class="v" id="fsRoi">387%</div><div class="l">Return on Investment (lifetime)</div></div>
+            <div class="mini-outs">
+              <div class="mini-out"><div class="v" id="fsInv">Tk 1.10M</div><div class="l">Total investment</div></div>
+              <div class="mini-out"><div class="v" id="fsSave">Tk 270,000</div><div class="l">Annual saving</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="verdict-box" id="fsVerdict"></div>
+      </div>
+      <div class="callout" style="margin-top:16px"><b>CAPEX vs OPEX cash flows.</b> Under <b>CAPEX</b> you pay the investment and keep the full annual saving — the RoI above is yours. Under <b>OPEX</b> the developer funds it and you instead pay a per-kWh tariff below retail; the developer's RoI comes from the gap between their cost and your tariff. Same physics, different pockets.</div>
+    </section>
+
+    <!-- ===== 8 LAUNCH ROADMAP ===== -->
+    <section class="panel" id="tab-roadmap" data-title="Launch Roadmap" data-emoji="🗺️" data-boppps="Participatory learning">
+      <div class="p-head"><span class="pn">8</span><h2>Launch Roadmap — From Application to COD</h2><span class="tag">Guideline §3.7, Figure 2</span></div>
+      <p class="lead">The guideline sets a clear, time-bound process. Apply online at the national portal or on paper, and the utility must move within fixed deadlines. Click each stage to expand what happens and who does it.</p>
+
+      <div class="stepper" id="roadmap">
+        <div class="step open">
+          <div class="step-dot">1</div>
+          <button class="step-btn"><div class="step-head"><span class="st">📥 Submit the application</span><span class="stime">≤ 5 days</span></div></button>
+          <div class="step-body">Collect the form &amp; checklist, then submit online at <b>nem.powerdivision.gov.bd</b> (or hard copy) using the Annex-1 template with all supporting documents. The utility acknowledges receipt; online applicants get SMS/email confirmations and can track status. <b>OPEX first:</b> before applying, the consumer and OPEX investor execute the bilateral OPEX agreement (Annex-6).</div>
+        </div>
+        <div class="step">
+          <div class="step-dot">2</div>
+          <button class="step-btn"><div class="step-head"><span class="st">🔍 Evaluation &amp; approval to install</span><span class="stime">≤ 7 days</span></div></button>
+          <div class="step-body">The utility evaluates the premises, interconnection point and distribution system. If a system modification is needed, you're informed (its cost is borne by the applicant). Otherwise, approval to install the RE system is issued. Permission for the whole submission is issued within <b>10 working days</b>.</div>
+        </div>
+        <div class="step">
+          <div class="step-dot">3</div>
+          <button class="step-btn"><div class="step-head"><span class="st">🔧 Install the system</span><span class="stime">≤ 8 months</span></div></button>
+          <div class="step-body">Install the renewable system and meters using SREDA-approved equipment (solar modules, inverters per IEC 61727, charge controllers, Net Meter). Complete the Annex-3 Net Metering Checklist and apply for compliance verification. You have up to eight months from the permission letter.</div>
+        </div>
+        <div class="step">
+          <div class="step-dot">4</div>
+          <button class="step-btn"><div class="step-head"><span class="st">✅ Inspection, agreement &amp; COD</span><span class="stime">≤ 15 days</span></div></button>
+          <div class="step-body">The utility inspects and commissions the system for compliance. On success, the Net Energy Metering Agreement is signed (Annex-4; <b>tripartite</b> for OPEX). The execution date is the <b>Commercial Operation Date (COD)</b> — your system is officially earning. The system is registered in the National Renewable Energy Database with a unique SID.</div>
+        </div>
+      </div>
+
+      <div class="callout" style="margin-top:16px"><b>Know your rights.</b> If the utility misses the guideline's timelines, or you disagree with a rejection, you can lodge a complaint or review application with <b>SREDA</b> (online or hard copy) with evidence — a SREDA committee reviews it and its decision is final. Underperformance is monitored too: if annual generation falls 35% below expectation you get advisory guidance; below 50%, a formal remedial request.</div>
+    </section>
+
+    <!-- ===== 9 POST-ASSESSMENT ===== -->
+    <section class="panel" id="tab-post" data-title="Post-Assessment" data-emoji="✅" data-boppps="Post-assessment">
+      <div class="p-head"><span class="pn">9</span><h2>Post-Assessment</h2><span class="tag">Score: <span id="quizscore">0 / 10</span></span></div>
+      <p class="lead">Ten questions across the whole playbook — multiple-choice, fill-in-the-blank, and true/false. Answer each for instant feedback with a brief explanation.</p>
+      <div id="quizbox"></div>
+    </section>
+
+    <!-- ===== 10 SUMMARY ===== -->
+    <section class="panel" id="tab-summary" data-title="Summary" data-emoji="📚" data-boppps="Summary">
+      <div class="p-head"><span class="pn">10</span><h2>Summary</h2><span class="tag">Key takeaways</span></div>
+      <ul class="sum-list">
+        <li><span class="tick">✔</span><span><b>Net metering</b> nets exported against imported energy: Billing Units = Import − Export − Previous Credit; surplus carries forward and is settled quarterly at the bulk rate.</span></li>
+        <li><span class="tick">✔</span><span>Two business models: <b>CAPEX</b> (consumer self-invests, keeps the full benefit) and <b>OPEX</b> (a third-party developer invests and sells power below retail) — the OPEX model is the entrepreneur's play.</span></li>
+        <li><span class="tick">✔</span><span><b>Sizing limits:</b> AC output ≤ sanctioned load; ≤ 80% of transformer capacity for MV/EHV consumers.</span></li>
+        <li><span class="tick">✔</span><span>Because tariffs rise in <b>slabs</b>, cutting grid import saves more than the energy offset — the guideline's residential example shows a ~70% bill cut; a net exporter can be <b>paid</b> by the utility.</span></li>
+        <li><span class="tick">✔</span><span><b>Charges:</b> 10% Distribution System Maintenance Charge on net export (90% credited); 5% Grid System Maintenance Charge where feeders export to the national grid; fixed charges always remain.</span></li>
+        <li><span class="tick">✔</span><span><b>Feasibility</b> hinges on Simple Payback Period and Return on Investment — rooftop solar under net metering typically pays back in a handful of years.</span></li>
+        <li><span class="tick">✔</span><span><b>Launch:</b> apply (≤5 d) → evaluation (≤7 d) → install (≤8 mo) → inspection &amp; agreement (≤15 d) = Commercial Operation Date, via nem.powerdivision.gov.bd.</span></li>
+      </ul>
+
+      <h3 class="sh">References &amp; sources</h3>
+      <div class="refbox">
+        <p>SREDA (2025). <i>Net Metering Guideline – 2025.</i> Sustainable and Renewable Energy Development Authority, Power Division, Ministry of Power, Energy and Mineral Resources, Government of the People's Republic of Bangladesh (English translation approved 9 December 2025). <a href="https://www.powerdivision.gov.bd">powerdivision.gov.bd</a> · Application portal: <a href="https://nem.powerdivision.gov.bd">nem.powerdivision.gov.bd</a></p>
+        <p>Worked billing examples and the application flow are reproduced from Annex-5 and Figure 2 of the guideline. Slab tariffs, bulk rates and charges are illustrative of the guideline's examples and are subject to BERC revision.</p>
+        <p>Course text: Nag, P. (2014). <i>Power Plant Engineering.</i> McGraw-Hill Education, 4th edition — ME4201 reference.</p>
+      </div>
+      <div class="foot-note">
+        Interactive entrepreneurship module for <b>ME4201 — Power Plant Engineering</b>, by Professor Dr. Mazharul Islam, P.Eng., Department of Mechanical and Production Engineering, Ahsanullah University of Science and Technology (AUST), Dhaka, Bangladesh. Built on the Net Metering Guideline – 2025 (SREDA). Calculators are illustrative teaching tools using the guideline's figures, not investment or legal advice; verify current tariffs and rules with your distribution utility and SREDA. Licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.
+      </div>
+    </section>
+
+  </div></div>
+</div>
+<script id="mainjs">
+(function(){
+"use strict";
+const $=(s,c)=>(c||document).querySelector(s);
+const $$=(s,c)=>Array.from((c||document).querySelectorAll(s));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const norm=s=>String(s).toLowerCase().trim().replace(/[$,°.;:!?'"()%]/g,"").replace(/\s+/g," ");
+const tk=n=>"Tk "+Math.round(n).toLocaleString("en-US");
+const num=(n,d)=>n.toLocaleString("en-US",{maximumFractionDigits:d==null?0:d,minimumFractionDigits:d==null?0:d});
+
+/* theme */
+const themeBtn=$("#themeToggle");
+function setTheme(t){document.documentElement.setAttribute("data-theme",t);themeBtn.textContent=t==="dark"?"☀️":"🌙";themeBtn.setAttribute("aria-pressed",t==="dark"?"true":"false");}
+themeBtn.addEventListener("click",()=>setTheme(document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark"));
+
+/* tab shell */
+const panels=$$("#panels .panel");
+const tabbar=$("#tabbar");
+let activeIdx=Math.max(0,panels.findIndex(p=>p.classList.contains("active")));
+panels.forEach((p,i)=>{
+  const b=document.createElement("button");
+  b.innerHTML="<span class='tnum'>"+(i+1)+"</span><span>"+p.dataset.emoji+" "+p.dataset.title+"</span>";
+  b.title="BOPPPS: "+p.dataset.boppps;
+  b.addEventListener("click",()=>goTo(i));
+  tabbar.appendChild(b);
+  const nav=document.createElement("div");nav.className="panel-nav";
+  nav.innerHTML="<button class='pn-btn' data-dir='-1'>◂ Previous</button><button class='pn-btn primary' data-dir='1'>Next ▸</button>";
+  nav.querySelectorAll("button").forEach(bt=>bt.addEventListener("click",()=>goTo(i+ +bt.dataset.dir)));
+  p.appendChild(nav);
+});
+const tabBtns=$$("#tabbar button");
+function goTo(i){
+  i=clamp(i,0,panels.length-1);
+  panels.forEach((p,k)=>p.classList.toggle("active",k===i));
+  tabBtns.forEach((b,k)=>b.classList.toggle("active",k===i));
+  activeIdx=i;
+  $("#progFill").style.width=Math.round((i+1)/panels.length*100)+"%";
+  $("#progLabel").textContent="Module "+(i+1)+" / "+panels.length;
+  $("#stage").scrollTop=0;
+  const nav=panels[i].querySelector(".panel-nav");
+  if(nav){const bs=nav.querySelectorAll("button");bs[0].disabled=(i===0);bs[1].disabled=(i===panels.length-1);}
+  tabBtns[i].scrollIntoView({inline:"center",block:"nearest"});
+}
+document.addEventListener("keydown",e=>{
+  const t=document.activeElement?document.activeElement.tagName:"";
+  if(/INPUT|TEXTAREA|SELECT|BUTTON/.test(t))return;
+  if(e.key==="ArrowRight")goTo(activeIdx+1);
+  else if(e.key==="ArrowLeft")goTo(activeIdx-1);
+});
+function segGroup(id,cb){const g=$("#"+id);$$("button",g).forEach(b=>b.addEventListener("click",()=>{$$("button",g).forEach(x=>x.classList.remove("active"));b.classList.add("active");cb(b.dataset.v);}));}
+
+/* ===== Net-position simulator ===== */
+const npIR=$("#npIR"),npER=$("#npER"),npCR=$("#npCR");
+function updNP(){
+  const I=+npIR.value,E=+npER.value,C=+npCR.value;
+  $("#npI").textContent=num(I)+" kWh";$("#npE").textContent=num(E)+" kWh";$("#npC").textContent=num(C)+" kWh";
+  const mx=Math.max(I,E,1);
+  $("#npBarI").style.width=(I/mx*100)+"%";$("#npBarI").textContent=I>mx*0.12?num(I):"";
+  $("#npBarE").style.width=(E/mx*100)+"%";$("#npBarE").textContent=E>mx*0.12?num(E):"";
+  const pos=$("#npPos");let BU=0,cf=0,verdict="";
+  if(E>I){
+    const Enet=E-I,Eadj=0.9*Enet;cf=Eadj+C;BU=0;
+    pos.className="netpos exp";pos.textContent="Net exporter";
+    verdict="🟢 <b>Net exporter.</b> You sent "+num(Enet)+" kWh more than you took. After the 10% maintenance charge, "+num(Eadj)+" kWh is added to your credit → <b>"+num(cf)+" kWh carried forward</b>. No energy charge this month (only fixed charges). At quarter-end this credit is paid to you at the bulk rate.";
+  } else if(E===I){
+    BU=Math.max(0,-C);cf=C;pos.className="netpos zero";pos.textContent="Net zero";
+    verdict="⚖️ <b>Net zero this month.</b> Import equals export, so no energy charge — your "+num(C)+" kWh of prior credit stays intact.";
+  } else {
+    const netImp=I-E,raw=netImp-C;
+    if(raw>0){BU=raw;cf=0;pos.className="netpos imp";pos.textContent="Net importer";
+      verdict="🔴 <b>Net importer.</b> You pay for <b>"+num(BU)+" kWh</b> (net import "+num(netImp)+" − prior credit "+num(C)+"). No credit carried forward.";}
+    else{BU=0;cf=-raw;pos.className="netpos zero";pos.textContent="Net zero (credit covers it)";
+      verdict="🟢 <b>Covered by credit.</b> Your prior credit wipes out the "+num(netImp)+" kWh net import — no energy charge, and <b>"+num(cf)+" kWh</b> credit remains (settled at quarter-end).";}
+  }
+  $("#npBU").textContent=num(BU)+" kWh";$("#npCf").textContent=num(cf)+" kWh";
+  $("#npVerdict").innerHTML=verdict;
+}
+[npIR,npER,npCR].forEach(el=>el.addEventListener("input",updNP));updNP();
+
+/* ===== Business model chooser ===== */
+let mCapital="yes",mOwn="yes",mRole="host";
+segGroup("q-capital",v=>{mCapital=v;updModel();});
+segGroup("q-own",v=>{mOwn=v;updModel();});
+segGroup("q-role",v=>{mRole=v;updModel();});
+function updModel(){
+  const capex=$("#card-capex"),opex=$("#card-opex");
+  capex.classList.remove("rec");opex.classList.remove("rec");
+  let rec,why;
+  if(mRole==="dev"){rec="opex";why="As an <b>energy developer/investor</b>, the OPEX model is your business: you fund and install systems on clients' roofs and sell them electricity below the grid tariff, earning the margin over a fixed-term contract.";}
+  else if(mCapital==="yes"&&mOwn==="yes"){rec="capex";why="You have capital and want to own the asset — the <b>CAPEX model</b> lets you self-invest and keep the <b>full</b> net-metering benefit (bill savings plus quarterly settlement).";}
+  else{rec="opex";why="You'd rather avoid the up-front cost or ownership burden — the <b>OPEX model</b> lets a third-party developer fund and run the system while you simply buy cleaner power at a tariff below retail, with no capital and no O&amp;M risk.";}
+  (rec==="capex"?capex:opex).classList.add("rec");
+  $("#modelVerdict").innerHTML="🧭 <b>Recommended: "+(rec==="capex"?"CAPEX":"OPEX")+" model.</b> "+why;
+}
+updModel();
+
+/* ===== Sizing calculator ===== */
+const szLoadR=$("#szLoadR"),szTxR=$("#szTxR"),szRoofR=$("#szRoofR");
+let szV="lt";
+segGroup("szVolt",v=>{szV=v;$("#szTxWrap").style.display=(v==="lt")?"none":"block";updSize();});
+function updSize(){
+  const load=+szLoadR.value,tx=+szTxR.value,roof=+szRoofR.value;
+  $("#szLoad").textContent=num(load)+" kW";$("#szTx").textContent=num(tx)+" kVA";$("#szRoof").textContent=num(roof)+" m²";
+  const byLoad=load;
+  const byTx=(szV==="lt")?Infinity:0.8*tx;
+  const acRoof=(roof/10)/1.2; // 10 m²/kWp DC, DC:AC 1.2
+  const maxAC=Math.max(0,Math.min(byLoad,byTx,acRoof));
+  const kwp=maxAC*1.2, gen=maxAC*1500;
+  $("#szMax").textContent=num(maxAC,maxAC<10?1:0)+" kW";
+  $("#szKwp").textContent=num(kwp,kwp<10?1:0)+" kWp";
+  $("#szGen").textContent=num(gen);
+  let bind="the sanctioned load";
+  if(byTx<byLoad&&byTx<=acRoof)bind="the 80% transformer limit ("+num(byTx,0)+" kW)";
+  else if(acRoof<byLoad&&acRoof<byTx)bind="the available roof area ("+num(acRoof,0)+" kW)";
+  $("#szVerdict").innerHTML="📐 Largest compliant system: <b>"+num(maxAC,maxAC<10?1:0)+" kW AC</b> — limited by <b>"+bind+"</b>. That's about "+num(kwp,0)+" kWp of panels needing ~"+num(kwp*10,0)+" m² of roof, generating roughly "+num(gen)+" kWh/year.";
+}
+[szLoadR,szTxR,szRoofR].forEach(el=>el.addEventListener("input",updSize));updSize();
+
+/* ===== Bill & savings (LT-A slabs) ===== */
+const SLABS=[[75,5.26],[125,7.20],[100,7.59],[100,8.02],[200,12.67],[1e9,14.61]];
+function slabBill(u){let rem=u,c=0;for(const[w,r]of SLABS){const t=Math.min(rem,w);c+=t*r;rem-=t;if(rem<=0)break;}return c;}
+function slabSplit(u){let rem=u,rows=[];const names=["0–75","76–200","201–300","301–400","401–600",">600"];SLABS.forEach(([w,r],i)=>{const t=Math.min(Math.max(rem,0),w);if(t>0)rows.push([names[i],t,r,t*r]);rem-=t;});return rows;}
+const mnIR=$("#mnIR"),mnER=$("#mnER"),mnLoadR=$("#mnLoadR");
+function updMoney(){
+  const I=+mnIR.value,E=+mnER.value,load=+mnLoadR.value;
+  $("#mnI").textContent=num(I)+" kWh";$("#mnE").textContent=num(E)+" kWh";$("#mnLoad").textContent=load+" kW";
+  const BU=Math.max(0,I-E), demand=load*42;
+  const energyAfter=slabBill(BU), subAfter=energyAfter+demand, totAfter=subAfter*1.05;
+  const energyBefore=slabBill(I), subBefore=energyBefore+demand, totBefore=subBefore*1.05;
+  const save=totBefore-totAfter, pct=totBefore>0?save/totBefore*100:0;
+  $("#mnSave").textContent=tk(save);$("#mnBefore").textContent=tk(totBefore);$("#mnAfter").textContent=tk(totAfter);$("#mnPct").textContent=num(pct,0)+"%";
+  let rows="<tr><th>Item</th><th>After solar</th></tr>";
+  rows+="<tr><td>Net billing units</td><td>"+num(BU)+" kWh</td></tr>";
+  slabSplit(BU).forEach(r=>{rows+="<tr><td style='color:var(--ink-3)'>&nbsp;&nbsp;"+r[0]+" @ "+r[2].toFixed(2)+"</td><td>"+tk(r[3])+"</td></tr>";});
+  rows+="<tr><td>Demand charge ("+load+" kW × 42)</td><td>"+tk(demand)+"</td></tr>";
+  rows+="<tr><td>VAT (5%)</td><td>"+tk(subAfter*0.05)+"</td></tr>";
+  rows+="<tr class='tot'><td>Total after solar</td><td>"+tk(totAfter)+"</td></tr>";
+  rows+="<tr><td style='color:var(--ink-3)'>Total before solar ("+num(I)+" kWh)</td><td style='color:var(--ink-3)'>"+tk(totBefore)+"</td></tr>";
+  $("#mnTable").innerHTML=rows;
+}
+[mnIR,mnER,mnLoadR].forEach(el=>el.addEventListener("input",updMoney));updMoney();
+
+/* ===== Feasibility ===== */
+const fsKwR=$("#fsKwR"),fsCostR=$("#fsCostR"),fsGenR=$("#fsGenR"),fsTarR=$("#fsTarR"),fsLifeR=$("#fsLifeR");
+function updFeas(){
+  const kw=+fsKwR.value,cost=+fsCostR.value,gen=+fsGenR.value,tar=+fsTarR.value,life=+fsLifeR.value;
+  $("#fsKw").textContent=kw+" kW";$("#fsCost").textContent=tk(cost);$("#fsGen").textContent=num(gen)+" kWh";$("#fsTar").textContent="Tk "+tar.toFixed(1);$("#fsLife").textContent=life+" years";
+  const inv=kw*cost, save=kw*gen*tar, spp=save>0?inv/save:0, roi=(save*life-inv)/inv*100;
+  $("#fsSpp").textContent=num(spp,2)+" years";$("#fsRoi").textContent=num(roi,0)+"%";
+  $("#fsInv").textContent="Tk "+num(inv/1e6,2)+"M";$("#fsSave").textContent=tk(save);
+  $("#fsVerdict").innerHTML="📊 A <b>"+kw+" kW</b> system costs <b>"+tk(inv)+"</b>, saves <b>"+tk(save)+"/year</b>, pays back in <b>"+num(spp,2)+" years</b> and returns <b>"+num(roi,0)+"%</b> over "+life+" years — "+(roi>150?"a strongly bankable venture.":roi>0?"a viable project.":"not viable at these assumptions.");
+}
+[fsKwR,fsCostR,fsGenR,fsTarR,fsLifeR].forEach(el=>el.addEventListener("input",updFeas));updFeas();
+
+/* ===== Roadmap stepper ===== */
+$$("#roadmap .step-btn").forEach(b=>b.addEventListener("click",()=>b.closest(".step").classList.toggle("open")));
+
+/* ===================================================================
+   QUIZ ENGINE
+   =================================================================== */
+function buildQuestion(item,qi,onAnswered){
+  const div=document.createElement("div");div.className="quiz-q";
+  const typeLbl=item.type==="mcq"?"Multiple choice":item.type==="tf"?"True / False":"Fill in the blank";
+  div.innerHTML="<h4><span class='qn'>Q"+(qi+1)+".</span> "+item.q+"<span class='qtype'>"+typeLbl+"</span></h4><div class='qbody'></div><div class='fb'></div>";
+  const body=$(".qbody",div),fb=$(".fb",div);
+  function finish(ok,ex){if(div.dataset.done)return;div.dataset.done="1";fb.className="fb show "+(ok?"good":"bad");fb.innerHTML=(ok?"✅ Correct! ":"❌ Not quite. ")+ex;onAnswered(ok);}
+  if(item.type==="mcq"){
+    const opts=document.createElement("div");opts.className="opts";
+    item.o.forEach((op,oi)=>{const b=document.createElement("button");b.className="opt";b.innerHTML=op;
+      b.addEventListener("click",()=>{if(div.dataset.done)return;$$(".opt",opts).forEach((x,xi)=>{x.disabled=true;if(xi===item.a)x.classList.add("correct");});if(oi!==item.a)b.classList.add("wrong");finish(oi===item.a,item.fb);});
+      opts.appendChild(b);});
+    body.appendChild(opts);
+  } else if(item.type==="tf"){
+    const row=document.createElement("div");row.className="opts tf-row";
+    [["True",true],["False",false]].forEach(([label,val])=>{const b=document.createElement("button");b.className="opt";b.textContent=label;
+      b.addEventListener("click",()=>{if(div.dataset.done)return;$$(".opt",row).forEach(x=>{x.disabled=true;if((x.textContent==="True")===item.a)x.classList.add("correct");});if(val!==item.a)b.classList.add("wrong");finish(val===item.a,item.fb);});
+      row.appendChild(b);});
+    body.appendChild(row);
+  } else {
+    const row=document.createElement("div");row.className="blank-row";
+    const inp=document.createElement("input");inp.type="text";inp.placeholder="Type your answer…";inp.autocomplete="off";
+    const btn=document.createElement("button");btn.className="blank-submit";btn.textContent="Check";
+    function check(){if(div.dataset.done)return;const val=norm(inp.value);const ok=val.length>0&&item.accept.some(a=>norm(a)===val);inp.disabled=true;btn.disabled=true;inp.classList.add(ok?"correct":"wrong");finish(ok,"Accepted answer: <b>"+item.accept[0]+"</b>. "+item.fb);}
+    btn.addEventListener("click",check);
+    inp.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();check();}});
+    row.appendChild(inp);row.appendChild(btn);body.appendChild(row);
+  }
+  return div;
+}
+
+/* PRE-ASSESSMENT */
+const PRE=[
+ {type:"tf",q:"Under net metering, the utility pays you cash for every single unit your solar panels produce — including the ones you use yourself.",a:false,
+  fb:"No — self-consumed units simply avoid buying grid power (worth the retail rate), and only your net-exported surplus earns credit. It's netting, not a feed-in payment for all production."},
+ {type:"mcq",q:"You have an ideal factory rooftop but no capital to buy panels. Which arrangement still lets you go solar?",
+  o:["You must pay cash up-front or skip it","The OPEX model — a developer funds it and you buy the power","Net metering is only for people who own panels","Only the government can install it"],a:1,
+  fb:"The OPEX model lets a third-party investor fund, install and operate the system while you buy the electricity at an agreed (below-retail) tariff — zero capital from you."},
+ {type:"tf",q:"Because electricity tariffs rise in slabs, cutting your grid import saves more money than just the value of the energy you offset.",a:true,
+  fb:"Exactly — trimming import drops you out of the expensive top slabs, so the rupee saving exceeds the simple energy value. That's why the guideline's example shows a ~70% bill cut."},
+ {type:"blank",q:"The meter that records both imported and exported electricity is called a ______-directional meter.",
+  accept:["bi","bidirectional","bi directional"],
+  fb:"A bi-directional (Net) meter measures import and export separately — the basis of net-metering billing."},
+ {type:"mcq",q:"Which model turns YOU into an energy entrepreneur, investing in solar on other people's roofs and selling them power?",
+  o:["CAPEX model","OPEX model","Lifeline tariff","Load shedding"],a:1,
+  fb:"Under the OPEX model the developer invests and sells electricity below the retail tariff — the classic rooftop-solar startup play."}
+];
+let preAnswered=0;const prebox=$("#prebox");
+PRE.forEach((item,qi)=>{prebox.appendChild(buildQuestion(item,qi,()=>{preAnswered++;if(preAnswered===PRE.length){const s=$("#preSummary");s.style.display="block";s.innerHTML="🌟 <b>Great warm-up!</b> You've surfaced your instincts on how net metering pays and who invests — all ungraded. Every one of these is worked out with a live tool in the tabs ahead.";}}));});
+
+/* POST-ASSESSMENT */
+const POST=[
+ {type:"blank",q:"Net-metering billing units are calculated as: Billing Units = Import − Export − Previous ______.",
+  accept:["credit","credits"],
+  fb:"BU = I − E − C. If it's positive you pay for those units; if it's zero or negative, surplus credit carries forward."},
+ {type:"mcq",q:"A prosumer imports 500 kWh, exports 350 kWh, and has no prior credit. How many units are billed?",
+  o:["350 kWh","850 kWh","150 kWh","0 kWh"],a:2,
+  fb:"BU = 500 − 350 − 0 = 150 kWh. She's a net importer and pays for 150 units (charged up the slab tariff)."},
+ {type:"tf",q:"A net exporter still has to pay demand, meter and other fixed charges, even in a month with no energy charge.",a:true,
+  fb:"Correct — netting removes the energy charge when you export enough, but fixed charges (demand, meter, etc.) always remain."},
+ {type:"mcq",q:"In the OPEX business model, who funds, owns and maintains the solar system?",
+  o:["The rooftop consumer","A third-party OPEX investor / developer","The distribution utility only","The Bangladesh Bank"],a:1,
+  fb:"The OPEX investor funds, installs, owns and maintains the system under a tripartite agreement; the consumer just buys the output below retail."},
+ {type:"blank",q:"For medium- and high-voltage consumers, the system capacity must not exceed ____% of the transformer's rated capacity.",
+  accept:["80","80%"],
+  fb:"Guideline §3.3(C): for MV/EHV consumers, capacity ≤ 80% of the transformer capacity. And for everyone, AC output ≤ sanctioned load."},
+ {type:"tf",q:"A system's AC output is allowed to exceed the consumer's sanctioned load as long as the roof is large enough.",a:false,
+  fb:"False — §3.3(B) caps the renewable converter's AC output at the sanctioned load, regardless of roof size."},
+ {type:"mcq",q:"Ten percent of a prosumer's net exported energy is retained by the utility as the…",
+  o:["Value Added Tax","Distribution System Maintenance Charge","Demand charge","Late payment fee"],a:1,
+  fb:"10% of net export is the Distribution System Maintenance Charge (you keep 90% as credit). Feeders exporting to the national grid also carry a 5% Grid System Maintenance Charge."},
+ {type:"mcq",q:"In the guideline's residential example, installing rooftop solar cut the monthly electricity bill by about:",
+  o:["10%","30%","50%","70%"],a:3,
+  fb:"Ms. Rafia Begum's bill fell from Tk 4,770 to ~Tk 1,423 — roughly a 70% reduction — because net billing dropped her into much cheaper tariff slabs."},
+ {type:"blank",q:"Left-over export credit is settled every ______ months (i.e. quarterly, after March, June, September and December).",
+  accept:["three","3"],
+  fb:"The settlement period is three months (quarterly). Any remaining credit is then paid to the prosumer and the balance resets."},
+ {type:"tf",q:"At quarterly settlement, a net exporter is paid for surplus units at the full retail tariff.",a:false,
+  fb:"False — settlement is at the BULK rate (e.g. DPDC's 8.56 BDT/unit), which is lower than retail. That's why self-consuming your solar is worth more than exporting it."}
+];
+let score=0,answered=0;const qbox=$("#quizbox");
+POST.forEach((item,qi)=>{qbox.appendChild(buildQuestion(item,qi,(ok)=>{answered++;if(ok)score++;$("#quizscore").textContent=score+" / "+POST.length+(answered===POST.length?(score===POST.length?" 🏆":(score>=7?" — well done!":" — review earlier tabs!")):"");}));});
+
+/* init */
+if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)setTheme("dark");
+goTo(activeIdx);
+})();
+</script>
+</body>
+</html>

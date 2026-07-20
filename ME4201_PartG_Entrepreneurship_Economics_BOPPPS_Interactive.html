@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ME4201 — Economics &amp; Entrepreneurship in Power Projects (BOPPPS Interactive Module)</title>
+<meta name="description" content="BOPPPS interactive learning module — ME4201 Power Plant Engineering, Chapter 1 Part G: Entrepreneurship in Power Projects — COE, LCOE, RoI, SPP. Prof. Dr. Mazharul Islam, AUST.">
+<style>
+  :root{
+    color-scheme: light;
+    --maroon:#7a1015; --maroon-deep:#4d0509; --maroon-mid:#96262b; --maroon-soft:#b5484d;
+    --maroon-tint:#f8eeee; --maroon-tint2:#f2e2e2;
+    --page:#f4f2ef; --surface:#fcfcfb; --card:#ffffff;
+    --ink:#1a1a1a; --ink-2:#52514e; --ink-3:#898781;
+    --grid:#e1e0d9; --axis:#c3c2b7; --ring:rgba(11,11,11,.10);
+    --s-blue:#2a78d6; --s-green:#008300; --s-yellow:#eda100; --s-red:#e34948; --s-aqua:#1baf7a; --s-violet:#4a3aa7; --s-orange:#eb6834;
+    --seq-100:#cde2fb; --seq-250:#86b6ef; --seq-450:#2a78d6; --seq-550:#1c5cab; --seq-650:#104281;
+    --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+    --good-text:#006300;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(20,10,10,.06),0 8px 24px rgba(20,10,10,.07);
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --serif:Georgia,"Times New Roman",serif;
+    --appbar-h:56px; --tabbar-h:52px;
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --maroon:#c96a6f; --maroon-deep:#2b0406; --maroon-mid:#b5484d; --maroon-soft:#d98a8e;
+    --maroon-tint:#2a1516; --maroon-tint2:#341a1b;
+    --page:#0b0b0b; --surface:#1a1a19; --card:#201f1f;
+    --ink:#f5f4f2; --ink-2:#c3c2b7; --ink-3:#898781;
+    --grid:#2c2c2a; --axis:#383835; --ring:rgba(255,255,255,.12);
+    --s-blue:#3987e5; --s-green:#3fae3f; --s-yellow:#c98500; --s-red:#e66767; --s-aqua:#199e70; --s-violet:#9085e9; --s-orange:#d95926;
+    --seq-100:#0d366b; --seq-250:#184f95; --seq-450:#3987e5; --seq-550:#5598e7; --seq-650:#86b6ef;
+    --good-text:#0ca30c;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);background:var(--page);color:var(--ink);line-height:1.55;font-size:16px}
+  .skip-link{position:absolute;left:-999px;top:0;background:var(--maroon);color:#fff;padding:8px 14px;z-index:99}
+  .skip-link:focus{left:8px}
+  a{color:var(--maroon)}
+
+  .app{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
+  .appbar{flex:0 0 auto;height:var(--appbar-h);display:flex;align-items:center;gap:12px;padding:0 16px;background:linear-gradient(100deg,#5d090d,#7a1015 60%,#4d0509);color:#fff;position:relative;z-index:20}
+  .appbar .code{font-weight:800;font-size:.95rem;letter-spacing:.02em;color:#ffd98a}
+  .appbar .ttl{font-family:var(--serif);font-size:1.02rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .appbar .ttl small{font-weight:400;color:#f0d5d5;font-family:var(--sans);font-size:.78rem}
+  .appbar .spacer{flex:1}
+  .prog-wrap{display:flex;align-items:center;gap:8px;font-size:.72rem;color:#f0d5d5;white-space:nowrap}
+  .prog-track{width:120px;height:6px;border-radius:3px;background:rgba(255,255,255,.22);overflow:hidden}
+  .prog-fill{height:100%;width:11%;background:linear-gradient(90deg,#ffd98a,#f0a500);border-radius:3px;transition:width .35s ease}
+  .theme-btn{border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.2);color:#fff;border-radius:999px;padding:6px 12px;font-size:.78rem;cursor:pointer}
+  .theme-btn:hover{background:rgba(0,0,0,.38)}
+
+  .tabbar{flex:0 0 auto;height:var(--tabbar-h);display:flex;align-items:center;gap:5px;padding:0 12px;background:var(--surface);border-bottom:1px solid var(--ring);overflow-x:auto;scrollbar-width:thin;z-index:15}
+  .tabbar button{flex:0 0 auto;border:1px solid transparent;background:transparent;color:var(--ink-2);font-size:.8rem;font-weight:600;padding:7px 12px;border-radius:999px;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap}
+  .tabbar button:hover{background:var(--maroon-tint);color:var(--maroon)}
+  .tabbar button.active{background:var(--maroon);color:#fff;border-color:var(--maroon)}
+  .tabbar button .tnum{font-size:.66rem;opacity:.7}
+
+  .stage{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth;background:var(--page)}
+  .panel{display:none;max-width:1060px;margin:0 auto;padding:26px 22px 40px;animation:fade .35s ease}
+  .panel.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  .panel-nav{display:flex;justify-content:space-between;gap:12px;margin-top:30px;padding-top:18px;border-top:1px solid var(--ring)}
+  .pn-btn{border:1px solid var(--ring);background:var(--card);color:var(--ink);border-radius:10px;padding:10px 18px;font-size:.9rem;font-weight:700;cursor:pointer;box-shadow:var(--shadow)}
+  .pn-btn:hover{border-color:var(--maroon-soft);color:var(--maroon)}
+  .pn-btn.primary{background:var(--maroon);color:#fff;border-color:var(--maroon)}
+  .pn-btn.primary:hover{background:var(--maroon-mid);color:#fff}
+  .pn-btn:disabled{opacity:.35;cursor:default}
+
+  .p-head{display:flex;align-items:baseline;gap:12px;border-bottom:3px solid var(--maroon);padding-bottom:9px;margin-bottom:18px;flex-wrap:wrap}
+  .p-head .pn{background:var(--maroon);color:#fff;font-weight:800;border-radius:9px;padding:3px 11px;font-size:.95rem}
+  .p-head h2{font-family:var(--serif);color:var(--maroon);font-size:clamp(1.2rem,2.4vw,1.55rem);font-weight:700}
+  .p-head .tag{margin-left:auto;font-size:.72rem;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em}
+  .lead{color:var(--ink-2);max-width:850px;margin-bottom:16px}
+  h3.sh{font-family:var(--serif);color:var(--maroon);margin:22px 0 12px;font-size:1.1rem}
+
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  .g4{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+  .card{background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+
+  .callout{border-left:5px solid var(--maroon);background:var(--maroon-tint);border-radius:0 var(--radius) var(--radius) 0;padding:15px 17px;color:var(--ink)}
+  .callout.quote{font-family:var(--serif);font-style:italic;font-size:1.02rem}
+  .callout.good{border-left-color:var(--good);background:color-mix(in srgb,var(--good) 10%,var(--surface))}
+  .callout.warn{border-left-color:var(--warning);background:color-mix(in srgb,var(--warning) 12%,var(--surface))}
+  .callout .src{display:block;margin-top:8px;font-size:.8rem;color:var(--ink-3);font-style:normal;font-family:var(--sans)}
+
+  .icon-card{display:flex;gap:13px;align-items:flex-start;background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);padding:15px;box-shadow:var(--shadow)}
+  .icon-card .ic{flex:0 0 42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;background:var(--maroon-tint);color:var(--maroon)}
+  .icon-card h4{font-size:.95rem;margin-bottom:3px}
+  .icon-card p{font-size:.84rem;color:var(--ink-2)}
+  .num-badge{flex:0 0 38px;height:38px;border-radius:50%;background:var(--maroon);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:.95rem}
+
+  .chip-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .chip{background:var(--maroon-tint);color:var(--maroon);border-radius:999px;padding:6px 13px;font-size:.82rem;font-weight:600}
+  .statmini{background:var(--card);border:1px solid var(--ring);border-radius:12px;padding:14px;text-align:center;box-shadow:var(--shadow)}
+  .statmini .v{font-size:1.35rem;font-weight:800;color:var(--maroon)}
+  .statmini .l{font-size:.76rem;color:var(--ink-2);margin-top:2px}
+
+  .widget{background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
+  .widget h3{font-family:var(--serif);color:var(--maroon);font-size:1.1rem;margin-bottom:5px}
+  .widget .note{font-size:.8rem;color:var(--ink-3);margin-bottom:12px}
+  .ctrl{margin:12px 0}
+  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;font-weight:600;color:var(--ink-2);margin-bottom:5px;gap:8px}
+  .ctrl label output{color:var(--maroon);font-weight:800;font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--maroon-mid);height:26px;cursor:pointer}
+  .formula{font-family:var(--serif);background:var(--maroon-tint);border:1px dashed var(--maroon-soft);border-radius:10px;padding:11px 15px;text-align:center;font-size:1.02rem;overflow-x:auto}
+  .formula sub,.formula sup{font-size:.7em}
+  .fracc{display:inline-block;text-align:center;vertical-align:middle;margin:0 4px}
+  .fracc .num{display:block;border-bottom:1.5px solid currentColor;padding:0 6px}
+  .fracc .den{display:block;padding:0 6px}
+  .big-out{margin-top:12px;background:var(--maroon);color:#fff;border-radius:12px;padding:13px 17px;text-align:center}
+  .big-out .v{font-size:1.7rem;font-weight:800;color:#ffd98a;font-variant-numeric:tabular-nums}
+  .big-out .l{font-size:.76rem;text-transform:uppercase;letter-spacing:.08em;color:#f3d9d9}
+  .mini-outs{display:flex;gap:9px;margin-top:9px;flex-wrap:wrap}
+  .mini-out{flex:1;min-width:100px;background:var(--maroon-tint);border-radius:10px;padding:8px 11px;text-align:center}
+  .mini-out .v{font-weight:800;color:var(--maroon);font-variant-numeric:tabular-nums}
+  .mini-out .l{font-size:.7rem;color:var(--ink-2)}
+  .preset-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .preset-row .pn-btn{font-size:.76rem;padding:7px 11px}
+  svg text{font-family:var(--sans)}
+  .axis-lbl{font-size:11px;fill:var(--ink-3)}
+  .verdict-box{margin-top:12px;border-radius:12px;padding:13px 15px;border:1px solid var(--ring);background:var(--surface);font-size:.88rem}
+  .verdict-box b{color:var(--maroon)}
+
+  .bar-row{display:flex;align-items:center;gap:10px;margin:5px 0}
+  .bar-row .bnm{flex:0 0 150px;font-size:.8rem;font-weight:600}
+  .bar-track{flex:1;height:20px;background:var(--grid);border-radius:6px;overflow:hidden;position:relative}
+  .bar-track span{position:absolute;top:0;bottom:0;border-radius:6px}
+  .bar-row .bval{flex:0 0 108px;text-align:right;font-size:.76rem;font-weight:700;font-variant-numeric:tabular-nums}
+
+  table.dt{width:100%;border-collapse:collapse;font-size:.82rem}
+  table.dt th{text-align:left;border-bottom:2px solid var(--maroon);padding:7px 9px;color:var(--maroon)}
+  table.dt td{border-bottom:1px solid var(--grid);padding:7px 9px}
+  table.dt td:last-child,table.dt th:last-child{text-align:right;font-variant-numeric:tabular-nums}
+
+  .quiz-q{background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+  .quiz-q h4{font-size:.96rem;margin-bottom:11px} .quiz-q h4 .qn{color:var(--maroon)}
+  .qtype{display:inline-block;font-size:.66rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;background:var(--maroon-tint);color:var(--maroon);border-radius:999px;padding:2px 9px;margin-left:8px;vertical-align:middle}
+  .opts{display:grid;gap:8px}
+  .opt{text-align:left;border:1.5px solid var(--ring);background:var(--surface);border-radius:10px;padding:9px 13px;font-size:.88rem;cursor:pointer;color:var(--ink);font-family:var(--sans)}
+  .opt:hover{border-color:var(--maroon-soft)}
+  .opt.correct{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--surface));font-weight:700}
+  .opt.wrong{border-color:var(--critical);background:color-mix(in srgb,var(--critical) 10%,var(--surface))}
+  .opt:disabled{cursor:default;opacity:.92}
+  .tf-row{display:flex;gap:10px}
+  .tf-row .opt{flex:1;text-align:center;font-weight:700}
+  .blank-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .blank-row input[type=text]{flex:1;min-width:160px;border:1.5px solid var(--ring);background:var(--surface);border-radius:10px;padding:9px 13px;font-size:.92rem;color:var(--ink);font-family:var(--sans)}
+  .blank-row input[type=text]:focus{outline:2px solid var(--maroon-soft);border-color:var(--maroon)}
+  .blank-row input.correct{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--surface))}
+  .blank-row input.wrong{border-color:var(--critical);background:color-mix(in srgb,var(--critical) 10%,var(--surface))}
+  .blank-submit{border:none;background:var(--maroon);color:#fff;border-radius:10px;padding:9px 18px;font-weight:700;font-size:.86rem;cursor:pointer}
+  .blank-submit:hover{background:var(--maroon-mid)} .blank-submit:disabled{opacity:.4;cursor:default}
+  .fb{margin-top:9px;font-size:.85rem;display:none;border-radius:8px;padding:9px 11px}
+  .fb.show{display:block}
+  .fb.good{background:color-mix(in srgb,var(--good) 12%,var(--surface));color:var(--good-text)}
+  .fb.bad{background:color-mix(in srgb,var(--critical) 10%,var(--surface));color:var(--critical)}
+  #preScore,#quizscore{font-weight:800;color:var(--maroon)}
+  .diag-note{font-size:.78rem;color:var(--ink-3);background:var(--maroon-tint2);border-radius:8px;padding:8px 12px;margin-bottom:16px;display:inline-block}
+
+  .sum-list{list-style:none;display:grid;gap:9px}
+  .sum-list li{display:flex;gap:11px;align-items:flex-start;background:var(--card);border:1px solid var(--ring);border-radius:12px;padding:11px 15px;box-shadow:var(--shadow);font-size:.9rem}
+  .sum-list li .tick{color:var(--good-text);font-weight:800;flex:0 0 auto}
+  .refbox{background:var(--card);border:1px solid var(--ring);border-radius:12px;padding:13px 17px;font-size:.84rem;color:var(--ink-2);box-shadow:var(--shadow)}
+  .refbox p{margin:5px 0}
+  .foot-note{margin-top:22px;font-size:.76rem;color:var(--ink-3);border-top:1px solid var(--ring);padding-top:14px}
+  .foot-note a{color:var(--maroon)}
+
+  @media (max-width:760px){
+    .app{height:auto;min-height:100vh;overflow:visible}
+    .stage{overflow:visible}
+    .appbar{position:sticky;top:0} .tabbar{position:sticky;top:var(--appbar-h)}
+    .appbar .ttl small{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#stage">Skip to content</a>
+<div class="app">
+  <div class="appbar">
+    <span class="code">ME 4201</span>
+    <span class="ttl">Entrepreneurship in Power Projects&nbsp;<small>Chapter 1 · Part G · BOPPPS</small></span>
+    <span class="spacer"></span>
+    <div class="prog-wrap"><span id="progLabel">Module 1 / 9</span><div class="prog-track"><div class="prog-fill" id="progFill"></div></div></div>
+    <button class="theme-btn" id="themeToggle" aria-pressed="false">🌙</button>
+  </div>
+  <nav class="tabbar" id="tabbar" aria-label="Module sections"></nav>
+  <div class="stage" id="stage"><div id="panels">
+
+    <!-- ===== 1 START ===== -->
+    <section class="panel active" id="tab-start" data-title="Start" data-emoji="🎯" data-boppps="Bridge-in · Objectives">
+      <div class="p-head"><span class="pn">1</span><h2>Start Here — Economics &amp; Entrepreneurship in Power Projects</h2><span class="tag">Bridge-in · Objectives</span></div>
+
+      <div class="callout quote">"A rural entrepreneur in Bangladesh has Tk 1,200,000 and a rooftop. Should they build a 10 kW solar plant to replace diesel — and how many years until the money comes back? Two simple numbers decide it."
+        <span class="src">🌉 Bridge-in — those two numbers are Return on Investment and Simple Payback Period. By the end, you'll run the whole feasibility study yourself in the case-study tool.</span></div>
+
+      <p class="lead" style="margin-top:16px">Part G turns engineering into <b>entrepreneurship</b>: the economic analysis that decides whether a small power project (10 kW – 10 MW) is worth building. An interactive companion to the lecture by <b>Prof. Dr. Mazharul Islam, P.Eng.</b> (Alberta, Canada), Department of Mechanical and Production Engineering, Ahsanullah University of Science and Technology (AUST), Dhaka, Bangladesh.</p>
+
+      <h3 class="sh">🎯 Learning Outcomes (Objectives)</h3>
+      <div class="grid g2">
+        <div class="icon-card"><div class="ic">📈</div><div><h4>Analyse with Return on Investment (RoI)</h4><p>Conduct economic analysis of smaller-capacity power plants using Return on Investment to judge overall profitability.</p></div></div>
+        <div class="icon-card"><div class="ic">⏱️</div><div><h4>Analyse with Simple Payback Period (SPP)</h4><p>Use the Simple Payback Period to estimate how quickly the capital invested in a plant is recovered.</p></div></div>
+      </div>
+
+      <h3 class="sh">The four economic metrics in this module</h3>
+      <div class="grid g4">
+        <div class="statmini"><div class="v">COE</div><div class="l">Cost of Energy — lifetime $/MWh</div></div>
+        <div class="statmini"><div class="v">LCOE</div><div class="l">Levelized Cost — discounted, comparable</div></div>
+        <div class="statmini"><div class="v">RoI</div><div class="l">Return on Investment — profitability</div></div>
+        <div class="statmini"><div class="v">SPP</div><div class="l">Simple Payback Period — years to recover</div></div>
+      </div>
+      <p class="lead" style="margin-top:14px">Move with the tabs, the <b>Next ▸</b> button, or the <b>← / →</b> arrow keys. Six live calculators await — every formula in the lecture is one you can drive yourself.</p>
+    </section>
+
+    <!-- ===== 2 PRE-ASSESSMENT ===== -->
+    <section class="panel" id="tab-pre" data-title="Pre-Assessment" data-emoji="📝" data-boppps="Pre-assessment">
+      <div class="p-head"><span class="pn">2</span><h2>Pre-Assessment — Test Your Instincts</h2><span class="tag">Diagnostic · not graded</span></div>
+      <p class="lead">A <b>warm-up, not a test</b> — no penalty for guessing, and this score counts toward nothing. It surfaces your intuition about project economics before we reach the formulas. Answer instinctively, then watch your reasoning sharpen.</p>
+      <div class="diag-note">🔎 Diagnostic only — this score is <b>not</b> added to your Post-Assessment result.</div>
+      <div id="prebox"></div>
+      <div class="callout good" id="preSummary" style="display:none;margin-top:8px"></div>
+    </section>
+
+    <!-- ===== 3 COST OF ENERGY ===== -->
+    <section class="panel" id="tab-coe" data-title="Cost of Energy" data-emoji="💵" data-boppps="Participatory learning">
+      <div class="p-head"><span class="pn">3</span><h2>Cost of Energy (COE) &amp; Escalating Costs</h2><span class="tag">Introduction · COE</span></div>
+      <p class="lead">The <b>Cost of Energy (COE)</b> is the average cost to produce one unit of electricity over the entire operational lifetime of a plant. It's the simplest lifetime cost metric — no discounting yet (that comes with LCOE in the next tab).</p>
+      <div class="formula" style="margin-bottom:16px">COE = <span class="fracc"><span class="num">Total Lifetime Cost</span><span class="den">Total Lifetime Energy Output</span></span> = <span class="fracc"><span class="num">Capital Cost + (Annual O&amp;M × Years)</span><span class="den">Annual Output × Years</span></span></div>
+
+      <div class="grid g2">
+        <div class="widget">
+          <h3>🧮 Cost of Energy Calculator</h3>
+          <p class="note">Lecture example: $900,000 capital, $15,000/yr O&amp;M, 1.5 GWh/yr, 20 years → $40/MWh. Drag to explore.</p>
+          <div class="ctrl"><label>Capital cost (CapEx) <output id="coeCap">$900,000</output></label><input type="range" id="coeCapR" min="100000" max="5000000" step="50000" value="900000"></div>
+          <div class="ctrl"><label>Annual O&amp;M cost <output id="coeOm">$15,000</output></label><input type="range" id="coeOmR" min="0" max="200000" step="1000" value="15000"></div>
+          <div class="ctrl"><label>Annual energy output <output id="coeGwh">1.50 GWh</output></label><input type="range" id="coeGwhR" min="0.2" max="10" step="0.1" value="1.5"></div>
+          <div class="ctrl"><label>Plant life <output id="coeYrs">20 years</output></label><input type="range" id="coeYrsR" min="5" max="40" step="1" value="20"></div>
+          <div class="big-out"><div class="v" id="coeOut">$40.0 /MWh</div><div class="l">Cost of Energy</div></div>
+          <div class="mini-outs"><div class="mini-out"><div class="v" id="coeTC">$1.20M</div><div class="l">Total lifetime cost</div></div><div class="mini-out"><div class="v" id="coeTE">30,000</div><div class="l">Lifetime MWh</div></div></div>
+        </div>
+        <div class="widget">
+          <h3>📈 Escalating Cost Calculator</h3>
+          <p class="note">Maintenance/fuel costs rise each year. Both the summation and the closed-form give the <b>same</b> total. Example: $30,000 at 5%, 15 yr.</p>
+          <div class="formula" style="font-size:.9rem">C<sub>total</sub> = C<sub>0</sub> × <span class="fracc"><span class="num">(1+r)<sup>N</sup> − 1</span><span class="den">r</span></span> = C<sub>0</sub> × Σ(1+r)<sup>t−1</sup></div>
+          <div class="ctrl"><label>Base-year cost C₀ <output id="escC0">$30,000</output></label><input type="range" id="escC0R" min="5000" max="200000" step="1000" value="30000"></div>
+          <div class="ctrl"><label>Escalation rate r <output id="escR">5%</output></label><input type="range" id="escRR" min="0" max="15" step="0.5" value="5"></div>
+          <div class="ctrl"><label>Number of years N <output id="escN">15</output></label><input type="range" id="escNR" min="1" max="40" step="1" value="15"></div>
+          <div class="big-out"><div class="v" id="escOut">$647,400</div><div class="l">Total escalated cost over N years</div></div>
+          <div class="mini-outs"><div class="mini-out"><div class="v" id="escFactor">21.58</div><div class="l">Series factor</div></div><div class="mini-out"><div class="v" id="escLast">$60,000</div><div class="l">Cost in final year</div></div></div>
+        </div>
+      </div>
+
+      <div class="callout" style="margin-top:16px"><b>Worked example (COE):</b> a 1 MW wind turbine with $1,200,000 capital and $25,000/yr operating cost generating 2 GWh/yr over 20 years → COE = (1,200,000 + 25,000×20) / (2×20) = 1,700,000 / 40 = <b>$42.5/MWh</b>. Try reproducing it in the calculator.</div>
+
+      <h3 class="sh">Key factors behind escalating maintenance costs</h3>
+      <div class="grid g3">
+        <div class="icon-card"><div class="ic">🔧</div><div><h4>Aging equipment</h4><p>Wear and tear increases repair frequency and part replacements.</p></div></div>
+        <div class="icon-card"><div class="ic">📊</div><div><h4>Inflation</h4><p>Rising cost of materials, labour and spare parts over the plant life.</p></div></div>
+        <div class="icon-card"><div class="ic">🖥️</div><div><h4>Technological obsolescence</h4><p>Outdated components need costly custom replacements or upgrades.</p></div></div>
+        <div class="icon-card"><div class="ic">⚙️</div><div><h4>Operational strain</h4><p>Small plants run near capacity, accelerating deterioration.</p></div></div>
+        <div class="icon-card"><div class="ic">🚚</div><div><h4>Supply-chain disruptions</h4><p>Delays and shortages raise procurement costs for critical parts.</p></div></div>
+        <div class="icon-card"><div class="ic">📋</div><div><h4>Regulatory changes</h4><p>New environmental/safety rules impose extra maintenance.</p></div></div>
+      </div>
+    </section>
+
+    <!-- ===== 4 LCOE ===== -->
+    <section class="panel" id="tab-lcoe" data-title="LCOE" data-emoji="⚖️" data-boppps="Participatory learning">
+      <div class="p-head"><span class="pn">4</span><h2>Levelized Cost of Energy (LCOE)</h2><span class="tag">Discount rate · time value of money</span></div>
+      <p class="lead">LCOE is the average cost per unit of electricity over the entire operational life, with all costs and energy <b>discounted</b> to reflect the time value of money. Unlike COE, it captures capital, O&amp;M, fuel and decommissioning on a common basis — so you can fairly compare solar vs. coal vs. gas.</p>
+      <div class="formula" style="margin-bottom:16px">LCOE = <span class="fracc"><span class="num">Σ<sub>t=1..N</sub> (CapEx<sub>t</sub> + OpEx<sub>t</sub> + Fuel<sub>t</sub>)(1+r)<sup>−t</sup></span><span class="den">Σ<sub>t=1..N</sub> (E<sub>t</sub>)(1+r)<sup>−t</sup></span></span></div>
+
+      <div class="grid g2">
+        <div class="widget">
+          <h3>🧮 LCOE Calculator (with discount rate)</h3>
+          <p class="note">Lecture example: 1 MW solar, $1,200,000 CapEx, $15,000/yr OpEx, 1,500 MWh/yr, 20 yr, r = 8%. Drag the discount rate and watch LCOE move.</p>
+          <div class="ctrl"><label>Capital cost (CapEx) <output id="lcCap">$1,200,000</output></label><input type="range" id="lcCapR" min="200000" max="5000000" step="50000" value="1200000"></div>
+          <div class="ctrl"><label>Annual O&amp;M (OpEx) <output id="lcOp">$15,000</output></label><input type="range" id="lcOpR" min="0" max="200000" step="1000" value="15000"></div>
+          <div class="ctrl"><label>Annual energy output <output id="lcE">1500 MWh</output></label><input type="range" id="lcER" min="200" max="8000" step="50" value="1500"></div>
+          <div class="ctrl"><label>Plant lifetime N <output id="lcN">20 years</output></label><input type="range" id="lcNR" min="5" max="40" step="1" value="20"></div>
+          <div class="ctrl"><label>Discount rate r <output id="lcR">8%</output></label><input type="range" id="lcRR" min="0" max="15" step="0.5" value="8"></div>
+          <div class="big-out"><div class="v" id="lcOut">$91.5 /MWh</div><div class="l">Levelized Cost of Energy</div></div>
+          <div class="mini-outs"><div class="mini-out"><div class="v" id="lcAF">9.82</div><div class="l">Annuity factor Σ(1+r)⁻ᵗ</div></div><div class="mini-out"><div class="v" id="lcDiscE">14,730</div><div class="l">Discounted MWh</div></div></div>
+        </div>
+        <div class="widget">
+          <h3>🌤️ Capacity-Factor Sensitivity</h3>
+          <p class="note">LCOE scales inversely with capacity factor. Lecture example: a solar plant at $40/MWh (20% CF); if shading cuts CF by 15% → new CF 17% → LCOE rises to $47/MWh (+17.5%).</p>
+          <div class="ctrl"><label>Base LCOE <output id="sBase">$40 /MWh</output></label><input type="range" id="sBaseR" min="20" max="200" step="1" value="40"></div>
+          <div class="ctrl"><label>Base capacity factor <output id="sCf">20%</output></label><input type="range" id="sCfR" min="10" max="90" step="1" value="20"></div>
+          <div class="ctrl"><label>Capacity-factor change <output id="sChg">−15%</output></label><input type="range" id="sChgR" min="-40" max="40" step="1" value="-15"></div>
+          <div class="big-out"><div class="v" id="sNew">$47 /MWh</div><div class="l">New LCOE at adjusted capacity factor</div></div>
+          <div class="mini-outs"><div class="mini-out"><div class="v" id="sNewCf">17%</div><div class="l">New capacity factor</div></div><div class="mini-out"><div class="v" id="sDelta">+17.5%</div><div class="l">Change in LCOE</div></div></div>
+        </div>
+      </div>
+
+      <h3 class="sh">Benchmark: unsubsidized LCOE by technology (Lazard LCOE+ v18.0, 2025)</h3>
+      <p class="lead" style="font-size:.85rem">US$/kWh ranges. Renewables now sit at the low end — but LCOE ignores reliability, dispatchability and storage. Hover values shown as ranges (min → max).</p>
+      <div class="widget"><svg id="lazChart" viewBox="0 0 480 300" width="100%" role="img" aria-label="Range bar chart of levelized cost of electricity by technology from Lazard 2025"></svg></div>
+
+      <div class="grid g2" style="margin-top:16px">
+        <div class="callout"><b>Discount rate = time value of money.</b> It adjusts for inflation, opportunity cost and project risk over time — an economic tool to evaluate project viability. Lower discount rates reduce LCOE and enhance feasibility.</div>
+        <div class="callout warn"><b>Interest (Riba) vs. discount rate.</b> Interest (Riba) is any guaranteed return on loans or deposits. If the LCOE discount rate is derived from market interest rates, there can be involvement with Interest (Riba) — so careful selection of the discount rate is essential to avoid unintentional alignment with Interest (Riba).</div>
+      </div>
+    </section>
+
+    <!-- ===== 5 RoI ===== -->
+    <section class="panel" id="tab-roi" data-title="Return on Investment" data-emoji="📈" data-boppps="Participatory learning">
+      <div class="p-head"><span class="pn">5</span><h2>Return on Investment (RoI)</h2><span class="tag">Profitability</span></div>
+      <p class="lead">RoI measures overall profitability — the net profit earned over a project's life as a percentage of the money put in. A higher RoI makes a project more attractive to investors.</p>
+      <div class="formula" style="margin-bottom:16px">RoI = <span class="fracc"><span class="num">Net Profit</span><span class="den">Initial Investment</span></span> × 100 &nbsp;&nbsp;<span style="font-size:.72em;color:var(--ink-3)">Net Profit = (Annual Revenue × Years) − Total Maintenance − Initial Investment</span></div>
+
+      <div class="grid g2">
+        <div class="widget">
+          <h3>🧮 Return on Investment Calculator</h3>
+          <p class="note">Lecture example: 500 kW biomass, $500,000 to install, $80,000/yr revenue, 10 years → RoI = 60%. Add escalating maintenance to see it fall.</p>
+          <div class="ctrl"><label>Initial investment <output id="roiInit">$500,000</output></label><input type="range" id="roiInitR" min="50000" max="3000000" step="10000" value="500000"></div>
+          <div class="ctrl"><label>Annual revenue / savings <output id="roiRev">$80,000</output></label><input type="range" id="roiRevR" min="10000" max="600000" step="5000" value="80000"></div>
+          <div class="ctrl"><label>Project life <output id="roiYrs">10 years</output></label><input type="range" id="roiYrsR" min="1" max="30" step="1" value="10"></div>
+          <div class="ctrl"><label>Annual maintenance C₀ (0 = none) <output id="roiMaint">$0</output></label><input type="range" id="roiMaintR" min="0" max="100000" step="1000" value="0"></div>
+          <div class="ctrl"><label>Maintenance escalation r <output id="roiMr">5%</output></label><input type="range" id="roiMrR" min="0" max="15" step="0.5" value="5"></div>
+          <div class="big-out"><div class="v" id="roiOut">60%</div><div class="l">Return on Investment</div></div>
+          <div class="mini-outs"><div class="mini-out"><div class="v" id="roiTR">$800,000</div><div class="l">Total revenue</div></div><div class="mini-out"><div class="v" id="roiNP">$300,000</div><div class="l">Net profit</div></div></div>
+        </div>
+        <div class="widget">
+          <h3>💡 Reading the result</h3>
+          <div class="verdict-box" id="roiVerdict" style="margin-top:0"></div>
+          <table class="dt" style="margin-top:14px">
+            <tr><th>Worked example</th><th>RoI</th></tr>
+            <tr><td>$200k invested, $30k/yr × 10 yr</td><td>50%</td></tr>
+            <tr><td>500 kW biomass ($500k, $80k/yr, 10 yr)</td><td>60%</td></tr>
+            <tr><td>10 kW solar case study (Tk 1.2M, 20 yr)</td><td>275%</td></tr>
+          </table>
+          <p class="note" style="margin-top:10px">RoI ignores <i>when</i> cash arrives — that's why we pair it with the discounted LCOE and the Simple Payback Period.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 6 SPP ===== -->
+    <section class="panel" id="tab-spp" data-title="Simple Payback" data-emoji="⏱️" data-boppps="Participatory learning">
+      <div class="p-head"><span class="pn">6</span><h2>Simple Payback Period (SPP)</h2><span class="tag">Years to recover capital</span></div>
+      <p class="lead">The Simple Payback Period is the most intuitive metric for a small-scale entrepreneur: how many years of savings or revenue it takes to recover the initial investment.</p>
+      <div class="formula" style="margin-bottom:16px">SPP = <span class="fracc"><span class="num">Initial Investment</span><span class="den">Annual Savings or Revenue</span></span></div>
+
+      <div class="grid g2">
+        <div class="widget">
+          <h3>🧮 Simple Payback Calculator</h3>
+          <p class="note">Lecture example: small hydro costs $750,000, saves $100,000/yr → 7.5 years. Add periodic major maintenance to model the complex case.</p>
+          <div class="ctrl"><label>Initial investment <output id="sppInit">$750,000</output></label><input type="range" id="sppInitR" min="50000" max="3000000" step="10000" value="750000"></div>
+          <div class="ctrl"><label>Annual savings / revenue <output id="sppSav">$100,000</output></label><input type="range" id="sppSavR" min="10000" max="600000" step="5000" value="100000"></div>
+          <div class="ctrl"><label>Major maintenance amount (0 = none) <output id="sppMaint">$0</output></label><input type="range" id="sppMaintR" min="0" max="200000" step="5000" value="0"></div>
+          <div class="ctrl"><label>Number of major-maintenance events <output id="sppEvents">0</output></label><input type="range" id="sppEventsR" min="0" max="8" step="1" value="0"></div>
+          <div class="big-out"><div class="v" id="sppOut">7.5 years</div><div class="l">Simple Payback Period</div></div>
+          <div class="mini-outs"><div class="mini-out"><div class="v" id="sppTotInv">$750,000</div><div class="l">Total investment</div></div></div>
+        </div>
+        <div class="widget">
+          <h3>📊 Payback timeline</h3>
+          <p class="note">Cumulative savings climb until they cross the (dashed) investment line — that crossing is the payback point.</p>
+          <svg id="sppChart" viewBox="0 0 440 240" width="100%" role="img" aria-label="Cumulative savings versus investment payback timeline"></svg>
+          <div class="verdict-box" id="sppVerdict"></div>
+        </div>
+      </div>
+      <div class="callout" style="margin-top:16px"><b>Complex example:</b> a small hydro plant costs $900,000 plus major maintenance of $50,000 every 5 years (4 events) → total investment $1,100,000; at $120,000/yr savings, SPP = 1,100,000 / 120,000 = <b>9.2 years</b>. Set the two maintenance sliders to reproduce it.</div>
+    </section>
+
+    <!-- ===== 7 ENTREPRENEURSHIP / CASE STUDY ===== -->
+    <section class="panel" id="tab-case" data-title="Case Study" data-emoji="🌞" data-boppps="Participatory learning">
+      <div class="p-head"><span class="pn">7</span><h2>Entrepreneurship &amp; the 10 kW Solar Case Study</h2><span class="tag">Bangladesh · SREDA 2025</span></div>
+      <p class="lead">Decentralised, small-scale energy projects are increasingly viable in Bangladesh, and mechanical engineers can drive rural development through solar and bioenergy ventures. The tools you've built now come together in one real feasibility study.</p>
+
+      <div class="grid g3" style="margin-bottom:16px">
+        <div class="icon-card"><div class="ic">🔌</div><div><h4>Net Metering (SREDA, 2025)</h4><p>Under the <b>Net Metering Guideline – 2025</b>, a grid-connected prosumer exports surplus solar energy; a bi-directional meter nets exported against imported kWh, surplus credits carry forward, and any remaining credit is settled quarterly — boosting the return of grid-tied PV.</p></div></div>
+        <div class="icon-card"><div class="ic">🌾</div><div><h4>Rural development</h4><p>Off-grid solar replaces diesel for irrigation and small businesses, cutting fuel dependence.</p></div></div>
+        <div class="icon-card"><div class="ic">📐</div><div><h4>Feasibility tools</h4><p>RoI and SPP let an entrepreneur judge a project before committing capital.</p></div></div>
+      </div>
+
+      <div class="callout" style="margin-bottom:16px"><b>What's new in the Net Metering Guideline – 2025.</b> The Power Division's updated guideline supports two ownership models — the <b>CAPEX model</b> (the consumer self-invests and keeps the full net-metering benefit, as in this off-grid-style case) and the <b>OPEX model</b> (a third-party investor installs and operates under a tripartite agreement). Credits are accounted in kWh, carried forward, and <b>settled every quarter</b> (after March, June, September, December); leftover credit is paid to the prosumer at the tariff under Clause 3.5 via bank/BEFTN, mobile financial services or cheque. As of the guideline, over <b>3,763 net-metered rooftop solar systems (≈185 MW)</b> are connected across the six distribution utilities. <span class="src">Source: Net Metering Guideline – 2025, SREDA, Power Division, Ministry of Power, Energy and Mineral Resources, Government of Bangladesh (English translation approved 9 Dec 2025).</span></div>
+
+      <div class="widget">
+        <h3>🌞 Interactive Case Study — 10 kW Off-Grid Solar PV</h3>
+        <p class="note">A rural entrepreneur replaces diesel for irrigation. Defaults reproduce the lecture: Tk 1,200,000 capital, 1,500 kWh/kW/yr, Tk 15/kWh diesel offset, 20-year life → RoI 275%, SPP 5.33 years.</p>
+        <div class="grid g2">
+          <div>
+            <div class="ctrl"><label>System capacity <output id="csCap">10 kW</output></label><input type="range" id="csCapR" min="1" max="100" step="1" value="10"></div>
+            <div class="ctrl"><label>Annual generation per kW <output id="csGen">1500 kWh/kW</output></label><input type="range" id="csGenR" min="800" max="2000" step="50" value="1500"></div>
+            <div class="ctrl"><label>Diesel offset value <output id="csDiesel">Tk 15/kWh</output></label><input type="range" id="csDieselR" min="5" max="30" step="0.5" value="15"></div>
+            <div class="ctrl"><label>Total capital investment <output id="csCapital">Tk 1,200,000</output></label><input type="range" id="csCapitalR" min="200000" max="8000000" step="50000" value="1200000"></div>
+            <div class="ctrl"><label>Project lifespan <output id="csLife">20 years</output></label><input type="range" id="csLifeR" min="5" max="30" step="1" value="20"></div>
+          </div>
+          <div>
+            <div class="big-out"><div class="v" id="csRoi">275%</div><div class="l">Return on Investment (lifetime)</div></div>
+            <div class="big-out" style="background:var(--maroon-mid)"><div class="v" id="csSpp">5.33 years</div><div class="l">Simple Payback Period</div></div>
+            <div class="mini-outs">
+              <div class="mini-out"><div class="v" id="csOut">15,000</div><div class="l">Annual output (kWh)</div></div>
+              <div class="mini-out"><div class="v" id="csSave">Tk 225,000</div><div class="l">Annual savings</div></div>
+              <div class="mini-out"><div class="v" id="csNet">Tk 3.30M</div><div class="l">Lifetime net profit</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="verdict-box" id="csVerdict"></div>
+      </div>
+
+      <h3 class="sh">Capital investment breakdown (default 10 kW system)</h3>
+      <table class="dt">
+        <tr><th>Item</th><th>Cost (Tk)</th></tr>
+        <tr><td>Solar panels (10 kW)</td><td>700,000</td></tr>
+        <tr><td>Inverter + battery bank</td><td>300,000</td></tr>
+        <tr><td>Installation &amp; wiring</td><td>100,000</td></tr>
+        <tr><td>Contingency &amp; miscellaneous</td><td>100,000</td></tr>
+        <tr><td><b>Total initial investment</b></td><td><b>1,200,000</b></td></tr>
+      </table>
+    </section>
+
+    <!-- ===== 8 POST-ASSESSMENT ===== -->
+    <section class="panel" id="tab-post" data-title="Post-Assessment" data-emoji="✅" data-boppps="Post-assessment">
+      <div class="p-head"><span class="pn">8</span><h2>Post-Assessment</h2><span class="tag">Score: <span id="quizscore">0 / 10</span></span></div>
+      <p class="lead">Ten questions across the whole module — multiple-choice, fill-in-the-blank, and true/false. Answer each for instant feedback with a brief explanation.</p>
+      <div id="quizbox"></div>
+    </section>
+
+    <!-- ===== 9 SUMMARY ===== -->
+    <section class="panel" id="tab-summary" data-title="Summary" data-emoji="📚" data-boppps="Summary">
+      <div class="p-head"><span class="pn">9</span><h2>Summary</h2><span class="tag">Key takeaways</span></div>
+      <ul class="sum-list">
+        <li><span class="tick">✔</span><span>Economic analysis is essential for the feasibility of smaller-capacity plants (10 kW – 10 MW); real-world analysis includes degradation, inflation and maintenance escalation.</span></li>
+        <li><span class="tick">✔</span><span><b>Cost of Energy (COE)</b> = total lifetime cost ÷ total lifetime energy — the simplest measure of generation cost efficiency.</span></li>
+        <li><span class="tick">✔</span><span><b>LCOE</b> discounts all costs and energy to reflect the time value of money, enabling fair comparison across technologies; the discount rate must be chosen carefully (Interest / Riba consideration).</span></li>
+        <li><span class="tick">✔</span><span><b>Return on Investment (RoI)</b> = net profit ÷ initial investment × 100 — indicates overall profitability.</span></li>
+        <li><span class="tick">✔</span><span><b>Simple Payback Period (SPP)</b> = initial investment ÷ annual savings — estimates how quickly capital is recovered.</span></li>
+        <li><span class="tick">✔</span><span>The 10 kW solar case study (RoI 275%, SPP 5.33 years) shows these tools make small rural energy ventures bankable — aided by the <b>Net Metering Guideline – 2025</b> (SREDA), which nets exported kWh against imports and settles surplus credit quarterly.</span></li>
+      </ul>
+
+      <h3 class="sh">References &amp; sources cited</h3>
+      <div class="refbox">
+        <p>Lazard (2025). <i>Levelized Cost of Energy+ (LCOE+), Version 18.0.</i> June 2025 — U.S. unsubsidized new-build estimates.</p>
+        <p>SREDA (2025). <i>Net Metering Guideline – 2025.</i> Sustainable and Renewable Energy Development Authority, Power Division, Ministry of Power, Energy and Mineral Resources, Government of the People's Republic of Bangladesh (English translation approved 9 December 2025). <a href="https://www.powerdivision.gov.bd">powerdivision.gov.bd</a></p>
+        <p>Course text: Nag, P. (2014). <i>Power Plant Engineering.</i> McGraw-Hill Education, 4th edition — ME4201 reference.</p>
+      </div>
+      <div class="foot-note">
+        Interactive BOPPPS learning module for <b>ME4201 — Power Plant Engineering</b>, Chapter 1 Part G, by Professor Dr. Mazharul Islam, P.Eng., Department of Mechanical and Production Engineering, Ahsanullah University of Science and Technology (AUST), Dhaka, Bangladesh. Calculators use the lecture's formulas; escalating-cost totals use the exact closed form ((1+r)ᴺ−1)/r, identical to the summation. Illustrative teaching tools, not investment advice. Licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.
+      </div>
+    </section>
+
+  </div></div>
+</div>
+<script id="mainjs">
+(function(){
+"use strict";
+const $=(s,c)=>(c||document).querySelector(s);
+const $$=(s,c)=>Array.from((c||document).querySelectorAll(s));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const norm=s=>String(s).toLowerCase().trim().replace(/[$,°.;:!?'"()%]/g,"").replace(/\s+/g," ");
+const money=n=>"$"+Math.round(n).toLocaleString("en-US");
+const tk=n=>"Tk "+Math.round(n).toLocaleString("en-US");
+const num=(n,d)=>n.toLocaleString("en-US",{maximumFractionDigits:d==null?0:d,minimumFractionDigits:d==null?0:d});
+
+/* theme */
+const themeBtn=$("#themeToggle");
+function setTheme(t){document.documentElement.setAttribute("data-theme",t);themeBtn.textContent=t==="dark"?"☀️":"🌙";themeBtn.setAttribute("aria-pressed",t==="dark"?"true":"false");drawLaz();drawSpp();}
+themeBtn.addEventListener("click",()=>setTheme(document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark"));
+
+/* tab shell */
+const panels=$$("#panels .panel");
+const tabbar=$("#tabbar");
+let activeIdx=Math.max(0,panels.findIndex(p=>p.classList.contains("active")));
+panels.forEach((p,i)=>{
+  const b=document.createElement("button");
+  b.innerHTML="<span class='tnum'>"+(i+1)+"</span><span>"+p.dataset.emoji+" "+p.dataset.title+"</span>";
+  b.title="BOPPPS: "+p.dataset.boppps;
+  b.addEventListener("click",()=>goTo(i));
+  tabbar.appendChild(b);
+  const nav=document.createElement("div");nav.className="panel-nav";
+  nav.innerHTML="<button class='pn-btn' data-dir='-1'>◂ Previous</button><button class='pn-btn primary' data-dir='1'>Next ▸</button>";
+  nav.querySelectorAll("button").forEach(bt=>bt.addEventListener("click",()=>goTo(i+ +bt.dataset.dir)));
+  p.appendChild(nav);
+});
+const tabBtns=$$("#tabbar button");
+function goTo(i){
+  i=clamp(i,0,panels.length-1);
+  panels.forEach((p,k)=>p.classList.toggle("active",k===i));
+  tabBtns.forEach((b,k)=>b.classList.toggle("active",k===i));
+  activeIdx=i;
+  $("#progFill").style.width=Math.round((i+1)/panels.length*100)+"%";
+  $("#progLabel").textContent="Module "+(i+1)+" / "+panels.length;
+  $("#stage").scrollTop=0;
+  const nav=panels[i].querySelector(".panel-nav");
+  if(nav){const bs=nav.querySelectorAll("button");bs[0].disabled=(i===0);bs[1].disabled=(i===panels.length-1);}
+  if(panels[i].id==="tab-lcoe")drawLaz();
+  if(panels[i].id==="tab-spp")drawSpp();
+  tabBtns[i].scrollIntoView({inline:"center",block:"nearest"});
+}
+document.addEventListener("keydown",e=>{
+  const t=document.activeElement?document.activeElement.tagName:"";
+  if(/INPUT|TEXTAREA|SELECT|BUTTON/.test(t))return;
+  if(e.key==="ArrowRight")goTo(activeIdx+1);
+  else if(e.key==="ArrowLeft")goTo(activeIdx-1);
+});
+
+/* ===== COE calculator ===== */
+const coeCapR=$("#coeCapR"),coeOmR=$("#coeOmR"),coeGwhR=$("#coeGwhR"),coeYrsR=$("#coeYrsR");
+function updCoe(){
+  const cap=+coeCapR.value,om=+coeOmR.value,gwh=+coeGwhR.value,yrs=+coeYrsR.value;
+  $("#coeCap").textContent=money(cap);$("#coeOm").textContent=money(om);
+  $("#coeGwh").textContent=gwh.toFixed(2)+" GWh";$("#coeYrs").textContent=yrs+" years";
+  const totalCost=cap+om*yrs, totalMWh=gwh*1000*yrs, coe=totalCost/totalMWh;
+  $("#coeOut").textContent="$"+num(coe,1)+" /MWh";
+  $("#coeTC").textContent="$"+num(totalCost/1e6,2)+"M";
+  $("#coeTE").textContent=num(totalMWh);
+}
+[coeCapR,coeOmR,coeGwhR,coeYrsR].forEach(el=>el.addEventListener("input",updCoe));updCoe();
+
+/* ===== Escalating cost ===== */
+const escC0R=$("#escC0R"),escRR=$("#escRR"),escNR=$("#escNR");
+function updEsc(){
+  const c0=+escC0R.value,r=+escRR.value/100,N=+escNR.value;
+  $("#escC0").textContent=money(c0);$("#escR").textContent=(+escRR.value)+"%";$("#escN").textContent=N;
+  const factor= r===0 ? N : (Math.pow(1+r,N)-1)/r;
+  $("#escOut").textContent=money(c0*factor);
+  $("#escFactor").textContent=num(factor,2);
+  $("#escLast").textContent=money(c0*Math.pow(1+r,N-1));
+}
+[escC0R,escRR,escNR].forEach(el=>el.addEventListener("input",updEsc));updEsc();
+
+/* ===== LCOE ===== */
+const lcCapR=$("#lcCapR"),lcOpR=$("#lcOpR"),lcER=$("#lcER"),lcNR=$("#lcNR"),lcRR=$("#lcRR");
+function updLcoe(){
+  const cap=+lcCapR.value,op=+lcOpR.value,E=+lcER.value,N=+lcNR.value,r=+lcRR.value/100;
+  $("#lcCap").textContent=money(cap);$("#lcOp").textContent=money(op);
+  $("#lcE").textContent=num(E)+" MWh";$("#lcN").textContent=N+" years";$("#lcR").textContent=(+lcRR.value)+"%";
+  const AF= r===0 ? N : (1-Math.pow(1+r,-N))/r;
+  const discE=E*AF, lcoe=(cap+op*AF)/discE;
+  $("#lcOut").textContent="$"+num(lcoe,1)+" /MWh";
+  $("#lcAF").textContent=num(AF,2);
+  $("#lcDiscE").textContent=num(discE);
+}
+[lcCapR,lcOpR,lcER,lcNR,lcRR].forEach(el=>el.addEventListener("input",updLcoe));updLcoe();
+
+/* CF sensitivity */
+const sBaseR=$("#sBaseR"),sCfR=$("#sCfR"),sChgR=$("#sChgR");
+function updSens(){
+  const base=+sBaseR.value,cf=+sCfR.value,chg=+sChgR.value;
+  $("#sBase").textContent="$"+base+" /MWh";$("#sCf").textContent=cf+"%";
+  $("#sChg").textContent=(chg>=0?"+":"−")+Math.abs(chg)+"%";
+  const newCf=cf*(1+chg/100);
+  const newLcoe=base*cf/newCf; // LCOE ∝ 1/CF
+  $("#sNew").textContent="$"+num(newLcoe,0)+" /MWh";
+  $("#sNewCf").textContent=num(newCf,0)+"%";
+  const delta=(newLcoe-base)/base*100;
+  $("#sDelta").textContent=(delta>=0?"+":"")+num(delta,1)+"%";
+}
+[sBaseR,sCfR,sChgR].forEach(el=>el.addEventListener("input",updSens));updSens();
+
+/* Lazard chart (range bars) */
+const LAZ=[
+ {n:"Solar PV (utility)",lo:0.038,hi:0.078,r:1},
+ {n:"Wind (onshore)",lo:0.037,hi:0.086,r:1},
+ {n:"Gas combined cycle",lo:0.048,hi:0.107,r:0},
+ {n:"Geothermal",lo:0.064,hi:0.106,r:1},
+ {n:"Wind (offshore)",lo:0.072,hi:0.140,r:1},
+ {n:"Coal",lo:0.071,hi:0.173,r:0},
+ {n:"Nuclear",lo:0.141,hi:0.220,r:0},
+ {n:"Gas peaking",lo:0.149,hi:0.251,r:0}
+].sort((a,b)=>(a.lo+a.hi)-(b.lo+b.hi));
+function drawLaz(){
+  const host=$("#lazChart");if(!host)return;
+  const x0=140,x1=452,y0=14,dy=32,maxV=0.26;
+  const X=v=>x0+(x1-x0)*v/maxV;
+  let g="";
+  [0,0.05,0.10,0.15,0.20,0.25].forEach(t=>{g+="<line x1='"+X(t)+"' y1='"+y0+"' x2='"+X(t)+"' y2='"+(y0+LAZ.length*dy)+"' stroke='var(--grid)' stroke-width='1'/><text x='"+X(t)+"' y='"+(y0+LAZ.length*dy+15)+"' text-anchor='middle' class='axis-lbl'>$"+t.toFixed(2)+"</text>";});
+  LAZ.forEach((d,i)=>{
+    const y=y0+i*dy;
+    const col=d.r?"var(--s-aqua)":"var(--s-orange)";
+    g+="<text x='133' y='"+(y+15)+"' text-anchor='end' style='font-size:10.5px;font-weight:600;fill:var(--ink-2)'>"+d.n+"</text>";
+    g+="<rect x='"+X(d.lo)+"' y='"+(y+3)+"' width='"+(X(d.hi)-X(d.lo)).toFixed(1)+"' height='15' rx='4' fill='"+col+"' opacity='0.85'/>";
+    g+="<line x1='"+X((d.lo+d.hi)/2)+"' y1='"+(y+1)+"' x2='"+X((d.lo+d.hi)/2)+"' y2='"+(y+20)+"' stroke='var(--ink)' stroke-width='1.5'/>";
+    g+="<text x='"+(X(d.hi)+5)+"' y='"+(y+15)+"' style='font-size:9.5px;font-weight:700;fill:var(--ink)'>$"+d.lo.toFixed(3)+"–"+d.hi.toFixed(3)+"</text>";
+  });
+  g+="<text x='"+((x0+x1)/2)+"' y='"+(y0+LAZ.length*dy+30)+"' text-anchor='middle' class='axis-lbl'>Unsubsidized LCOE (US$/kWh) — ▮ renewable  ▮ conventional</text>";
+  host.innerHTML=g;
+}
+drawLaz();
+
+/* ===== RoI ===== */
+const roiInitR=$("#roiInitR"),roiRevR=$("#roiRevR"),roiYrsR=$("#roiYrsR"),roiMaintR=$("#roiMaintR"),roiMrR=$("#roiMrR");
+function updRoi(){
+  const init=+roiInitR.value,rev=+roiRevR.value,yrs=+roiYrsR.value,m0=+roiMaintR.value,mr=+roiMrR.value/100;
+  $("#roiInit").textContent=money(init);$("#roiRev").textContent=money(rev);$("#roiYrs").textContent=yrs+" years";
+  $("#roiMaint").textContent=money(m0);$("#roiMr").textContent=(+roiMrR.value)+"%";
+  const maintTotal= m0===0?0:m0*(mr===0?yrs:(Math.pow(1+mr,yrs)-1)/mr);
+  const totalRev=rev*yrs, netProfit=totalRev-maintTotal-init, roi=netProfit/init*100;
+  $("#roiOut").textContent=num(roi,0)+"%";
+  $("#roiTR").textContent=money(totalRev);
+  $("#roiNP").textContent=money(netProfit);
+  const v=$("#roiVerdict");
+  if(roi<0)v.innerHTML="🔴 <b>Loss-making.</b> Over "+yrs+" years the project doesn't recover its capital — revenue is too low or maintenance too high.";
+  else if(roi<50)v.innerHTML="🟠 <b>Modest return ("+num(roi,0)+"%).</b> Profitable but slow; investors may want a shorter payback or higher revenue.";
+  else if(roi<150)v.innerHTML="🟢 <b>Healthy return ("+num(roi,0)+"%).</b> Attractive to investors — the project earns well over its life.";
+  else v.innerHTML="🟢 <b>Excellent return ("+num(roi,0)+"%).</b> The project earns "+(roi/100).toFixed(2)+"× its investment — very bankable.";
+}
+[roiInitR,roiRevR,roiYrsR,roiMaintR,roiMrR].forEach(el=>el.addEventListener("input",updRoi));updRoi();
+
+/* ===== SPP ===== */
+const sppInitR=$("#sppInitR"),sppSavR=$("#sppSavR"),sppMaintR=$("#sppMaintR"),sppEventsR=$("#sppEventsR");
+function sppTotals(){
+  const init=+sppInitR.value,sav=+sppSavR.value,m=+sppMaintR.value,ev=+sppEventsR.value;
+  const totalInv=init+m*ev;
+  return {init,sav,m,ev,totalInv,spp:totalInv/sav};
+}
+function updSpp(){
+  const t=sppTotals();
+  $("#sppInit").textContent=money(t.init);$("#sppSav").textContent=money(t.sav);
+  $("#sppMaint").textContent=money(t.m);$("#sppEvents").textContent=t.ev;
+  $("#sppOut").textContent=num(t.spp,2)+" years";
+  $("#sppTotInv").textContent=money(t.totalInv);
+  drawSpp();
+}
+function drawSpp(){
+  const host=$("#sppChart");if(!host)return;
+  const t=sppTotals();
+  const x0=50,x1=422,y0=16,y1=196;
+  const years=Math.max(Math.ceil(t.spp*1.4),6);
+  const maxY=Math.max(t.totalInv*1.3,t.sav*years);
+  const PX=y=>x0+(x1-x0)*y/years;
+  const PY=v=>y1-(y1-y0)*v/maxY;
+  let d="";for(let y=0;y<=years;y++){d+=(d?" L":"M")+PX(y).toFixed(1)+" "+PY(t.sav*y).toFixed(1);}
+  let g="";
+  g+="<line x1='"+x0+"' y1='"+y1+"' x2='"+x1+"' y2='"+y1+"' stroke='var(--axis)' stroke-width='1.2'/>";
+  g+="<line x1='"+x0+"' y1='"+y0+"' x2='"+x0+"' y2='"+y1+"' stroke='var(--axis)' stroke-width='1.2'/>";
+  g+="<line x1='"+x0+"' y1='"+PY(t.totalInv)+"' x2='"+x1+"' y2='"+PY(t.totalInv)+"' stroke='var(--critical)' stroke-width='1.6' stroke-dasharray='5 4'/>";
+  g+="<text x='"+x1+"' y='"+(PY(t.totalInv)-5)+"' text-anchor='end' style='font-size:10px;font-weight:700;fill:var(--critical)'>investment "+money(t.totalInv)+"</text>";
+  g+="<path d='"+d+"' fill='none' stroke='var(--s-green)' stroke-width='2.5'/>";
+  if(t.spp<=years){g+="<line x1='"+PX(t.spp)+"' y1='"+PY(t.totalInv)+"' x2='"+PX(t.spp)+"' y2='"+y1+"' stroke='var(--maroon)' stroke-width='1.3' stroke-dasharray='3 3'/>";
+    g+="<circle cx='"+PX(t.spp)+"' cy='"+PY(t.totalInv)+"' r='6' fill='var(--maroon)' stroke='var(--surface)' stroke-width='2'/>";
+    g+="<text x='"+PX(t.spp)+"' y='"+(y1-6)+"' text-anchor='middle' style='font-size:10px;font-weight:800;fill:var(--maroon)'>"+num(t.spp,2)+" yr</text>";}
+  for(let y=0;y<=years;y+=Math.ceil(years/6)){g+="<text x='"+PX(y)+"' y='"+(y1+14)+"' text-anchor='middle' class='axis-lbl'>"+y+"</text>";}
+  g+="<text x='"+((x0+x1)/2)+"' y='"+(y1+28)+"' text-anchor='middle' class='axis-lbl'>Years</text>";
+  host.innerHTML=g;
+  const v=$("#sppVerdict");
+  v.innerHTML="💡 Investment recovered in <b>"+num(t.spp,2)+" years</b>. "+(t.spp<7?"A fast payback — the remaining lifetime is largely profit.":t.spp<12?"A reasonable payback for infrastructure of this kind.":"A long payback — worth checking revenue and maintenance assumptions.");
+}
+[sppInitR,sppSavR,sppMaintR,sppEventsR].forEach(el=>el.addEventListener("input",updSpp));updSpp();
+
+/* ===== Case study ===== */
+const csCapR=$("#csCapR"),csGenR=$("#csGenR"),csDieselR=$("#csDieselR"),csCapitalR=$("#csCapitalR"),csLifeR=$("#csLifeR");
+function updCase(){
+  const cap=+csCapR.value,gen=+csGenR.value,diesel=+csDieselR.value,capital=+csCapitalR.value,life=+csLifeR.value;
+  $("#csCap").textContent=cap+" kW";$("#csGen").textContent=num(gen)+" kWh/kW";
+  $("#csDiesel").textContent="Tk "+num(diesel,diesel%1?1:0)+"/kWh";$("#csCapital").textContent=tk(capital);$("#csLife").textContent=life+" years";
+  const out=cap*gen, save=out*diesel, net=save*life-capital, roi=net/capital*100, spp=capital/save;
+  $("#csOut").textContent=num(out);
+  $("#csSave").textContent=tk(save);
+  $("#csNet").textContent="Tk "+num(net/1e6,2)+"M";
+  $("#csRoi").textContent=num(roi,0)+"%";
+  $("#csSpp").textContent=num(spp,2)+" years";
+  const v=$("#csVerdict");
+  v.innerHTML="🌞 This "+cap+" kW system generates <b>"+num(out)+" kWh/year</b>, saving <b>"+tk(save)+"</b> in diesel annually. It pays back in <b>"+num(spp,2)+" years</b> and returns <b>"+num(roi,0)+"%</b> over "+life+" years — "+(roi>150?"a strongly bankable rural venture.":roi>0?"a viable project.":"not viable at these assumptions — revisit costs or offset value.");
+}
+[csCapR,csGenR,csDieselR,csCapitalR,csLifeR].forEach(el=>el.addEventListener("input",updCase));updCase();
+
+/* ===================================================================
+   QUIZ ENGINE
+   =================================================================== */
+function buildQuestion(item,qi,onAnswered){
+  const div=document.createElement("div");div.className="quiz-q";
+  const typeLbl=item.type==="mcq"?"Multiple choice":item.type==="tf"?"True / False":"Fill in the blank";
+  div.innerHTML="<h4><span class='qn'>Q"+(qi+1)+".</span> "+item.q+"<span class='qtype'>"+typeLbl+"</span></h4><div class='qbody'></div><div class='fb'></div>";
+  const body=$(".qbody",div),fb=$(".fb",div);
+  function finish(ok,ex){if(div.dataset.done)return;div.dataset.done="1";fb.className="fb show "+(ok?"good":"bad");fb.innerHTML=(ok?"✅ Correct! ":"❌ Not quite. ")+ex;onAnswered(ok);}
+  if(item.type==="mcq"){
+    const opts=document.createElement("div");opts.className="opts";
+    item.o.forEach((op,oi)=>{const b=document.createElement("button");b.className="opt";b.innerHTML=op;
+      b.addEventListener("click",()=>{if(div.dataset.done)return;$$(".opt",opts).forEach((x,xi)=>{x.disabled=true;if(xi===item.a)x.classList.add("correct");});if(oi!==item.a)b.classList.add("wrong");finish(oi===item.a,item.fb);});
+      opts.appendChild(b);});
+    body.appendChild(opts);
+  } else if(item.type==="tf"){
+    const row=document.createElement("div");row.className="opts tf-row";
+    [["True",true],["False",false]].forEach(([label,val])=>{const b=document.createElement("button");b.className="opt";b.textContent=label;
+      b.addEventListener("click",()=>{if(div.dataset.done)return;$$(".opt",row).forEach(x=>{x.disabled=true;if((x.textContent==="True")===item.a)x.classList.add("correct");});if(val!==item.a)b.classList.add("wrong");finish(val===item.a,item.fb);});
+      row.appendChild(b);});
+    body.appendChild(row);
+  } else {
+    const row=document.createElement("div");row.className="blank-row";
+    const inp=document.createElement("input");inp.type="text";inp.placeholder="Type your answer…";inp.autocomplete="off";
+    const btn=document.createElement("button");btn.className="blank-submit";btn.textContent="Check";
+    function check(){if(div.dataset.done)return;const val=norm(inp.value);const ok=val.length>0&&item.accept.some(a=>norm(a)===val);inp.disabled=true;btn.disabled=true;inp.classList.add(ok?"correct":"wrong");finish(ok,"Accepted answer: <b>"+item.accept[0]+"</b>. "+item.fb);}
+    btn.addEventListener("click",check);
+    inp.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();check();}});
+    row.appendChild(inp);row.appendChild(btn);body.appendChild(row);
+  }
+  return div;
+}
+
+/* PRE-ASSESSMENT */
+const PRE=[
+ {type:"tf",q:"For a rooftop solar project, the faster the initial money is paid back, the more attractive the project usually is.",a:true,
+  fb:"Exactly — a shorter Simple Payback Period means capital is recovered sooner, so more of the plant's life is pure profit."},
+ {type:"mcq",q:"To compare a solar plant and a coal plant on a fair 'cost per unit of electricity' basis over their whole lives, which metric is designed for the job?",
+  o:["Forced Outage Rate","Levelized Cost of Energy (LCOE)","Installed capacity","Stack height"],a:1,
+  fb:"LCOE discounts all lifetime costs and energy to a common basis — built precisely for comparing different technologies."},
+ {type:"tf",q:"A project's Return on Investment tells you exactly WHEN each year's cash will arrive.",a:false,
+  fb:"RoI measures total profitability, not timing. For timing you use the payback period; for the time value of money you use LCOE's discount rate."},
+ {type:"blank",q:"The number of years it takes for a project's savings to recover the money invested is called the Simple ______ Period.",
+  accept:["payback","pay back","pay-back"],
+  fb:"The Simple Payback Period (SPP) = initial investment ÷ annual savings."},
+ {type:"mcq",q:"A Bangladeshi rooftop solar owner exports surplus electricity and gets credited on their bill. This policy is called…",
+  o:["Load shedding","Net metering","Peak shaving","Feed rationing"],a:1,
+  fb:"Net metering (SREDA's Net Metering Guideline – 2025) credits exported solar energy in kWh via a bi-directional meter — you'll see it in the case-study tab."}
+];
+let preAnswered=0;const prebox=$("#prebox");
+PRE.forEach((item,qi)=>{prebox.appendChild(buildQuestion(item,qi,()=>{preAnswered++;if(preAnswered===PRE.length){const s=$("#preSummary");s.style.display="block";s.innerHTML="🌟 <b>Great warm-up!</b> You've surfaced your instincts on payback, LCOE, RoI and net metering — all ungraded. Every one of these is answered with a live calculator in the tabs ahead.";}}));});
+
+/* POST-ASSESSMENT */
+const POST=[
+ {type:"mcq",q:"A plant has $900,000 capital, $15,000/yr O&amp;M, generates 1.5 GWh/yr, and lasts 20 years. Its Cost of Energy is:",
+  o:["$40/MWh","$30/MWh","$60/MWh","$45/MWh"],a:0,
+  fb:"COE = (900,000 + 15,000×20) / (1.5×1000×20) = 1,200,000 / 30,000 = $40/MWh."},
+ {type:"blank",q:"COE = Total Lifetime Cost ÷ Total Lifetime Energy ______.",
+  accept:["output","generated"],
+  fb:"Total Lifetime Energy Output = Annual Output × Number of Years."},
+ {type:"tf",q:"Both the summation formula C₀·Σ(1+r)^(t−1) and the closed form C₀·[(1+r)ᴺ−1]/r give the same escalated total cost.",a:true,
+  fb:"Correct — they are algebraically identical; the closed form is just a faster way to compute the same series."},
+ {type:"mcq",q:"Compared with the plain Cost of Energy, the Levelized Cost of Energy additionally accounts for:",
+  o:["The colour of the panels","The time value of money (a discount rate)","The number of employees","The stack height"],a:1,
+  fb:"LCOE discounts future costs and energy with a discount rate r, capturing the time value of money."},
+ {type:"tf",q:"Raising the discount rate lowers the LCOE of a project.",a:false,
+  fb:"The reverse — a higher discount rate shrinks the discounted energy and raises LCOE; lower rates reduce LCOE and improve feasibility."},
+ {type:"blank",q:"If a plant's LCOE is $40/MWh at 20% capacity factor and shading cuts the capacity factor to 17%, the new LCOE is $____ /MWh (whole number).",
+  accept:["47","47/mwh"],
+  fb:"LCOE ∝ 1/CF, so new LCOE = 40 ÷ (17/20) = 40/0.85 = $47/MWh — a 17.5% increase."},
+ {type:"mcq",q:"A 500 kW biomass plant costs $500,000 and earns $80,000/yr for 10 years. Its Return on Investment is:",
+  o:["16%","60%","80%","160%"],a:1,
+  fb:"RoI = (80,000×10 − 500,000) / 500,000 × 100 = 300,000/500,000 × 100 = 60%."},
+ {type:"blank",q:"Simple Payback Period = Initial Investment ÷ Annual Savings or ______.",
+  accept:["revenue","savings or revenue"],
+  fb:"SPP = Initial Investment ÷ Annual Savings (or Revenue). E.g. $750,000 ÷ $100,000 = 7.5 years."},
+ {type:"tf",q:"In the 10 kW solar case study, the system pays back its Tk 1,200,000 cost in about 5.3 years and returns 275% over its 20-year life.",a:true,
+  fb:"Correct — annual savings = 15,000 kWh × Tk 15 = Tk 225,000; SPP = 1,200,000/225,000 = 5.33 yr; RoI = (225,000×20 − 1,200,000)/1,200,000 = 275%."},
+ {type:"mcq",q:"Bangladesh's <b>Net Metering Guideline – 2025</b> (SREDA) helps a solar entrepreneur by:",
+  o:["Removing all taxes on diesel","Letting them export surplus electricity to the grid for kWh credit (settled quarterly)","Guaranteeing a fixed interest loan","Doubling the panel lifetime"],a:1,
+  fb:"Net metering nets exported surplus solar energy against imported electricity in kWh via a bi-directional meter; leftover credit is settled quarterly — increasing the economic return of grid-tied PV."}
+];
+let score=0,answered=0;const qbox=$("#quizbox");
+POST.forEach((item,qi)=>{qbox.appendChild(buildQuestion(item,qi,(ok)=>{answered++;if(ok)score++;$("#quizscore").textContent=score+" / "+POST.length+(answered===POST.length?(score===POST.length?" 🏆":(score>=7?" — well done!":" — review earlier tabs!")):"");}));});
+
+/* init */
+if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)setTheme("dark");
+goTo(activeIdx);
+})();
+</script>
+</body>
+</html>
