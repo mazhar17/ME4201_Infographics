@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ME4201 — Location of Conventional Power Plants (BOPPPS Interactive Module)</title>
+<meta name="description" content="BOPPPS-structured interactive learning module — ME4201 Power Plant Engineering, Chapter 1 Part E: Location / Site Selection of Conventional Power Plants. Prof. Dr. Mazharul Islam, AUST.">
+<style>
+  :root{
+    color-scheme: light;
+    --maroon:#7a1015; --maroon-deep:#4d0509; --maroon-mid:#96262b; --maroon-soft:#b5484d;
+    --maroon-tint:#f8eeee; --maroon-tint2:#f2e2e2;
+    --page:#f4f2ef; --surface:#fcfcfb; --card:#ffffff;
+    --ink:#1a1a1a; --ink-2:#52514e; --ink-3:#898781;
+    --grid:#e1e0d9; --axis:#c3c2b7; --ring:rgba(11,11,11,.10);
+    --s-blue:#2a78d6; --s-green:#008300; --s-yellow:#eda100; --s-red:#e34948; --s-aqua:#1baf7a; --s-violet:#4a3aa7; --s-orange:#eb6834;
+    --seq-250:#86b6ef; --seq-450:#2a78d6; --seq-650:#104281;
+    --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+    --good-text:#006300;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(20,10,10,.06),0 8px 24px rgba(20,10,10,.07);
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --serif:Georgia,"Times New Roman",serif;
+    --appbar-h:56px; --tabbar-h:52px;
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --maroon:#c96a6f; --maroon-deep:#2b0406; --maroon-mid:#b5484d; --maroon-soft:#d98a8e;
+    --maroon-tint:#2a1516; --maroon-tint2:#341a1b;
+    --page:#0b0b0b; --surface:#1a1a19; --card:#201f1f;
+    --ink:#f5f4f2; --ink-2:#c3c2b7; --ink-3:#898781;
+    --grid:#2c2c2a; --axis:#383835; --ring:rgba(255,255,255,.12);
+    --s-blue:#3987e5; --s-green:#3fae3f; --s-yellow:#c98500; --s-red:#e66767; --s-aqua:#199e70; --s-violet:#9085e9; --s-orange:#d95926;
+    --seq-250:#184f95; --seq-450:#3987e5; --seq-650:#86b6ef;
+    --good-text:#0ca30c;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);background:var(--page);color:var(--ink);line-height:1.55;font-size:16px}
+  .skip-link{position:absolute;left:-999px;top:0;background:var(--maroon);color:#fff;padding:8px 14px;z-index:99}
+  .skip-link:focus{left:8px}
+  a{color:var(--maroon)}
+
+  .app{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
+  .appbar{flex:0 0 auto;height:var(--appbar-h);display:flex;align-items:center;gap:12px;padding:0 16px;background:linear-gradient(100deg,#5d090d,#7a1015 60%,#4d0509);color:#fff;position:relative;z-index:20}
+  .appbar .code{font-weight:800;font-size:.95rem;letter-spacing:.02em;color:#ffd98a}
+  .appbar .ttl{font-family:var(--serif);font-size:1.02rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .appbar .ttl small{font-weight:400;color:#f0d5d5;font-family:var(--sans);font-size:.78rem}
+  .appbar .spacer{flex:1}
+  .prog-wrap{display:flex;align-items:center;gap:8px;font-size:.72rem;color:#f0d5d5;white-space:nowrap}
+  .prog-track{width:120px;height:6px;border-radius:3px;background:rgba(255,255,255,.22);overflow:hidden}
+  .prog-fill{height:100%;width:10%;background:linear-gradient(90deg,#ffd98a,#f0a500);border-radius:3px;transition:width .35s ease}
+  .theme-btn{border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.2);color:#fff;border-radius:999px;padding:6px 12px;font-size:.78rem;cursor:pointer}
+  .theme-btn:hover{background:rgba(0,0,0,.38)}
+
+  .tabbar{flex:0 0 auto;height:var(--tabbar-h);display:flex;align-items:center;gap:5px;padding:0 12px;background:var(--surface);border-bottom:1px solid var(--ring);overflow-x:auto;scrollbar-width:thin;z-index:15}
+  .tabbar button{flex:0 0 auto;border:1px solid transparent;background:transparent;color:var(--ink-2);font-size:.8rem;font-weight:600;padding:7px 12px;border-radius:999px;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap}
+  .tabbar button:hover{background:var(--maroon-tint);color:var(--maroon)}
+  .tabbar button.active{background:var(--maroon);color:#fff;border-color:var(--maroon)}
+  .tabbar button .tnum{font-size:.66rem;opacity:.7}
+  .tabbar button.milestone{border:1px dashed var(--maroon-soft)}
+
+  .stage{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth;background:var(--page)}
+  .panel{display:none;max-width:1060px;margin:0 auto;padding:26px 22px 40px;animation:fade .35s ease}
+  .panel.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  .panel-nav{display:flex;justify-content:space-between;gap:12px;margin-top:30px;padding-top:18px;border-top:1px solid var(--ring)}
+  .pn-btn{border:1px solid var(--ring);background:var(--card);color:var(--ink);border-radius:10px;padding:10px 18px;font-size:.9rem;font-weight:700;cursor:pointer;box-shadow:var(--shadow)}
+  .pn-btn:hover{border-color:var(--maroon-soft);color:var(--maroon)}
+  .pn-btn.primary{background:var(--maroon);color:#fff;border-color:var(--maroon)}
+  .pn-btn.primary:hover{background:var(--maroon-mid);color:#fff}
+  .pn-btn:disabled{opacity:.35;cursor:default}
+
+  .p-head{display:flex;align-items:baseline;gap:12px;border-bottom:3px solid var(--maroon);padding-bottom:9px;margin-bottom:18px;flex-wrap:wrap}
+  .p-head .pn{background:var(--maroon);color:#fff;font-weight:800;border-radius:9px;padding:3px 11px;font-size:.95rem}
+  .p-head h2{font-family:var(--serif);color:var(--maroon);font-size:clamp(1.2rem,2.4vw,1.55rem);font-weight:700}
+  .p-head .tag{margin-left:auto;font-size:.72rem;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em}
+  .lead{color:var(--ink-2);max-width:840px;margin-bottom:16px}
+  h3.sh{font-family:var(--serif);color:var(--maroon);margin:22px 0 12px;font-size:1.1rem}
+
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  .g4{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+  .card{background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+
+  .callout{border-left:5px solid var(--maroon);background:var(--maroon-tint);border-radius:0 var(--radius) var(--radius) 0;padding:15px 17px;color:var(--ink)}
+  .callout.quote{font-family:var(--serif);font-style:italic;font-size:1.02rem}
+  .callout.good{border-left-color:var(--good);background:color-mix(in srgb,var(--good) 10%,var(--surface))}
+  .callout .src{display:block;margin-top:8px;font-size:.8rem;color:var(--ink-3);font-style:normal;font-family:var(--sans)}
+
+  .icon-card{display:flex;gap:13px;align-items:flex-start;background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);padding:15px;box-shadow:var(--shadow)}
+  .icon-card .ic{flex:0 0 42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;background:var(--maroon-tint);color:var(--maroon)}
+  .icon-card h4{font-size:.95rem;margin-bottom:3px}
+  .icon-card p{font-size:.84rem;color:var(--ink-2)}
+  .num-badge{flex:0 0 38px;height:38px;border-radius:50%;background:var(--maroon);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:.95rem}
+
+  .chip-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .chip{background:var(--maroon-tint);color:var(--maroon);border-radius:999px;padding:6px 13px;font-size:.82rem;font-weight:600}
+  .statmini{background:var(--card);border:1px solid var(--ring);border-radius:12px;padding:14px;text-align:center;box-shadow:var(--shadow)}
+  .statmini .v{font-size:1.35rem;font-weight:800;color:var(--maroon)}
+  .statmini .l{font-size:.76rem;color:var(--ink-2);margin-top:2px}
+
+  .plant-tabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px;margin-bottom:18px}
+  .plant-btn{border:2px solid var(--ring);background:var(--card);border-radius:13px;padding:12px 10px;cursor:pointer;text-align:center;transition:transform .15s,border-color .15s;color:var(--ink)}
+  .plant-btn:hover{transform:translateY(-3px);border-color:var(--maroon-soft)}
+  .plant-btn .pemoji{font-size:1.7rem;display:block}
+  .plant-btn .pname{display:block;font-weight:800;font-size:.9rem;margin-top:4px}
+  .plant-btn .pdet{display:block;font-size:.7rem;color:var(--ink-3);margin-top:2px}
+  .plant-btn.active{border-color:var(--maroon);background:var(--maroon);color:#fff}
+  .plant-btn.active .pdet{color:#f0d5d5}
+  .plant-panel{display:none} .plant-panel.active{display:block;animation:fade .3s ease}
+  .determinant{background:linear-gradient(120deg,var(--maroon),var(--maroon-mid));color:#fff;border-radius:14px;padding:17px 19px;margin-bottom:16px}
+  .determinant .lab{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:#ffd98a}
+  .determinant h3{font-family:var(--serif);font-size:1.25rem;margin:3px 0 6px}
+  .determinant p{font-size:.88rem;color:#f3d9d9}
+  .crit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:11px}
+  .crit{background:var(--card);border:1px solid var(--ring);border-left:4px solid var(--maroon-soft);border-radius:10px;padding:11px 13px;box-shadow:var(--shadow)}
+  .crit .ct{font-weight:700;font-size:.88rem;display:flex;gap:7px;align-items:center}
+  .crit .ct .n{background:var(--maroon-tint);color:var(--maroon);border-radius:6px;font-size:.7rem;padding:1px 6px;font-weight:800}
+  .crit p{font-size:.8rem;color:var(--ink-2);margin-top:4px}
+
+  .widget{background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
+  .widget h3{font-family:var(--serif);color:var(--maroon);font-size:1.1rem;margin-bottom:5px}
+  .widget .note{font-size:.8rem;color:var(--ink-3);margin-bottom:12px}
+  .ctrl{margin:12px 0}
+  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;font-weight:600;color:var(--ink-2);margin-bottom:5px;gap:8px}
+  .ctrl label output{color:var(--maroon);font-weight:800;font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--maroon-mid);height:26px;cursor:pointer}
+  .formula{font-family:var(--serif);background:var(--maroon-tint);border:1px dashed var(--maroon-soft);border-radius:10px;padding:11px 15px;text-align:center;font-size:1.08rem;overflow-x:auto}
+  .formula sub,.formula sup{font-size:.7em}
+  .big-out{margin-top:12px;background:var(--maroon);color:#fff;border-radius:12px;padding:13px 17px;text-align:center}
+  .big-out .v{font-size:1.7rem;font-weight:800;color:#ffd98a;font-variant-numeric:tabular-nums}
+  .big-out .l{font-size:.76rem;text-transform:uppercase;letter-spacing:.08em;color:#f3d9d9}
+  .mini-outs{display:flex;gap:9px;margin-top:9px;flex-wrap:wrap}
+  .mini-out{flex:1;min-width:100px;background:var(--maroon-tint);border-radius:10px;padding:8px 11px;text-align:center}
+  .mini-out .v{font-weight:800;color:var(--maroon);font-variant-numeric:tabular-nums}
+  .mini-out .l{font-size:.7rem;color:var(--ink-2)}
+  svg text{font-family:var(--sans)}
+  .axis-lbl{font-size:11px;fill:var(--ink-3)}
+
+  .subtypes{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
+  .subtype{border:1.5px solid var(--ring);background:var(--surface);border-radius:10px;padding:8px 13px;cursor:pointer;font-size:.84rem;font-weight:600;color:var(--ink)}
+  .subtype:hover{border-color:var(--maroon-soft)} .subtype.active{background:var(--maroon-tint);border-color:var(--maroon);color:var(--maroon)}
+  #subtypeDesc{font-size:.85rem;color:var(--ink-2);background:var(--maroon-tint);border-radius:10px;padding:10px 13px}
+  .tradeoff{display:flex;justify-content:space-between;font-size:.78rem;font-weight:700;margin-top:4px}
+  .tradeoff .a{color:var(--s-blue)} .tradeoff .b{color:var(--s-orange)}
+  .verdict-box{margin-top:12px;border-radius:12px;padding:13px 15px;border:1px solid var(--ring);background:var(--surface);font-size:.88rem}
+  .verdict-box b{color:var(--maroon)}
+
+  .lab-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:16px}
+  @media(max-width:820px){.lab-grid{grid-template-columns:1fr}}
+  .score-row{display:flex;align-items:center;gap:10px;margin:7px 0}
+  .score-row .nm{flex:0 0 132px;font-size:.85rem;font-weight:700;display:flex;align-items:center;gap:6px}
+  .score-bar{flex:1;height:20px;background:var(--grid);border-radius:6px;overflow:hidden;position:relative}
+  .score-bar span{position:absolute;left:0;top:0;bottom:0;border-radius:6px;transition:width .4s ease}
+  .score-row .sv{flex:0 0 42px;text-align:right;font-weight:800;font-variant-numeric:tabular-nums;font-size:.9rem}
+  .best-flag{background:var(--maroon);color:#fff;border-radius:6px;font-size:.64rem;padding:1px 6px;font-weight:800;letter-spacing:.04em}
+  #labVerdict{margin-top:14px}
+
+  .map-tray{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:12px}
+  .plant-chip{display:flex;align-items:center;gap:7px;border:2px solid var(--maroon-soft);background:var(--card);border-radius:999px;padding:8px 15px;font-weight:700;font-size:.88rem;cursor:grab;touch-action:none;user-select:none;box-shadow:var(--shadow);color:var(--ink)}
+  .plant-chip .pe{font-size:1.15rem}
+  .plant-chip.placed{opacity:.35;pointer-events:none;text-decoration:line-through}
+  .plant-chip.selected{outline:3px solid var(--maroon);outline-offset:2px}
+  .plant-chip.dragging{position:fixed;z-index:999;pointer-events:none;box-shadow:0 12px 28px rgba(0,0,0,.35);transform:translate(-50%,-50%) scale(1.05)}
+  .mapwrap{background:var(--card);border:1px solid var(--ring);border-radius:14px;box-shadow:var(--shadow);padding:10px}
+  .zone{cursor:pointer;transition:opacity .2s}
+  .zone .zbox{fill:var(--surface);stroke:var(--axis);stroke-width:1.5;stroke-dasharray:5 4}
+  .zone.hot .zbox{stroke:var(--maroon);stroke-width:2.5;fill:var(--maroon-tint)}
+  .zone.ok .zbox{stroke:var(--good);fill:color-mix(in srgb,var(--good) 12%,var(--surface));stroke-dasharray:none}
+  .zone.bad .zbox{stroke:var(--critical);fill:color-mix(in srgb,var(--critical) 10%,var(--surface));stroke-dasharray:none}
+  .zone text{font-size:11px;fill:var(--ink-2);font-weight:600}
+  .zone .zplaced{font-size:15px;font-weight:800}
+  #mapFeedback{margin-top:12px;min-height:44px;border-radius:12px;padding:12px 15px;border:1px solid var(--ring);background:var(--surface);font-size:.88rem}
+  .map-score{font-weight:800;color:var(--maroon)}
+
+  .dual{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:stretch}
+  .dual .side{background:var(--card);border:1px solid var(--ring);border-radius:14px;padding:15px;box-shadow:var(--shadow)}
+  .dual .side.a{border-top:5px solid var(--s-blue)} .dual .side.b{border-top:5px solid var(--s-orange)}
+  .dual .side h4{font-size:.98rem;margin-bottom:3px}
+  .dual .side .sub{font-size:.76rem;color:var(--ink-3);margin-bottom:9px}
+  .dual .side ul{margin-left:17px;font-size:.83rem;color:var(--ink-2)} .dual .side ul li{margin:4px 0}
+  .dual .core{align-self:center;text-align:center;font-size:1.9rem}
+  @media(max-width:720px){.dual{grid-template-columns:1fr}.dual .core{transform:rotate(90deg)}}
+
+  .pillars{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:13px}
+  .pillar{border-radius:14px;padding:17px;color:#fff;box-shadow:var(--shadow)}
+  .pillar.soc{background:linear-gradient(135deg,#2a78d6,#1c5cab)}
+  .pillar.env{background:linear-gradient(135deg,#0f8a3c,#065f28)}
+  .pillar.eco{background:linear-gradient(135deg,#c98500,#9a6400)}
+  .pillar h4{font-size:1.05rem;margin-bottom:5px} .pillar p{font-size:.84rem;opacity:.95}
+  .sdg-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:13px}
+  .sdg{background:var(--card);border:1px solid var(--ring);border-radius:10px;padding:8px 11px;font-size:.79rem;font-weight:700;color:var(--ink-2);box-shadow:var(--shadow)}
+  .sdg .n{display:inline-block;width:21px;height:21px;border-radius:5px;background:var(--maroon);color:#fff;text-align:center;line-height:21px;font-size:.7rem;margin-right:6px}
+
+  /* quiz — shared by pre- and post-assessment */
+  .quiz-q{background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+  .quiz-q h4{font-size:.96rem;margin-bottom:11px} .quiz-q h4 .qn{color:var(--maroon)}
+  .qtype{display:inline-block;font-size:.66rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;background:var(--maroon-tint);color:var(--maroon);border-radius:999px;padding:2px 9px;margin-left:8px;vertical-align:middle}
+  .opts{display:grid;gap:8px}
+  .opt{text-align:left;border:1.5px solid var(--ring);background:var(--surface);border-radius:10px;padding:9px 13px;font-size:.88rem;cursor:pointer;color:var(--ink);font-family:var(--sans)}
+  .opt:hover{border-color:var(--maroon-soft)}
+  .opt.correct{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--surface));font-weight:700}
+  .opt.wrong{border-color:var(--critical);background:color-mix(in srgb,var(--critical) 10%,var(--surface))}
+  .opt:disabled{cursor:default;opacity:.92}
+  .tf-row{display:flex;gap:10px}
+  .tf-row .opt{flex:1;text-align:center;font-weight:700}
+  .blank-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .blank-row input[type=text]{flex:1;min-width:160px;border:1.5px solid var(--ring);background:var(--surface);border-radius:10px;padding:9px 13px;font-size:.92rem;color:var(--ink);font-family:var(--sans)}
+  .blank-row input[type=text]:focus{outline:2px solid var(--maroon-soft);border-color:var(--maroon)}
+  .blank-row input.correct{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--surface))}
+  .blank-row input.wrong{border-color:var(--critical);background:color-mix(in srgb,var(--critical) 10%,var(--surface))}
+  .blank-submit{border:none;background:var(--maroon);color:#fff;border-radius:10px;padding:9px 18px;font-weight:700;font-size:.86rem;cursor:pointer}
+  .blank-submit:hover{background:var(--maroon-mid)}
+  .blank-submit:disabled{opacity:.4;cursor:default}
+  .fb{margin-top:9px;font-size:.85rem;display:none;border-radius:8px;padding:9px 11px}
+  .fb.show{display:block}
+  .fb.good{background:color-mix(in srgb,var(--good) 12%,var(--surface));color:var(--good-text)}
+  .fb.bad{background:color-mix(in srgb,var(--critical) 10%,var(--surface));color:var(--critical)}
+  #preScore,#quizscore{font-weight:800;color:var(--maroon)}
+  .diag-note{font-size:.78rem;color:var(--ink-3);background:var(--maroon-tint2);border-radius:8px;padding:8px 12px;margin-bottom:16px;display:inline-block}
+
+  .sum-list{list-style:none;display:grid;gap:9px}
+  .sum-list li{display:flex;gap:11px;align-items:flex-start;background:var(--card);border:1px solid var(--ring);border-radius:12px;padding:11px 15px;box-shadow:var(--shadow);font-size:.9rem}
+  .sum-list li .tick{color:var(--good-text);font-weight:800;flex:0 0 auto}
+  .refbox{background:var(--card);border:1px solid var(--ring);border-radius:12px;padding:13px 17px;font-size:.86rem;color:var(--ink-2);box-shadow:var(--shadow)}
+  .refbox p{margin:4px 0}
+  .foot-note{margin-top:22px;font-size:.76rem;color:var(--ink-3);border-top:1px solid var(--ring);padding-top:14px}
+  .foot-note a{color:var(--maroon)}
+
+  @media (max-width:760px){
+    .app{height:auto;min-height:100vh;overflow:visible}
+    .stage{overflow:visible}
+    .appbar{position:sticky;top:0} .tabbar{position:sticky;top:var(--appbar-h)}
+    .appbar .ttl small{display:none}
+    .lab-grid{grid-template-columns:1fr}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#stage">Skip to content</a>
+<div class="app">
+  <div class="appbar">
+    <span class="code">ME 4201</span>
+    <span class="ttl">Location of Conventional Power Plants&nbsp;<small>Chapter 1 · Part E · BOPPPS</small></span>
+    <span class="spacer"></span>
+    <div class="prog-wrap"><span id="progLabel">Module 1 / 10</span><div class="prog-track"><div class="prog-fill" id="progFill"></div></div></div>
+    <button class="theme-btn" id="themeToggle" aria-pressed="false">🌙</button>
+  </div>
+  <nav class="tabbar" id="tabbar" aria-label="Module sections"></nav>
+  <div class="stage" id="stage"><div id="panels">
+
+    <!-- ===== 1 START — Bridge-in + Objectives ===== -->
+    <section class="panel active" id="tab-start" data-title="Start" data-emoji="🎯" data-boppps="Bridge-in · Objectives">
+      <div class="p-head"><span class="pn">1</span><h2>Start Here — Location of Conventional Power Plants</h2><span class="tag">Bridge-in · Objectives</span></div>
+
+      <div class="callout quote">"If you had to place a brand-new power plant on the map of Bangladesh tomorrow — what is the very first thing you'd look for? And would your answer change if it were hydro instead of gas, or nuclear instead of coal?"
+        <span class="src">🌉 Bridge-in — think about it for a moment. You'll test your instincts in the Pre-Assessment next, and again in the Map Game later.</span></div>
+
+      <p class="lead" style="margin-top:16px">Choosing where to build a power plant is one of the most consequential engineering decisions in the whole project — it locks in cost, efficiency, environmental impact and reliability for 40+ years. This module is an interactive companion to the lecture by <b>Prof. Dr. Mazharul Islam, P.Eng.</b> (Alberta, Canada), Department of Mechanical and Production Engineering, Ahsanullah University of Science and Technology (AUST), Dhaka, Bangladesh.</p>
+
+      <h3 class="sh">🎯 Learning Outcomes (Objectives)</h3>
+      <div class="grid g2">
+        <div class="icon-card"><div class="ic">📍</div><div><h4>Explain the factors that govern plant location</h4><p>Understand siting as a systematic engineering decision — balancing resource proximity, environmental &amp; regulatory compliance, and land &amp; socio-economic factors.</p></div></div>
+        <div class="icon-card"><div class="ic">⚖️</div><div><h4>Compare siting logic across technologies</h4><p>Contrast the decisive driver for hydro, thermal, gas-turbine, combined-cycle and nuclear plants — and connect each to the three pillars of sustainability.</p></div></div>
+      </div>
+
+      <h3 class="sh">What's inside this module</h3>
+      <div class="grid g4">
+        <div class="statmini"><div class="v">📝</div><div class="l">Pre-Assessment — test your instincts (ungraded)</div></div>
+        <div class="statmini"><div class="v">🏗️</div><div class="l">5-plant explorer + 3 live calculators</div></div>
+        <div class="statmini"><div class="v">📊</div><div class="l">Suitability lab · drag-drop map game</div></div>
+        <div class="statmini"><div class="v">✅</div><div class="l">10-question Post-Assessment + Summary</div></div>
+      </div>
+      <p class="lead" style="margin-top:14px">Use the tabs above, the <b>Next ▸</b> button, or the <b>← / →</b> arrow keys to move through the module. Try every slider, calculator and game as you go — that's where the real learning happens.</p>
+    </section>
+
+    <!-- ===== 2 PRE-ASSESSMENT ===== -->
+    <section class="panel" id="tab-pre" data-title="Pre-Assessment" data-emoji="📝" data-boppps="Pre-assessment">
+      <div class="p-head"><span class="pn">2</span><h2>Pre-Assessment — Test Your Instincts</h2><span class="tag">Diagnostic · not graded</span></div>
+      <p class="lead">This is a <b>warm-up, not a test</b> — there is no penalty for guessing wrong, and your score here doesn't count toward anything. It simply activates what you already think before we dig into the engineering. Answer instinctively, then watch how your thinking sharpens through the module.</p>
+      <div class="diag-note">🔎 Diagnostic only — this score is <b>not</b> added to your Post-Assessment result.</div>
+      <div id="prebox"></div>
+      <div class="callout good" id="preSummary" style="display:none;margin-top:8px"></div>
+    </section>
+
+    <!-- ===== 3 SITING FACTORS ===== -->
+    <section class="panel" id="tab-factors" data-title="Siting Factors" data-emoji="🧭" data-boppps="Participatory learning">
+      <div class="p-head"><span class="pn">3</span><h2>Universal vs. Technology-Specific Factors</h2><span class="tag">The framing</span></div>
+      <p class="lead">Selecting an optimal location is a complex engineering decision requiring systematic evaluation of many interdependent factors — some shared by <i>every</i> plant, and some that vary sharply with the generation technology.</p>
+
+      <h3 class="sh">Universal Siting Considerations</h3>
+      <div class="grid g3">
+        <div class="icon-card"><div class="ic">🔌</div><div><h4>Resource &amp; infrastructure proximity</h4><p>Access to fuel or water, grid connectivity, and transportation infrastructure.</p></div></div>
+        <div class="icon-card"><div class="ic">🌿</div><div><h4>Environmental &amp; regulatory compliance</h4><p>Every plant must meet environmental regulations and waste-management protocols.</p></div></div>
+        <div class="icon-card"><div class="ic">🏞️</div><div><h4>Land &amp; socio-economic factors</h4><p>Suitable topography, stable land, and careful management of community impact.</p></div></div>
+      </div>
+
+      <h3 class="sh">Technology-Specific Locational Imperatives</h3>
+      <div class="grid g2">
+        <div class="icon-card"><div class="ic">💧</div><div><h4>Hydro — water head &amp; flow rate</h4><p>Primarily determined by topography providing high potential energy and consistent water flow.</p></div></div>
+        <div class="icon-card"><div class="ic">🏭</div><div><h4>Thermal — fuel source &amp; waste disposal</h4><p>Proximity to fuel (e.g. coal mines) and viable ash-disposal areas.</p></div></div>
+        <div class="icon-card"><div class="ic">🔥</div><div><h4>Gas &amp; combined-cycle — gas supply &amp; ambient temp</h4><p>Direct access to gas pipelines; efficiency is sensitive to air temperature.</p></div></div>
+        <div class="icon-card"><div class="ic">☢️</div><div><h4>Nuclear — seismic stability &amp; population</h4><p>Low seismic activity and a safe distance from dense population centres.</p></div></div>
+      </div>
+      <div class="callout" style="margin-top:16px">➡️ In the next tab, pick each technology and see its decisive determinant, full criteria list, and a live tool.</div>
+    </section>
+
+    <!-- ===== 4 EXPLORER ===== -->
+    <section class="panel" id="tab-explorer" data-title="Plant Explorer" data-emoji="🏗️" data-boppps="Participatory learning">
+      <div class="p-head"><span class="pn">4</span><h2>Interactive Plant-Technology Explorer</h2><span class="tag">Pick a technology</span></div>
+      <p class="lead">Every technology answers the siting question differently. Select a plant type to reveal its decisive determinant, its engineering criteria, and its embedded tool — a power calculator for hydro, a siting trade-off for thermal, and an ISO derating calculator for gas.</p>
+
+      <div class="plant-tabs" role="tablist" aria-label="Plant technologies">
+        <button class="plant-btn active" role="tab" data-plant="hydro" aria-selected="true"><span class="pemoji">💧</span><span class="pname">Hydro</span><span class="pdet">Head &amp; flow</span></button>
+        <button class="plant-btn" role="tab" data-plant="thermal" aria-selected="false"><span class="pemoji">🏭</span><span class="pname">Thermal</span><span class="pdet">Fuel &amp; ash</span></button>
+        <button class="plant-btn" role="tab" data-plant="gas" aria-selected="false"><span class="pemoji">🔥</span><span class="pname">Gas Turbine</span><span class="pdet">Gas &amp; air</span></button>
+        <button class="plant-btn" role="tab" data-plant="ccgt" aria-selected="false"><span class="pemoji">♻️</span><span class="pname">Combined Cycle</span><span class="pdet">Cooling water</span></button>
+        <button class="plant-btn" role="tab" data-plant="nuclear" aria-selected="false"><span class="pemoji">☢️</span><span class="pname">Nuclear</span><span class="pdet">Seismic &amp; safety</span></button>
+      </div>
+
+      <!-- HYDRO -->
+      <div class="plant-panel active" id="p-hydro" role="tabpanel">
+        <div class="determinant"><div class="lab">Decisive determinant</div><h3>💧 Water Head &amp; Dependable Flow</h3><p>Siting is dictated by topography that provides high potential energy (head) and consistent flow. Firm power is estimated from the Flow-Duration Curve at 90–95% dependability across 20+ years of records.</p></div>
+        <div class="grid g2">
+          <div class="widget">
+            <h3>🧮 Hydro Power Calculator</h3>
+            <p class="note">Available power at the turbine — drag flow, net head and efficiency.</p>
+            <div class="formula">P = ρ · g · Q · H<sub>net</sub> · η</div>
+            <div class="ctrl"><label>Flow rate Q <output id="hQ">120 m³/s</output></label><input type="range" id="hQr" min="1" max="1000" step="1" value="120"></div>
+            <div class="ctrl"><label>Net head H<sub>net</sub> <output id="hH">80 m</output></label><input type="range" id="hHr" min="2" max="300" step="1" value="80"></div>
+            <div class="ctrl"><label>Overall efficiency η <output id="hE">0.85</output></label><input type="range" id="hEr" min="60" max="95" step="1" value="85"></div>
+            <div class="big-out"><div class="v" id="hP">80.0 MW</div><div class="l">Available electrical power</div></div>
+            <div class="mini-outs"><div class="mini-out"><div class="v" id="hGross">94.2 MW</div><div class="l">Gross hydraulic power</div></div><div class="mini-out"><div class="v" id="hClass">Medium head</div><div class="l">Head class</div></div></div>
+            <p class="note" style="margin-top:9px">ρ = 1000 kg/m³, g = 9.81 m/s². η = turbine × generator × transformer (≈ 0.75–0.90).</p>
+          </div>
+          <div class="widget">
+            <h3>🏔️ Select the Scheme Type</h3>
+            <p class="note">The configuration reshapes which criteria matter most.</p>
+            <div class="subtypes" role="group" aria-label="Hydro plant types">
+              <button class="subtype active" data-sub="dam">Storage Dam</button>
+              <button class="subtype" data-sub="ror">Run-of-River</button>
+              <button class="subtype" data-sub="pump">Pumped Storage</button>
+            </div>
+            <p id="subtypeDesc"></p>
+            <svg viewBox="0 0 420 170" width="100%" style="margin-top:12px" role="img" aria-label="Flow-duration curve, firm power at 90 to 95 percent dependability">
+              <line x1="44" y1="140" x2="404" y2="140" stroke="var(--axis)" stroke-width="1.2"/><line x1="44" y1="18" x2="44" y2="140" stroke="var(--axis)" stroke-width="1.2"/>
+              <path d="M44 28 C120 38 180 66 240 94 S340 132 404 137" fill="none" stroke="var(--s-blue)" stroke-width="2.5"/>
+              <line x1="368" y1="18" x2="368" y2="140" stroke="var(--maroon)" stroke-width="1.3" stroke-dasharray="4 4"/>
+              <text x="366" y="14" text-anchor="middle" class="axis-lbl" fill="var(--maroon)" font-weight="700">90–95%</text>
+              <circle cx="368" cy="134" r="5" fill="var(--maroon)"/><text x="360" y="126" text-anchor="end" class="axis-lbl" fill="var(--maroon)" font-weight="700">Firm power</text>
+              <text x="224" y="162" text-anchor="middle" class="axis-lbl">Exceedance probability (%)</text>
+            </svg>
+          </div>
+        </div>
+        <h3 class="sh">The Ten Engineering Criteria — Hydro</h3>
+        <div class="crit-grid" id="hydro-crit"></div>
+      </div>
+
+      <!-- THERMAL -->
+      <div class="plant-panel" id="p-thermal" role="tabpanel">
+        <div class="determinant"><div class="lab">Decisive determinant</div><h3>🏭 Fuel Supply &amp; Waste Disposal</h3><p>Critical factors are proximity to fuel (e.g. coal mines) and viable ash-disposal areas. The master trade-off: locate at the <b>pit-head</b> (transport electricity) or the <b>load-centre</b> (transport coal). Low-CV / high-ash coal favours the pit-head.</p></div>
+        <div class="widget" style="margin-bottom:16px">
+          <h3>⚖️ Pit-Head vs. Load-Centre Siting</h3>
+          <p class="note">Coal quality decides the trade-off. Slide the calorific value and see where the plant should sit — and what gets transported.</p>
+          <div class="ctrl"><label>Coal calorific value (CV) <output id="cvOut">4.0 MJ/kg</output></label><input type="range" id="cvR" min="1.5" max="7" step="0.1" value="4"></div>
+          <div class="tradeoff"><span class="a">◀ Pit-head siting</span><span class="b">Load-centre siting ▶</span></div>
+          <svg viewBox="0 0 440 56" width="100%" style="margin-top:8px" aria-hidden="true">
+            <defs><linearGradient id="tgrad" x1="0" x2="1"><stop offset="0" stop-color="var(--s-blue)"/><stop offset="1" stop-color="var(--s-orange)"/></linearGradient></defs>
+            <rect x="20" y="22" width="400" height="12" rx="6" fill="url(#tgrad)"/><circle id="tKnob" cx="220" cy="28" r="11" fill="var(--maroon)" stroke="var(--surface)" stroke-width="3"/>
+          </svg>
+          <div class="verdict-box" id="thermalVerdict"></div>
+        </div>
+        <h3 class="sh">Location of Thermal Power Plants — Nag (2014, p. 11)</h3>
+        <div class="crit-grid" id="thermal-crit"></div>
+      </div>
+
+      <!-- GAS -->
+      <div class="plant-panel" id="p-gas" role="tabpanel">
+        <div class="determinant"><div class="lab">Decisive determinant</div><h3>🔥 Gas Supply &amp; Ambient Temperature</h3><p>Gas turbines need direct access to gas pipelines, and their output is rated at ISO conditions (15 °C, 1.013 bar, 60% RH). Output derates with rising temperature and elevation — hot, high sites lose significant MW.</p></div>
+        <div class="widget" style="margin-bottom:16px">
+          <h3>🌡️ Gas-Turbine ISO Derating Calculator</h3>
+          <p class="note">Rated at ISO 15 °C &amp; sea level. See how a hot day and altitude cut real output. (Illustrative model: ≈ 0.7%/°C above 15 °C; power ∝ ambient pressure.)</p>
+          <div class="ctrl"><label>Nameplate ISO rating <output id="gRate">150 MW</output></label><input type="range" id="gRateR" min="20" max="500" step="10" value="150"></div>
+          <div class="ctrl"><label>Ambient temperature <output id="gTemp">35 °C</output></label><input type="range" id="gTempR" min="-10" max="50" step="1" value="35"></div>
+          <div class="ctrl"><label>Site elevation <output id="gAlt">300 m</output></label><input type="range" id="gAltR" min="0" max="3000" step="50" value="300"></div>
+          <div class="big-out"><div class="v" id="gOut">— MW</div><div class="l">Actual site output</div></div>
+          <div class="mini-outs"><div class="mini-out"><div class="v" id="gPct">—%</div><div class="l">of ISO rating</div></div><div class="mini-out"><div class="v" id="gLoss">— MW</div><div class="l">lost to conditions</div></div></div>
+          <svg id="gCurve" viewBox="0 0 440 170" width="100%" style="margin-top:12px" role="img" aria-label="Output versus ambient temperature curve">
+            <line x1="46" y1="140" x2="424" y2="140" stroke="var(--axis)" stroke-width="1.2"/><line x1="46" y1="14" x2="46" y2="140" stroke="var(--axis)" stroke-width="1.2"/>
+            <line x1="46" y1="30" x2="424" y2="30" stroke="var(--grid)" stroke-width="1" stroke-dasharray="3 4"/>
+            <text x="50" y="26" class="axis-lbl">ISO 100%</text>
+            <path id="gPath" d="" fill="none" stroke="var(--s-orange)" stroke-width="2.5"/>
+            <circle id="gDot" cx="0" cy="0" r="6" fill="var(--maroon)" stroke="var(--surface)" stroke-width="2"/>
+            <text x="235" y="162" text-anchor="middle" class="axis-lbl">Ambient temperature (°C) — at chosen elevation</text>
+            <g id="gTicks"></g>
+          </svg>
+        </div>
+        <div class="callout" style="margin-bottom:16px"><b>Why gas turbines go where coal cannot:</b> compact footprint, no ash handling, fast start &amp; ramp, minimal water, and siting close to load centres and gas pipelines — enabling urban-adjacent and industrial locations.</div>
+        <h3 class="sh">The Engineering Criteria — Gas Turbine</h3>
+        <div class="crit-grid" id="gas-crit"></div>
+      </div>
+
+      <!-- CCGT -->
+      <div class="plant-panel" id="p-ccgt" role="tabpanel">
+        <div class="determinant"><div class="lab">Decisive determinant</div><h3>♻️ Cooling System &amp; Water Siting</h3><p>Adding a steam bottoming cycle (via a Heat-Recovery Steam Generator) lifts efficiency to ~55–64%, but the steam cycle needs cooling — so the <b>cooling-system choice drives water siting</b>. Once-through needs a large water body; dry/air cooling cuts water at an efficiency penalty.</p></div>
+        <div class="grid g3" style="margin-bottom:16px">
+          <div class="statmini"><div class="v" style="color:var(--s-green)">55–64%</div><div class="l">Combined-cycle efficiency</div></div>
+          <div class="statmini"><div class="v" style="color:var(--s-green)">≈ ⅓ water</div><div class="l">vs equivalent coal plant</div></div>
+          <div class="statmini"><div class="v" style="color:var(--s-green)">GT + HRSG</div><div class="l">gas topping + steam bottoming</div></div>
+        </div>
+        <div class="callout" style="margin-bottom:16px"><b>Configuration:</b> Natural gas → Gas Turbine → hot exhaust → HRSG → Steam Turbine → condenser (cooling water or ACC) → grid. The condenser's cooling method is the biggest siting constraint for a CCGT.</div>
+        <h3 class="sh">The Engineering Criteria — Combined Cycle (CCGT)</h3>
+        <div class="crit-grid" id="ccgt-crit"></div>
+      </div>
+
+      <!-- NUCLEAR -->
+      <div class="plant-panel" id="p-nuclear" role="tabpanel">
+        <div class="determinant"><div class="lab">Decisive determinant</div><h3>☢️ Seismic Stability &amp; Population Density</h3><p>Nuclear siting mandates low seismic activity, a reliable ultimate heat sink, and distance from dense population. Nag (2014, p. 12) adds two factors beyond the thermal list: <b>(11) density of population in the vicinity</b> and <b>(12) danger of earthquake</b>. The full IAEA dual-evaluation principle is in tab 7.</p></div>
+        <h3 class="sh">The Engineering Criteria — Nuclear</h3>
+        <div class="crit-grid" id="nuclear-crit"></div>
+        <div class="callout" style="margin-top:14px">➡️ See the <b>IAEA dual-evaluation principle</b> in the Nuclear tab — how a site must be safe <i>from</i> the region and safe <i>for</i> the region.</div>
+      </div>
+    </section>
+
+    <!-- ===== 5 SUITABILITY LAB ===== -->
+    <section class="panel" id="tab-lab" data-title="Suitability Lab" data-emoji="📊" data-boppps="Participatory learning">
+      <div class="p-head"><span class="pn">5</span><h2>Site-Suitability Lab</h2><span class="tag">Interactive scorecard</span></div>
+      <p class="lead">This is the heart of siting: <b>the same site suits different technologies to very different degrees</b>, because each technology weights the factors differently. Drag the six site-condition sliders to describe a candidate site, then watch every technology's suitability score update. The radar shows how well your site (blue) matches the selected technology's priorities (maroon).</p>
+
+      <div class="lab-grid">
+        <div class="widget">
+          <h3>🎚️ Describe your candidate site</h3>
+          <p class="note">Higher = more favourable. These feed the weighted score for every technology.</p>
+          <div class="ctrl"><label>💧 Water availability <output id="f0">50</output></label><input type="range" class="fSlider" id="fs0" min="0" max="100" step="5" value="50"></div>
+          <div class="ctrl"><label>🪨 Ground / seismic stability <output id="f1">50</output></label><input type="range" class="fSlider" id="fs1" min="0" max="100" step="5" value="50"></div>
+          <div class="ctrl"><label>🏙️ Load-centre proximity <output id="f2">50</output></label><input type="range" class="fSlider" id="fs2" min="0" max="100" step="5" value="50"></div>
+          <div class="ctrl"><label>⛽ Fuel / gas access <output id="f3">50</output></label><input type="range" class="fSlider" id="fs3" min="0" max="100" step="5" value="50"></div>
+          <div class="ctrl"><label>🏞️ Land availability &amp; low cost <output id="f4">50</output></label><input type="range" class="fSlider" id="fs4" min="0" max="100" step="5" value="50"></div>
+          <div class="ctrl"><label>👥 Population setback (remoteness) <output id="f5">50</output></label><input type="range" class="fSlider" id="fs5" min="0" max="100" step="5" value="50"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+            <button class="pn-btn" id="presetRiver" style="font-size:.78rem;padding:7px 12px">🏔️ Mountain river</button>
+            <button class="pn-btn" id="presetCoast" style="font-size:.78rem;padding:7px 12px">🌊 Remote coast</button>
+            <button class="pn-btn" id="presetCity" style="font-size:.78rem;padding:7px 12px">🏙️ Near city</button>
+          </div>
+        </div>
+
+        <div class="widget">
+          <h3>📡 Site vs. Technology Priorities</h3>
+          <p class="note">Selected technology: <b id="radarTech">Hydro</b> — pick one below.</p>
+          <div class="subtypes" id="radarPick">
+            <button class="subtype active" data-t="hydro">💧 Hydro</button>
+            <button class="subtype" data-t="thermal">🏭 Thermal</button>
+            <button class="subtype" data-t="gas">🔥 Gas</button>
+            <button class="subtype" data-t="ccgt">♻️ CCGT</button>
+            <button class="subtype" data-t="nuclear">☢️ Nuclear</button>
+          </div>
+          <svg id="radar" viewBox="0 0 344 300" width="100%" role="img" aria-label="Radar chart comparing site conditions with technology priorities"></svg>
+          <div style="display:flex;gap:16px;justify-content:center;font-size:.78rem;margin-top:2px">
+            <span style="color:var(--s-blue);font-weight:700">■ Your site</span>
+            <span style="color:var(--maroon);font-weight:700">■ Tech priorities</span>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="sh">Suitability score for this site — all five technologies</h3>
+      <div class="card" id="scoreCard"></div>
+      <div class="callout" id="labVerdict"></div>
+    </section>
+
+    <!-- ===== 6 MAP GAME ===== -->
+    <section class="panel" id="tab-map" data-title="Map Game" data-emoji="🗺️" data-boppps="Participatory learning">
+      <div class="p-head"><span class="pn">6</span><h2>Place the Plant — Siting Challenge</h2><span class="tag">Drag &amp; drop · <span class="map-score" id="mapScore">0 / 5</span></span></div>
+      <p class="lead">Drag each plant (or tap a plant, then tap a zone) onto the terrain zone that best fits its siting needs. You'll get instant feedback on why it works — or where it should have gone. Can you get all five right?</p>
+
+      <div class="map-tray" id="mapTray">
+        <div class="plant-chip" data-plant="hydro" draggable="false"><span class="pe">💧</span>Hydro</div>
+        <div class="plant-chip" data-plant="thermal" draggable="false"><span class="pe">🏭</span>Thermal (coal)</div>
+        <div class="plant-chip" data-plant="gas" draggable="false"><span class="pe">🔥</span>Gas Turbine</div>
+        <div class="plant-chip" data-plant="ccgt" draggable="false"><span class="pe">♻️</span>Combined Cycle</div>
+        <div class="plant-chip" data-plant="nuclear" draggable="false"><span class="pe">☢️</span>Nuclear</div>
+      </div>
+
+      <div class="mapwrap">
+        <svg id="mapSvg" viewBox="0 0 640 380" width="100%" role="img" aria-label="Terrain map with five candidate siting zones">
+          <rect x="0" y="0" width="640" height="380" fill="var(--surface)"/>
+          <path d="M0 250 Q120 210 240 235 T480 230 T640 245 V380 H0 Z" fill="color-mix(in srgb,var(--s-green) 14%,var(--surface))"/>
+          <path d="M470 0 H640 V250 Q560 245 470 255 Z" fill="color-mix(in srgb,var(--s-blue) 14%,var(--surface))"/>
+          <text x="560" y="30" text-anchor="middle" class="axis-lbl" fill="var(--s-blue)" font-weight="700">SEA / COAST</text>
+          <path d="M20 40 l30 60 l30 -60 l30 70 l25 -50" fill="none" stroke="var(--axis)" stroke-width="2"/>
+          <text x="70" y="30" text-anchor="middle" class="axis-lbl">⛰ Highlands</text>
+          <path d="M250 40 l25 30 l-20 25 l30 35" fill="none" stroke="var(--critical)" stroke-width="2.5" stroke-dasharray="6 5"/>
+          <text x="300" y="55" class="axis-lbl" fill="var(--critical)" font-weight="700">⚠ fault line</text>
+
+          <g class="zone" id="z-hydro" data-zone="hydro" tabindex="0" role="button" aria-label="Zone: mountain river valley">
+            <rect class="zbox" x="30" y="120" width="150" height="72" rx="10"/>
+            <text x="105" y="150" text-anchor="middle">🏔️ Mountain river</text><text x="105" y="167" text-anchor="middle">valley (high head)</text>
+            <text class="zplaced" x="105" y="186" text-anchor="middle"></text>
+          </g>
+          <g class="zone" id="z-thermal" data-zone="thermal" tabindex="0" role="button" aria-label="Zone: coalfield mine mouth">
+            <rect class="zbox" x="70" y="270" width="150" height="72" rx="10"/>
+            <text x="145" y="300" text-anchor="middle">⛏️ Coalfield /</text><text x="145" y="317" text-anchor="middle">mine mouth</text>
+            <text class="zplaced" x="145" y="336" text-anchor="middle"></text>
+          </g>
+          <g class="zone" id="z-gas" data-zone="gas" tabindex="0" role="button" aria-label="Zone: gas pipeline near industrial city">
+            <rect class="zbox" x="300" y="250" width="160" height="72" rx="10"/>
+            <text x="380" y="280" text-anchor="middle">🏙️ Gas pipeline by</text><text x="380" y="297" text-anchor="middle">industrial city</text>
+            <text class="zplaced" x="380" y="316" text-anchor="middle"></text>
+          </g>
+          <g class="zone" id="z-ccgt" data-zone="ccgt" tabindex="0" role="button" aria-label="Zone: coastal cooling water and port">
+            <rect class="zbox" x="480" y="150" width="150" height="72" rx="10"/>
+            <text x="555" y="180" text-anchor="middle">🌊 Coastal cooling</text><text x="555" y="197" text-anchor="middle">water + port</text>
+            <text class="zplaced" x="555" y="216" text-anchor="middle"></text>
+          </g>
+          <g class="zone" id="z-nuclear" data-zone="nuclear" tabindex="0" role="button" aria-label="Zone: remote stable low population coast">
+            <rect class="zbox" x="470" y="40" width="160" height="72" rx="10"/>
+            <text x="550" y="66" text-anchor="middle">🏝️ Remote, stable,</text><text x="550" y="83" text-anchor="middle">low-population coast</text>
+            <text class="zplaced" x="550" y="102" text-anchor="middle"></text>
+          </g>
+        </svg>
+      </div>
+      <div id="mapFeedback">👆 Drag a plant onto a zone to begin. On touch, tap a plant then tap a zone.</div>
+      <div style="margin-top:10px"><button class="pn-btn" id="mapReset">↺ Reset game</button></div>
+    </section>
+
+    <!-- ===== 7 NUCLEAR ===== -->
+    <section class="panel" id="tab-nuclear" data-title="Nuclear (IAEA)" data-emoji="☢️" data-boppps="Participatory learning">
+      <div class="p-head"><span class="pn">7</span><h2>Nuclear &amp; the IAEA Dual-Evaluation Principle</h2><span class="tag">IAEA SSG-35 · NS-R-3</span></div>
+      <p class="lead">Nuclear site selection is uniquely two-directional. Screening criteria rule sites <i>out</i>; suitability criteria then rank the survivors. Every candidate must satisfy <b>both halves</b> of the dual evaluation:</p>
+      <div class="dual">
+        <div class="side a">
+          <h4>🌍 → 🏭 &nbsp;Effect of the REGION on the plant</h4>
+          <div class="sub">External hazards that could cause an accident</div>
+          <ul>
+            <li><b>Seismic &amp; geological hazard</b> — PSHA; capable-fault exclusion.</li>
+            <li><b>External flooding &amp; tsunami</b> — design-basis flood, surge, upstream dam-break.</li>
+            <li><b>External human-induced events</b> — aircraft crash, nearby industry &amp; pipelines.</li>
+            <li><b>Meteorology</b> — extreme weather affecting the exclusion boundary.</li>
+          </ul>
+        </div>
+        <div class="core" aria-hidden="true">⚛️<br>⇄</div>
+        <div class="side b">
+          <h4>🏭 → 🌍 &nbsp;Effect of the PLANT on the region</h4>
+          <div class="sub">Radiological impact on people &amp; environment</div>
+          <ul>
+            <li><b>Population &amp; emergency planning</b> — low density; workable evacuation zones.</li>
+            <li><b>Radiological dispersion</b> — atmospheric &amp; water pathways to the public.</li>
+            <li><b>Ultimate heat sink &amp; cooling water</b> — reliable decay-heat removal.</li>
+            <li><b>Environmental &amp; socio-economic</b> — long-term impact &amp; public acceptance.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout" style="margin-top:16px"><b>Screening then suitability:</b> a site must first survive the exclusion criteria (any single fatal hazard rules it out), and only then is ranked on suitability against the surviving candidates. This is why <b>(11) population density</b> and <b>(12) earthquake danger</b> (Nag 2014, p. 12) are non-negotiable for nuclear.</div>
+    </section>
+
+    <!-- ===== 8 SUSTAINABILITY ===== -->
+    <section class="panel" id="tab-sustain" data-title="Sustainability" data-emoji="🌱" data-boppps="Participatory learning">
+      <div class="p-head"><span class="pn">8</span><h2>Siting &amp; Sustainable Development</h2><span class="tag">3 pillars → SDGs</span></div>
+      <p class="lead">Site selection is where systems-level thinking meets design-oriented decision-making. Every choice maps to the <b>three pillars of sustainable development</b> — and to the Sustainable Development Goals.</p>
+      <div class="pillars">
+        <div class="pillar soc"><h4>👥 Social</h4><p>Community impact, resettlement &amp; livelihoods, public acceptance, worker safety, and safe distance from population centres.</p></div>
+        <div class="pillar env"><h4>🌱 Environmental</h4><p>Water quality &amp; availability, emissions &amp; ash/waste, biodiversity &amp; habitat, ecological flow and climate resilience.</p></div>
+        <div class="pillar eco"><h4>💰 Economic</h4><p>Capital &amp; fuel cost, transmission losses vs transport cost, reliability, life-cycle cost and decommissioning.</p></div>
+      </div>
+      <h3 class="sh">Mapped Sustainable Development Goals</h3>
+      <div class="sdg-row">
+        <div class="sdg"><span class="n">6</span>Clean Water &amp; Sanitation</div>
+        <div class="sdg"><span class="n">7</span>Affordable &amp; Clean Energy</div>
+        <div class="sdg"><span class="n">9</span>Industry, Innovation &amp; Infrastructure</div>
+        <div class="sdg"><span class="n">11</span>Sustainable Cities &amp; Communities</div>
+        <div class="sdg"><span class="n">13</span>Climate Action</div>
+        <div class="sdg"><span class="n">15</span>Life on Land</div>
+      </div>
+    </section>
+
+    <!-- ===== 9 POST-ASSESSMENT ===== -->
+    <section class="panel" id="tab-post" data-title="Post-Assessment" data-emoji="✅" data-boppps="Post-assessment">
+      <div class="p-head"><span class="pn">9</span><h2>Post-Assessment</h2><span class="tag">Score: <span id="quizscore">0 / 10</span></span></div>
+      <p class="lead">Ten questions covering the whole module — multiple-choice, fill-in-the-blank, and true/false. Answer each for instant feedback with a brief explanation.</p>
+      <div id="quizbox"></div>
+    </section>
+
+    <!-- ===== 10 SUMMARY ===== -->
+    <section class="panel" id="tab-summary" data-title="Summary" data-emoji="📚" data-boppps="Summary">
+      <div class="p-head"><span class="pn">10</span><h2>Summary</h2><span class="tag">Key takeaways</span></div>
+      <ul class="sum-list">
+        <li><span class="tick">✔</span><span>Site selection is a <b>systematic engineering decision</b> balancing universal factors (resource proximity, environmental/regulatory compliance, land &amp; socio-economics) with technology-specific imperatives.</span></li>
+        <li><span class="tick">✔</span><span><b>Hydro</b> is governed by topography — head &amp; dependable flow (P = ρgQH<sub>net</sub>η), firm power set by the 90–95% flow-duration point.</span></li>
+        <li><span class="tick">✔</span><span><b>Thermal</b> turns on fuel supply, cooling water &amp; ash disposal — the pit-head vs load-centre trade-off decided largely by coal quality (Nag 2014, p. 11).</span></li>
+        <li><span class="tick">✔</span><span><b>Gas &amp; combined-cycle</b> need pipeline gas and are temperature-sensitive; cooling choice drives water siting for CCGT.</span></li>
+        <li><span class="tick">✔</span><span><b>Nuclear</b> adds population density &amp; earthquake danger (Nag 2014, p. 12) under the IAEA dual-evaluation principle.</span></li>
+        <li><span class="tick">✔</span><span>The <b>same site suits technologies differently</b> — because each weights the siting factors differently (Suitability Lab).</span></li>
+      </ul>
+
+      <h3 class="sh">References</h3>
+      <div class="refbox">
+        <p>Nag, P. (2014). <i>Power Plant Engineering.</i> McGraw-Hill Education, fourth edition. (pp. 11–12)</p>
+        <p>International Hydropower Association (IHA) — Hydropower Sustainability Assessment Protocol / Good Practice Guidance.</p>
+        <p>IAEA Safety Standards — SSG-35 (Site Survey &amp; Site Selection) and NS-R-3 (Site Evaluation for Nuclear Installations).</p>
+      </div>
+      <div class="foot-note">
+        Interactive BOPPPS learning module for <b>ME4201 — Power Plant Engineering</b>, Chapter 1 Part E, by Professor Dr. Mazharul Islam, P.Eng., Department of Mechanical and Production Engineering, Ahsanullah University of Science and Technology (AUST), Dhaka, Bangladesh. The suitability scores and derating/trade-off models are illustrative teaching tools, not design values. Licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.
+      </div>
+    </section>
+
+  </div></div>
+</div>
+<script id="mainjs">
+(function(){
+"use strict";
+const $=(s,c)=>(c||document).querySelector(s);
+const $$=(s,c)=>Array.from((c||document).querySelectorAll(s));
+const fmt=(n,d)=>n.toLocaleString("en-US",{maximumFractionDigits:d==null?0:d,minimumFractionDigits:d==null?0:d});
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const norm=s=>String(s).toLowerCase().trim().replace(/[°.,;:!?'"()]/g,"").replace(/\s+/g," ");
+
+/* ===== theme ===== */
+const themeBtn=$("#themeToggle");
+function setTheme(t){document.documentElement.setAttribute("data-theme",t);themeBtn.textContent=t==="dark"?"☀️":"🌙";themeBtn.setAttribute("aria-pressed",t==="dark"?"true":"false");if(radarInit)drawRadar();}
+themeBtn.addEventListener("click",()=>setTheme(document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark"));
+
+/* ===== tab shell ===== */
+const panels=$$("#panels .panel");
+const tabbar=$("#tabbar");
+let activeIdx=Math.max(0,panels.findIndex(p=>p.classList.contains("active")));
+panels.forEach((p,i)=>{
+  const b=document.createElement("button");
+  b.innerHTML="<span class='tnum'>"+(i+1)+"</span><span>"+p.dataset.emoji+" "+p.dataset.title+"</span>";
+  b.title="BOPPPS: "+p.dataset.boppps;
+  b.addEventListener("click",()=>goTo(i));
+  tabbar.appendChild(b);
+  const nav=document.createElement("div");nav.className="panel-nav";
+  nav.innerHTML="<button class='pn-btn' data-dir='-1'>◂ Previous</button><button class='pn-btn primary' data-dir='1'>Next ▸</button>";
+  nav.querySelectorAll("button").forEach(bt=>bt.addEventListener("click",()=>goTo(i+ +bt.dataset.dir)));
+  p.appendChild(nav);
+});
+const tabBtns=$$("#tabbar button");
+function goTo(i){
+  i=clamp(i,0,panels.length-1);
+  panels.forEach((p,k)=>p.classList.toggle("active",k===i));
+  tabBtns.forEach((b,k)=>b.classList.toggle("active",k===i));
+  activeIdx=i;
+  const pct=Math.round((i+1)/panels.length*100);
+  $("#progFill").style.width=pct+"%";
+  $("#progLabel").textContent="Module "+(i+1)+" / "+panels.length;
+  $("#stage").scrollTop=0;
+  const nav=panels[i].querySelector(".panel-nav");
+  if(nav){const bs=nav.querySelectorAll("button");bs[0].disabled=(i===0);bs[1].disabled=(i===panels.length-1);}
+  if(panels[i].id==="tab-lab")initLab();
+  tabBtns[i].scrollIntoView({inline:"center",block:"nearest"});
+}
+document.addEventListener("keydown",e=>{
+  const t=document.activeElement?document.activeElement.tagName:"";
+  if(/INPUT|TEXTAREA|SELECT|BUTTON/.test(t))return;
+  if(e.key==="ArrowRight")goTo(activeIdx+1);
+  else if(e.key==="ArrowLeft")goTo(activeIdx-1);
+});
+
+/* ===== criteria data ===== */
+const CRIT={
+ hydro:[
+  ["Hydrology &amp; dependable flow","Flow-duration curve (FDC), seasonal variability, drought resilience — ensures reliable, sustainable energy."],
+  ["Topography &amp; head","Gross vs net head, dam-site suitability, penstock alignment — maximises head, minimises civil works."],
+  ["Geology, geotechnics &amp; seismicity","Foundation rock quality, landslide &amp; seismic risk — ensures structural safety and long-term reliability."],
+  ["Reservoir &amp; storage","Live storage, sediment inflow, evaporation — determines energy security and operational flexibility."],
+  ["Environmental impact","Ecological flow, fish passage, water quality, biodiversity — minimises ecological footprint."],
+  ["Submergence &amp; social impact","Resettlement &amp; rehabilitation, cultural heritage, community acceptance — ensures social equity."],
+  ["Power evacuation &amp; load-centre proximity","Transmission distance &amp; feasibility, grid connectivity — reduces transmission loss and cost."],
+  ["Construction &amp; access","Road/rail access, terrain, construction materials — controls cost and schedule."],
+  ["Legal &amp; regulatory","Water rights, permitting, transboundary treaties — ensures compliance, avoids delays."],
+  ["Climate &amp; long-term reliability","Rainfall shift, flood &amp; drought frequency, sedimentation risk — safeguards lifetime performance."]
+ ],
+ thermal:[
+  ["Availability of cooling water","Large, reliable water source (sea, lake or river) — the master constraint for a steam plant.",1],
+  ["Availability of fuel","Assured coal/oil/gas supply; low-CV, high-ash coal pulls the plant toward the pit-head.",2],
+  ["Distance from centre of gravity of load demand","Nearer the demand centroid → lower transmission loss and cost.",3],
+  ["Cost of land","Large parcels for plant, coal &amp; ash yards must be economically viable.",4],
+  ["Character of soil","Stable bearing soil for heavy turbine-generator foundations.",5],
+  ["Wind direction &amp; water currents","Prevailing wind &amp; currents arranged to minimise air &amp; water pollution.",6],
+  ["Ash disposal (coal-fired)","Viable, permitted area for 30–40% ash content — protects environment, enables reuse.",7],
+  ["Staff accommodation","If erected far from a town, housing and amenities for staff are required.",8],
+  ["Rail &amp; road connections","Reliable transport for fuel-in and equipment.",9],
+  ["Security considerations","Physical security and protection of critical infrastructure.",10]
+ ],
+ gas:[
+  ["Natural-gas supply &amp; quality","Proximity to pipelines; assured pressure &amp; heating value — economical, reliable operation.",1],
+  ["Backup / dual-fuel provision","On-site liquid fuel (e.g. HSD) for supply continuity during interruptions.",2],
+  ["Ambient conditions &amp; elevation","Temperature, humidity &amp; altitude derate output — a first-order siting factor.",3],
+  ["Intake air quality","Dust, salt &amp; pollutants foul the compressor — filtration &amp; siting protect performance.",4],
+  ["Water requirements","Some water for NOx control &amp; washing; low relative to steam plants.",5],
+  ["Grid interconnection &amp; load centre","Near load centres for peaking/black-start value; minimises losses.",6],
+  ["Land &amp; geotechnical","Compact footprint on stable ground — enables urban-adjacent siting.",7],
+  ["Emissions &amp; air quality","NOx and CO limits, ambient air-quality compliance and stack dispersion.",8],
+  ["Noise &amp; community","Turbine/exhaust noise mitigation and community acceptance.",9],
+  ["Regulatory &amp; permitting","Environmental clearance, gas-supply agreements and grid-code compliance.",10]
+ ],
+ ccgt:[
+  ["Cooling system &amp; water","Cooling choice (once-through / wet tower / dry ACC) dominates water siting for the steam cycle.",1],
+  ["Natural-gas supply &amp; quality","Reliable pipeline gas at pressure with assured heating value.",2],
+  ["Ambient conditions &amp; elevation","GT output rated at ISO 15 °C; higher temp/elevation reduce output.",3],
+  ["Intake air quality","Filtration for dust, salt &amp; pollutants protects compressor and HRSG.",4],
+  ["Grid interconnection &amp; role","Baseload/mid-merit; strong grid tie and dispatch flexibility near demand.",5],
+  ["Land &amp; phasing","Space for GT + HRSG + ST + cooling, often built in phases.",6],
+  ["Emissions &amp; air quality","Lower CO₂ (~0.35–0.45 kg/kWh) and NOx than coal; SCR/DLN compliance.",7],
+  ["Carbon &amp; fuel-transition readiness","Lower carbon vs coal; readiness for hydrogen co-firing.",8],
+  ["Noise &amp; community","Combined GT + ST noise management and acceptance.",9],
+  ["Regulatory, economic &amp; life-cycle","Permitting, ~24–36 month build, capital &amp; life-cycle economics.",10]
+ ],
+ nuclear:[
+  ["Seismic &amp; geological hazard","PSHA; capable-fault &amp; ground-motion exclusion — Nag (12) danger of earthquake.",12],
+  ["Population &amp; emergency planning","Low density with workable exclusion &amp; emergency zones — Nag (11) population density.",11],
+  ["Ultimate heat sink &amp; cooling water","Safety-grade heat rejection (sea/large river) for decay-heat removal.","UHS"],
+  ["External flooding &amp; tsunami","Design-basis flood, surge, tsunami and upstream dam-break protection.","F"],
+  ["External human-induced events","Aircraft crash, nearby industry/pipelines, hazardous transport screening.","H"],
+  ["Meteorology &amp; radiological dispersion","Atmospheric &amp; water pathways governing dose to the public.","M"],
+  ["Land, foundation &amp; layout","Sound bearing strata for safety structures; adequate site area.","L"],
+  ["Grid interconnection &amp; offsite power","Multiple independent offsite-power connections for safety supply.","G"],
+  ["Transportation, security &amp; preparedness","Heavy-component &amp; fuel routes, physical protection, emergency access.","S"],
+  ["Environmental, regulatory &amp; social","Environmental impact, monitoring and community acceptance.","E"]
+ ]
+};
+function renderCrit(key){
+  const host=$("#"+key+"-crit"); if(!host||host.dataset.done)return; host.dataset.done="1";
+  host.innerHTML=CRIT[key].map((c,i)=>{const n=c[2]!=null?c[2]:(i+1);return "<div class='crit'><div class='ct'><span class='n'>"+n+"</span>"+c[0]+"</div><p>"+c[1]+"</p></div>";}).join("");
+}
+["hydro","thermal","gas","ccgt","nuclear"].forEach(renderCrit);
+
+/* ===== plant explorer inner tabs ===== */
+$$(".plant-btn").forEach(b=>b.addEventListener("click",()=>{
+  $$(".plant-btn").forEach(x=>{x.classList.remove("active");x.setAttribute("aria-selected","false");});
+  $$(".plant-panel").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");b.setAttribute("aria-selected","true");
+  $("#p-"+b.dataset.plant).classList.add("active");
+}));
+
+/* ===== hydro calculator ===== */
+const hQr=$("#hQr"),hHr=$("#hHr"),hEr=$("#hEr");
+function updHydro(){
+  const Q=+hQr.value,H=+hHr.value,eta=+hEr.value/100;
+  $("#hQ").textContent=fmt(Q)+" m³/s";$("#hH").textContent=fmt(H)+" m";$("#hE").textContent=eta.toFixed(2);
+  const gross=1000*9.81*Q*H/1e6,net=gross*eta;
+  $("#hP").textContent=fmt(net,net<10?1:0)+" MW";
+  $("#hGross").textContent=fmt(gross,gross<10?1:0)+" MW";
+  $("#hClass").textContent=H<30?"Low head":H<150?"Medium head":"High head";
+}
+[hQr,hHr,hEr].forEach(el=>el.addEventListener("input",updHydro));updHydro();
+
+const SUB={
+ dam:"<b>Storage Dam:</b> a reservoir stores water and regulates flow year-round — high storage, firm dependable power, but larger submergence, resettlement and environmental footprint. Criteria emphasise reservoir volume, geology and social impact.",
+ ror:"<b>Run-of-River:</b> little or no storage; generation follows natural flow — low submergence and social impact, but seasonal output. Criteria emphasise consistent flow (FDC), head and ecological flow.",
+ pump:"<b>Pumped Storage:</b> two reservoirs; pumps up in off-peak and generates in peak — energy storage &amp; grid balancing rather than net generation. Criteria emphasise head between reservoirs, cycle efficiency and grid proximity."
+};
+$$(".subtype[data-sub]").forEach(b=>b.addEventListener("click",()=>{$$(".subtype[data-sub]").forEach(x=>x.classList.remove("active"));b.classList.add("active");$("#subtypeDesc").innerHTML=SUB[b.dataset.sub];}));
+$("#subtypeDesc").innerHTML=SUB.dam;
+
+/* ===== thermal trade-off ===== */
+const cvR=$("#cvR"),tKnob=$("#tKnob");
+function updThermal(){
+  const cv=+cvR.value;$("#cvOut").textContent=cv.toFixed(1)+" MJ/kg";
+  const t=(cv-1.5)/(7-1.5);tKnob.setAttribute("cx",(20+400*t).toFixed(0));
+  const v=$("#thermalVerdict");
+  if(cv<3.2)v.innerHTML="⛏️ <b>Pit-head siting favoured.</b> Low calorific value / high ash makes coal expensive to haul — burn it at the mine and <b>transport the electricity</b> (mine-mouth plant).";
+  else if(cv<5)v.innerHTML="⚖️ <b>Balanced case.</b> Moderate coal quality — the decision hinges on coal-transport cost vs transmission loss, plus water and load-centre proximity.";
+  else v.innerHTML="🚂 <b>Load-centre siting favoured.</b> High calorific value / low ash coal is economical to transport, so sit the plant near demand and <b>transport the coal</b> — cutting transmission losses.";
+}
+cvR.addEventListener("input",updThermal);updThermal();
+
+/* ===== gas ISO derating ===== */
+const gRateR=$("#gRateR"),gTempR=$("#gTempR"),gAltR=$("#gAltR");
+const pAlt=h=>Math.pow(1-2.25577e-5*h,5.2559);
+const tFac=T=>1-0.007*(T-15);
+const gX=T=>46+(424-46)*(T+10)/60;
+const gY=p=>140-(140-20)*(clamp(p,55,120)-55)/(120-55);
+(function gTicks(){let s="";[-10,10,30,50].forEach(T=>{s+="<text x='"+gX(T)+"' y='156' text-anchor='middle' class='axis-lbl'>"+T+"</text>";});$("#gTicks").innerHTML=s;})();
+function updGas(){
+  const rate=+gRateR.value,T=+gTempR.value,h=+gAltR.value;
+  $("#gRate").textContent=fmt(rate)+" MW";$("#gTemp").textContent=T+" °C";$("#gAlt").textContent=fmt(h)+" m";
+  const f=Math.max(0.3,tFac(T))*pAlt(h),out=rate*f;
+  $("#gOut").textContent=fmt(out,out<10?1:0)+" MW";
+  $("#gPct").textContent=fmt(f*100,0)+"%";
+  $("#gLoss").textContent=fmt(rate-out,(rate-out)<10?1:0)+" MW";
+  let d="";for(let T2=-10;T2<=50;T2+=2){const p=Math.max(0.3,tFac(T2))*pAlt(h)*100;d+=(d?" L":"M")+gX(T2).toFixed(1)+" "+gY(p).toFixed(1);}
+  $("#gPath").setAttribute("d",d);
+  const dot=$("#gDot");dot.setAttribute("cx",gX(T));dot.setAttribute("cy",gY(f*100));
+}
+[gRateR,gTempR,gAltR].forEach(el=>el.addEventListener("input",updGas));updGas();
+
+/* ===== SUITABILITY LAB ===== */
+const FLAB=["Water","Stability","Load prox.","Fuel access","Land","Pop. setback"];
+const FW={hydro:[5,4,2,0,3,2],thermal:[5,3,3,5,4,2],gas:[2,2,5,5,2,2],ccgt:[4,2,4,5,3,2],nuclear:[5,5,2,1,4,5]};
+const TNAME={hydro:"Hydro",thermal:"Thermal",gas:"Gas Turbine",ccgt:"Combined Cycle",nuclear:"Nuclear"};
+const TEMOJI={hydro:"💧",thermal:"🏭",gas:"🔥",ccgt:"♻️",nuclear:"☢️"};
+const TCOL={hydro:"var(--s-blue)",thermal:"var(--s-orange)",gas:"var(--s-yellow)",ccgt:"var(--s-aqua)",nuclear:"var(--s-violet)"};
+let radarTech="hydro",radarInit=false;
+function siteVals(){return [0,1,2,3,4,5].map(i=>+$("#fs"+i).value);}
+function scoreOf(t,a){let s=0,w=0;FW[t].forEach((wi,i)=>{s+=wi*a[i];w+=wi;});return w?s/w:0;}
+function drawRadar(){
+  const a=siteVals(),w=FW[radarTech];
+  const cx=172,cy=150,R=96,N=6;
+  const ang=i=>(-90+i*60)*Math.PI/180;
+  const pt=(val,i)=>[cx+R*val/100*Math.cos(ang(i)),cy+R*val/100*Math.sin(ang(i))];
+  let g="";
+  [25,50,75,100].forEach(r=>{let pts="";for(let i=0;i<N;i++){const p=pt(r,i);pts+=p[0].toFixed(1)+","+p[1].toFixed(1)+" ";}g+="<polygon points='"+pts+"' fill='none' stroke='var(--grid)' stroke-width='1'/>";});
+  for(let i=0;i<N;i++){const p=pt(100,i);g+="<line x1='"+cx+"' y1='"+cy+"' x2='"+p[0].toFixed(1)+"' y2='"+p[1].toFixed(1)+"' stroke='var(--grid)' stroke-width='1'/>";}
+  let tp="";for(let i=0;i<N;i++){const p=pt(w[i]/5*100,i);tp+=p[0].toFixed(1)+","+p[1].toFixed(1)+" ";}
+  g+="<polygon points='"+tp+"' fill='var(--maroon)' fill-opacity='0.14' stroke='var(--maroon)' stroke-width='2' stroke-dasharray='5 3'/>";
+  let sp="";for(let i=0;i<N;i++){const p=pt(a[i],i);sp+=p[0].toFixed(1)+","+p[1].toFixed(1)+" ";}
+  g+="<polygon points='"+sp+"' fill='var(--s-blue)' fill-opacity='0.22' stroke='var(--s-blue)' stroke-width='2'/>";
+  for(let i=0;i<N;i++){const p=pt(a[i],i);g+="<circle cx='"+p[0].toFixed(1)+"' cy='"+p[1].toFixed(1)+"' r='3' fill='var(--s-blue)'/>";}
+  for(let i=0;i<N;i++){const p=pt(117,i);const anchor=Math.abs(p[0]-cx)<8?"middle":(p[0]<cx?"end":"start");g+="<text x='"+p[0].toFixed(1)+"' y='"+(p[1]+3).toFixed(1)+"' text-anchor='"+anchor+"' style='font-size:10.5px;font-weight:700;fill:var(--ink-2)'>"+FLAB[i]+"</text>";}
+  $("#radar").innerHTML=g;
+}
+function updLab(){
+  siteVals().forEach((v,i)=>$("#f"+i).textContent=v);
+  const a=siteVals();
+  const rows=Object.keys(FW).map(t=>({t,s:scoreOf(t,a)})).sort((x,y)=>y.s-x.s);
+  const best=rows[0];
+  $("#scoreCard").innerHTML=rows.map((r,idx)=>{
+    return "<div class='score-row'><div class='nm'>"+TEMOJI[r.t]+" "+TNAME[r.t]+(idx===0?" <span class='best-flag'>BEST FIT</span>":"")+"</div><div class='score-bar'><span style='width:"+r.s.toFixed(0)+"%;background:"+TCOL[r.t]+"'></span></div><div class='sv'>"+r.s.toFixed(0)+"</div></div>";
+  }).join("");
+  const w=FW[best.t];let li=-1,lv=-1;w.forEach((wi,i)=>{const gap=wi*(100-a[i]);if(gap>lv){lv=gap;li=i;}});
+  const lim=(lv>0&&li>=0)?(" Its weakest point here is <b>"+FLAB[li].toLowerCase().replace('.','')+"</b> — raise that slider and watch the score climb."):" This site meets its priorities well.";
+  $("#labVerdict").innerHTML="🏆 For this site, the best-fit technology is <b>"+TNAME[best.t]+"</b> ("+best.s.toFixed(0)+"/100)."+lim;
+  drawRadar();
+}
+$$(".fSlider").forEach(el=>el.addEventListener("input",updLab));
+$$("#radarPick .subtype").forEach(b=>b.addEventListener("click",()=>{$$("#radarPick .subtype").forEach(x=>x.classList.remove("active"));b.classList.add("active");radarTech=b.dataset.t;$("#radarTech").textContent=TNAME[radarTech];drawRadar();}));
+function preset(vals){[0,1,2,3,4,5].forEach(i=>{$("#fs"+i).value=vals[i];});updLab();}
+$("#presetRiver").addEventListener("click",()=>preset([90,80,35,10,60,70]));
+$("#presetCoast").addEventListener("click",()=>preset([95,85,25,40,75,95]));
+$("#presetCity").addEventListener("click",()=>preset([40,55,95,90,35,20]));
+function initLab(){if(radarInit)return;radarInit=true;updLab();}
+
+/* ===== MAP GAME ===== */
+const ZOFFER={hydro:"high head and a steady river flow",thermal:"coal right at the mine mouth",gas:"pipeline gas beside the demand centre",ccgt:"abundant cooling water and a fuel-import port",nuclear:"stable geology and distance from people"};
+const PNEED={hydro:"high head and dependable river flow",thermal:"assured coal, cooling water and ash-disposal land",gas:"a gas pipeline and closeness to the load centre",ccgt:"pipeline gas plus reliable cooling water",nuclear:"low seismic hazard, a reliable heat sink and distance from population"};
+const chips=$$(".plant-chip");
+const zones=$$("#mapSvg .zone");
+let selectedChip=null,drag=null,placedCount=0,correctCount=0;
+function selectChip(chip){if(chip.classList.contains("placed"))return;chips.forEach(c=>c.classList.remove("selected"));chip.classList.add("selected");selectedChip=chip;}
+function zoneAt(x,y){for(const z of zones){const r=z.getBoundingClientRect();if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom)return z;}return null;}
+function clearHot(){zones.forEach(z=>z.classList.remove("hot"));}
+function highlightZone(x,y){clearHot();const z=zoneAt(x,y);if(z&&!z.dataset.filled)z.classList.add("hot");}
+function place(plant,zoneEl){
+  if(zoneEl.dataset.filled)return;
+  const chip=chips.find(c=>c.dataset.plant===plant);if(!chip||chip.classList.contains("placed"))return;
+  const zone=zoneEl.dataset.zone,ok=(plant===zone);
+  zoneEl.dataset.filled="1";zoneEl.classList.add(ok?"ok":"bad");
+  $(".zplaced",zoneEl).textContent=TEMOJI[plant];
+  chip.classList.add("placed");chip.classList.remove("selected");selectedChip=null;
+  placedCount++;if(ok)correctCount++;
+  $("#mapScore").textContent=correctCount+" / 5";
+  const fb=$("#mapFeedback");
+  fb.innerHTML=ok
+    ? "✅ <b>Perfect.</b> This site offers "+ZOFFER[zone]+", exactly what a "+TNAME[plant]+" plant needs."
+    : "⚠️ <b>Not ideal.</b> This site offers "+ZOFFER[zone]+", but a "+TNAME[plant]+" plant needs "+PNEED[plant]+". The best fit here is <b>"+TNAME[zone]+"</b>.";
+  if(placedCount===5){
+    fb.innerHTML+= correctCount===5
+      ? "<br><br>🏆 <b>Flawless siting — all five correct!</b> You've matched every technology to its decisive determinant."
+      : "<br><br>📋 You placed all five, with <b>"+correctCount+"/5</b> ideal. Hit reset to improve your score.";
+  }
+}
+function chipDown(e){
+  const chip=e.currentTarget;if(chip.classList.contains("placed"))return;
+  e.preventDefault();selectChip(chip);
+  drag={plant:chip.dataset.plant,chip,clone:null,moved:false,sx:e.clientX,sy:e.clientY};
+  window.addEventListener("pointermove",chipMove);
+  window.addEventListener("pointerup",chipUp);
+}
+function chipMove(e){
+  if(!drag)return;
+  if(!drag.moved&&Math.abs(e.clientX-drag.sx)+Math.abs(e.clientY-drag.sy)<6)return;
+  drag.moved=true;
+  if(!drag.clone){drag.clone=drag.chip.cloneNode(true);drag.clone.classList.add("dragging");drag.clone.classList.remove("selected");document.body.appendChild(drag.clone);}
+  drag.clone.style.left=e.clientX+"px";drag.clone.style.top=e.clientY+"px";
+  highlightZone(e.clientX,e.clientY);
+}
+function chipUp(e){
+  window.removeEventListener("pointermove",chipMove);window.removeEventListener("pointerup",chipUp);
+  if(!drag)return;
+  if(drag.clone)drag.clone.remove();clearHot();
+  if(drag.moved){const z=zoneAt(e.clientX,e.clientY);if(z)place(drag.plant,z);}
+  drag=null;
+}
+chips.forEach(c=>c.addEventListener("pointerdown",chipDown));
+zones.forEach(z=>{
+  const act=()=>{if(selectedChip&&!z.dataset.filled)place(selectedChip.dataset.plant,z);};
+  z.addEventListener("click",act);
+  z.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();act();}});
+});
+$("#mapReset").addEventListener("click",()=>{
+  placedCount=0;correctCount=0;selectedChip=null;$("#mapScore").textContent="0 / 5";
+  chips.forEach(c=>c.classList.remove("placed","selected"));
+  zones.forEach(z=>{delete z.dataset.filled;z.classList.remove("ok","bad","hot");$(".zplaced",z).textContent="";});
+  $("#mapFeedback").innerHTML="👆 Drag a plant onto a zone to begin. On touch, tap a plant then tap a zone.";
+});
+
+/* ===================================================================
+   GENERIC QUIZ ENGINE — supports mcq / tf / blank
+   =================================================================== */
+function buildQuestion(item,qi,onAnswered){
+  const div=document.createElement("div");div.className="quiz-q";
+  const typeLbl=item.type==="mcq"?"Multiple choice":item.type==="tf"?"True / False":"Fill in the blank";
+  div.innerHTML="<h4><span class='qn'>Q"+(qi+1)+".</span> "+item.q+"<span class='qtype'>"+typeLbl+"</span></h4><div class='qbody'></div><div class='fb'></div>";
+  const body=$(".qbody",div),fb=$(".fb",div);
+
+  function finish(isCorrect,explain){
+    if(div.dataset.done)return;div.dataset.done="1";
+    fb.className="fb show "+(isCorrect?"good":"bad");
+    fb.innerHTML=(isCorrect?"✅ Correct! ":"❌ Not quite. ")+explain;
+    onAnswered(isCorrect);
+  }
+
+  if(item.type==="mcq"){
+    const opts=document.createElement("div");opts.className="opts";
+    item.o.forEach((op,oi)=>{
+      const b=document.createElement("button");b.className="opt";b.innerHTML=op;
+      b.addEventListener("click",()=>{
+        if(div.dataset.done)return;
+        $$(".opt",opts).forEach((x,xi)=>{x.disabled=true;if(xi===item.a)x.classList.add("correct");});
+        if(oi!==item.a)b.classList.add("wrong");
+        finish(oi===item.a,item.fb);
+      });
+      opts.appendChild(b);
+    });
+    body.appendChild(opts);
+  } else if(item.type==="tf"){
+    const row=document.createElement("div");row.className="opts tf-row";
+    [["True",true],["False",false]].forEach(([label,val])=>{
+      const b=document.createElement("button");b.className="opt";b.textContent=label;
+      b.addEventListener("click",()=>{
+        if(div.dataset.done)return;
+        $$(".opt",row).forEach(x=>{x.disabled=true;if((x.textContent==="True")===item.a)x.classList.add("correct");});
+        if(val!==item.a)b.classList.add("wrong");
+        finish(val===item.a,item.fb);
+      });
+      row.appendChild(b);
+    });
+    body.appendChild(row);
+  } else { // blank
+    const row=document.createElement("div");row.className="blank-row";
+    const inp=document.createElement("input");inp.type="text";inp.placeholder="Type your answer…";inp.autocomplete="off";
+    const btn=document.createElement("button");btn.className="blank-submit";btn.textContent="Check";
+    function check(){
+      if(div.dataset.done)return;
+      const val=norm(inp.value);
+      const ok=val.length>0 && item.accept.some(a=>norm(a)===val);
+      inp.disabled=true;btn.disabled=true;
+      inp.classList.add(ok?"correct":"wrong");
+      finish(ok,"Accepted answer: <b>"+item.accept[0]+"</b>. "+item.fb);
+    }
+    btn.addEventListener("click",check);
+    inp.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();check();}});
+    row.appendChild(inp);row.appendChild(btn);
+    body.appendChild(row);
+  }
+  return div;
+}
+
+/* ===== PRE-ASSESSMENT (diagnostic, 5 Qs, ungraded) ===== */
+const PRE=[
+ {type:"tf",q:"A power plant can be sited almost anywhere, as long as there's enough open land for it.",a:false,
+  fb:"Land alone isn't enough — resource proximity (fuel/water), grid access, environmental compliance and community impact all constrain the choice."},
+ {type:"mcq",q:"What do you think matters <i>most</i> when choosing where to put a hydro power plant?",
+  o:["Nearby coal reserves","Water head and dependable flow (topography)","Population density","Access to a gas pipeline"],a:1,
+  fb:"Hydro siting is fundamentally about topography — head and consistent flow. You'll see the exact formula in the Plant Explorer tab."},
+ {type:"tf",q:"A nuclear plant can be safely built near an active earthquake fault line if the reactor building is reinforced enough.",a:false,
+  fb:"Seismic hazard is a screening/exclusion criterion in nuclear siting — no amount of reinforcement substitutes for choosing a low-seismicity site."},
+ {type:"blank",q:"Coal plants built right beside the mine — so only electricity, not coal, needs to travel — are called ______-head plants.",
+  accept:["pit","pit-head","pithead","pit head","mine-mouth","mine mouth","minemouth","mine"],
+  fb:"This is the 'pit-head' or 'mine-mouth' siting strategy — you'll explore the full trade-off with a live slider in the Plant Explorer."},
+ {type:"mcq",q:"For a combined-cycle gas plant, which resource often becomes a surprising siting constraint — even though it's a 'gas' plant?",
+  o:["Cooling water","Sunlight hours","Wind speed","Soil pH"],a:0,
+  fb:"The steam bottoming cycle still needs a condenser, so cooling-water access drives CCGT siting almost as much as gas supply does."}
+];
+let preAnswered=0;
+const prebox=$("#prebox");
+PRE.forEach((item,qi)=>{
+  const el=buildQuestion(item,qi,()=>{
+    preAnswered++;
+    if(preAnswered===PRE.length){
+      const s=$("#preSummary");
+      s.style.display="block";
+      s.innerHTML="🌟 <b>Nice work warming up!</b> You've activated your instincts on all five questions — remember, this wasn't graded. Carry these questions with you as you move through the Plant Explorer, Suitability Lab and Map Game, where you'll see the engineering reasoning behind each one.";
+    }
+  });
+  prebox.appendChild(el);
+});
+
+/* ===== POST-ASSESSMENT (graded, 10 Qs, mixed types) ===== */
+const POST=[
+ {type:"mcq",q:"What is the <b>most critical</b> factor for locating a hydro power plant?",
+  o:["Proximity to a coal mine","Water head and dependable flow (topography)","Low ambient air temperature","A dense population nearby"],a:1,
+  fb:"Hydro siting is primarily determined by topography providing high head and consistent flow — P = ρgQH_net·η and the flow-duration curve."},
+ {type:"blank",q:"The trade-off between transporting coal and transporting electricity is called the pit-head vs. ______-centre debate.",
+  accept:["load","load centre","load-centre","load center","demand","demand centre","demand center"],
+  fb:"Low-CV/high-ash coal favours pit-head siting (transport electricity); high-CV/low-ash coal favours load-centre siting (transport coal)."},
+ {type:"tf",q:"Combined-cycle (CCGT) plants generally use MORE cooling water than an equivalent coal-fired steam plant.",a:false,
+  fb:"CCGT plants use roughly ⅓ the water of an equivalent coal plant, because much of the energy is already extracted in the gas-turbine topping cycle."},
+ {type:"mcq",q:"Why is <b>seismic stability</b> crucial for nuclear power plants?",
+  o:["It raises thermal efficiency","It reduces cooling-water demand","Earthquakes could cause an accident with radiological release, so low-seismicity sites are mandated","It lowers the cost of land"],a:2,
+  fb:"Under the IAEA dual-evaluation principle, the region must not endanger the plant — earthquake danger (Nag factor 12) is an exclusion criterion."},
+ {type:"blank",q:"Gas-turbine output is rated at ISO reference conditions of ______ °C.",
+  accept:["15","15c","15 c","15°c"],
+  fb:"ISO conditions are 15 °C, 1.013 bar and 60% relative humidity. Output derates as ambient temperature and elevation rise above this reference."},
+ {type:"tf",q:"According to Nag (2014), nuclear power plants require two siting factors beyond the ten used for thermal plants: population density and danger of earthquake.",a:true,
+  fb:"Correct — Nag (2014, p. 12) lists factors (11) density of population and (12) danger of earthquake as nuclear-specific additions."},
+ {type:"mcq",q:"How does proximity to <b>load centres</b> affect thermal and gas-turbine plants?",
+  o:["It has no effect on siting","Nearer the load centre lowers transmission losses and cost","It only matters for hydro plants","It increases ash production"],a:1,
+  fb:"Distance from the centre of gravity of load demand (Nag 2014, p. 11) drives transmission loss and cost — key for thermal and peaking gas turbines."},
+ {type:"blank",q:"In the IAEA dual-evaluation principle, the direction that assesses hazards like seismicity and flooding is called the effect of the ______ on the plant.",
+  accept:["region","the region","surrounding region","site region","the surrounding region"],
+  fb:"Region-on-plant covers external hazards (seismic, flooding, human-induced events); plant-on-region covers the plant's radiological impact outward."},
+ {type:"tf",q:"Low calorific value, high-ash coal generally favours load-centre siting over pit-head siting.",a:false,
+  fb:"It's the opposite: low-CV, high-ash coal is expensive and wasteful to transport, so it favours pit-head (mine-mouth) siting instead."},
+ {type:"mcq",q:"A candidate site has abundant cooling water and is near a load centre, but has <b>no gas-pipeline access</b> and only moderate coal-transport links. Which technology is the <b>best remaining fit</b>?",
+  o:["Gas Turbine","Combined Cycle (CCGT)","Thermal (coal-fired)","Nuclear"],a:2,
+  fb:"No gas pipeline rules out both gas options; nuclear needs seismic/population screening not addressed here. Thermal coal fits: cooling water is satisfied and coal is still transportable via moderate links."}
+];
+let score=0,answered=0;const qbox=$("#quizbox");
+POST.forEach((item,qi)=>{
+  const el=buildQuestion(item,qi,(isCorrect)=>{
+    answered++; if(isCorrect)score++;
+    $("#quizscore").textContent=score+" / "+POST.length+(answered===POST.length?(score===POST.length?" 🏆":" — review earlier tabs!"):"");
+  });
+  qbox.appendChild(el);
+});
+
+/* init */
+if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)setTheme("dark");
+goTo(activeIdx);
+})();
+</script>
+</body>
+</html>
