@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Global State of Renewable Energy 2026 — Interactive (IRENA data)</title>
+<meta name="description" content="Interactive data infographic on global renewable energy, built on IRENA Renewable Energy Statistics 2026. For Power Plant Engineering & Renewable Energy courses and the general public. Prof. Mazharul Islam.">
+<style>
+  :root{
+    color-scheme: light;
+    --maroon:#7a1015; --maroon-deep:#4d0509; --maroon-mid:#96262b; --maroon-soft:#b5484d;
+    --maroon-tint:#f8eeee; --maroon-tint2:#f2e2e2;
+    --page:#f4f2ef; --surface:#fcfcfb; --card:#ffffff;
+    --ink:#1a1a1a; --ink-2:#52514e; --ink-3:#898781;
+    --grid:#e1e0d9; --axis:#c3c2b7; --ring:rgba(11,11,11,.10);
+    /* dataviz categorical palette (validated order) */
+    --c-blue:#2a78d6; --c-green:#008300; --c-magenta:#e87ba4; --c-yellow:#eda100; --c-aqua:#1baf7a; --c-orange:#eb6834; --c-violet:#4a3aa7; --c-red:#e34948;
+    --seq-100:#cde2fb; --seq-250:#86b6ef; --seq-400:#3987e5; --seq-450:#2a78d6; --seq-550:#1c5cab; --seq-650:#104281;
+    --good:#0ca30c; --warning:#fab219; --critical:#d03b3b; --good-text:#006300;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(20,10,10,.06),0 8px 24px rgba(20,10,10,.07);
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --serif:Georgia,"Times New Roman",serif;
+    --appbar-h:56px; --tabbar-h:52px;
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --maroon:#c96a6f; --maroon-deep:#2b0406; --maroon-mid:#b5484d; --maroon-soft:#d98a8e;
+    --maroon-tint:#2a1516; --maroon-tint2:#341a1b;
+    --page:#0b0b0b; --surface:#1a1a19; --card:#201f1f;
+    --ink:#f5f4f2; --ink-2:#c3c2b7; --ink-3:#898781;
+    --grid:#2c2c2a; --axis:#383835; --ring:rgba(255,255,255,.12);
+    --c-blue:#3987e5; --c-green:#3fae3f; --c-magenta:#d55181; --c-yellow:#c98500; --c-aqua:#199e70; --c-orange:#d95926; --c-violet:#9085e9; --c-red:#e66767;
+    --seq-100:#0d366b; --seq-250:#184f95; --seq-400:#3987e5; --seq-450:#3987e5; --seq-550:#5598e7; --seq-650:#86b6ef;
+    --good-text:#0ca30c;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);background:var(--page);color:var(--ink);line-height:1.55;font-size:16px}
+  .skip-link{position:absolute;left:-999px;top:0;background:var(--maroon);color:#fff;padding:8px 14px;z-index:99}
+  .skip-link:focus{left:8px}
+  a{color:var(--maroon)}
+
+  .app{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
+  .appbar{flex:0 0 auto;height:var(--appbar-h);display:flex;align-items:center;gap:12px;padding:0 16px;background:linear-gradient(100deg,#0d366b,#1c5cab 55%,#0d2a54);color:#fff;position:relative;z-index:20}
+  .appbar .code{font-weight:800;font-size:.95rem;letter-spacing:.02em;color:#cde2fb}
+  .appbar .ttl{font-family:var(--serif);font-size:1.02rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .appbar .ttl small{font-weight:400;color:#cfe3fb;font-family:var(--sans);font-size:.78rem}
+  .appbar .spacer{flex:1}
+  .prog-wrap{display:flex;align-items:center;gap:8px;font-size:.72rem;color:#cfe3fb;white-space:nowrap}
+  .prog-track{width:120px;height:6px;border-radius:3px;background:rgba(255,255,255,.22);overflow:hidden}
+  .prog-fill{height:100%;width:11%;background:linear-gradient(90deg,#7fc39a,#1baf7a);border-radius:3px;transition:width .35s ease}
+  .theme-btn{border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.2);color:#fff;border-radius:999px;padding:6px 12px;font-size:.78rem;cursor:pointer}
+  .theme-btn:hover{background:rgba(0,0,0,.38)}
+
+  .tabbar{flex:0 0 auto;height:var(--tabbar-h);display:flex;align-items:center;gap:5px;padding:0 12px;background:var(--surface);border-bottom:1px solid var(--ring);overflow-x:auto;scrollbar-width:thin;z-index:15}
+  .tabbar button{flex:0 0 auto;border:1px solid transparent;background:transparent;color:var(--ink-2);font-size:.8rem;font-weight:600;padding:7px 12px;border-radius:999px;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap}
+  .tabbar button:hover{background:color-mix(in srgb,var(--c-blue) 12%,transparent);color:var(--seq-550)}
+  .tabbar button.active{background:var(--seq-550);color:#fff;border-color:var(--seq-550)}
+  .tabbar button .tnum{font-size:.66rem;opacity:.7}
+
+  .stage{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth;background:var(--page)}
+  .panel{display:none;max-width:1060px;margin:0 auto;padding:26px 22px 40px;animation:fade .35s ease}
+  .panel.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  .panel-nav{display:flex;justify-content:space-between;gap:12px;margin-top:30px;padding-top:18px;border-top:1px solid var(--ring)}
+  .pn-btn{border:1px solid var(--ring);background:var(--card);color:var(--ink);border-radius:10px;padding:10px 18px;font-size:.9rem;font-weight:700;cursor:pointer;box-shadow:var(--shadow)}
+  .pn-btn:hover{border-color:var(--seq-450);color:var(--seq-550)}
+  .pn-btn.primary{background:var(--seq-550);color:#fff;border-color:var(--seq-550)}
+  .pn-btn.primary:hover{background:var(--seq-650);color:#fff}
+  .pn-btn:disabled{opacity:.35;cursor:default}
+
+  .p-head{display:flex;align-items:baseline;gap:12px;border-bottom:3px solid var(--seq-550);padding-bottom:9px;margin-bottom:18px;flex-wrap:wrap}
+  .p-head .pn{background:var(--seq-550);color:#fff;font-weight:800;border-radius:9px;padding:3px 11px;font-size:.95rem}
+  .p-head h2{font-family:var(--serif);color:var(--seq-650);font-size:clamp(1.2rem,2.4vw,1.55rem);font-weight:700}
+  :root[data-theme="dark"] .p-head h2{color:var(--seq-650)}
+  .p-head .tag{margin-left:auto;font-size:.72rem;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em}
+  .lead{color:var(--ink-2);max-width:860px;margin-bottom:16px}
+  h3.sh{font-family:var(--serif);color:var(--seq-650);margin:22px 0 12px;font-size:1.1rem}
+
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  .g4{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+  .card{background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+
+  .callout{border-left:5px solid var(--seq-550);background:color-mix(in srgb,var(--c-blue) 8%,var(--surface));border-radius:0 var(--radius) var(--radius) 0;padding:15px 17px;color:var(--ink)}
+  .callout.quote{font-family:var(--serif);font-style:italic;font-size:1.02rem}
+  .callout.good{border-left-color:var(--good);background:color-mix(in srgb,var(--good) 10%,var(--surface))}
+  .callout.warn{border-left-color:var(--warning);background:color-mix(in srgb,var(--warning) 12%,var(--surface))}
+  .callout .src{display:block;margin-top:8px;font-size:.8rem;color:var(--ink-3);font-style:normal;font-family:var(--sans)}
+
+  .icon-card{display:flex;gap:13px;align-items:flex-start;background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);padding:15px;box-shadow:var(--shadow)}
+  .icon-card .ic{flex:0 0 42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;background:color-mix(in srgb,var(--c-blue) 12%,var(--surface));color:var(--seq-550)}
+  .icon-card h4{font-size:.95rem;margin-bottom:3px}
+  .icon-card p{font-size:.84rem;color:var(--ink-2)}
+
+  .hero-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+  .hstat{border-radius:16px;padding:18px;color:#fff;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .hstat.s1{background:linear-gradient(135deg,#1c5cab,#0d366b)}
+  .hstat.s2{background:linear-gradient(135deg,#1baf7a,#0a7a54)}
+  .hstat.s3{background:linear-gradient(135deg,#eda100,#b87700)}
+  .hstat.s4{background:linear-gradient(135deg,#eb6834,#b8471c)}
+  .hstat .v{font-size:1.9rem;font-weight:800;line-height:1.05}
+  .hstat .l{font-size:.82rem;opacity:.95;margin-top:5px}
+  .hstat .sub{font-size:.72rem;opacity:.8;margin-top:6px}
+
+  .statmini{background:var(--card);border:1px solid var(--ring);border-radius:12px;padding:14px;text-align:center;box-shadow:var(--shadow)}
+  .statmini .v{font-size:1.35rem;font-weight:800;color:var(--seq-550)}
+  .statmini .l{font-size:.76rem;color:var(--ink-2);margin-top:2px}
+
+  .widget{background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
+  .widget h3{font-family:var(--serif);color:var(--seq-650);font-size:1.1rem;margin-bottom:5px}
+  .widget .note{font-size:.8rem;color:var(--ink-3);margin-bottom:12px}
+  .ctrl{margin:12px 0}
+  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;font-weight:600;color:var(--ink-2);margin-bottom:5px;gap:8px}
+  .ctrl label output{color:var(--seq-550);font-weight:800;font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--seq-450);height:26px;cursor:pointer}
+  .seg{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
+  .seg button{border:1.5px solid var(--ring);background:var(--surface);border-radius:10px;padding:8px 13px;cursor:pointer;font-size:.84rem;font-weight:600;color:var(--ink)}
+  .seg button:hover{border-color:var(--seq-450)} .seg button.active{background:color-mix(in srgb,var(--c-blue) 12%,var(--surface));border-color:var(--seq-550);color:var(--seq-550)}
+  .big-out{margin-top:12px;background:var(--seq-550);color:#fff;border-radius:12px;padding:13px 17px;text-align:center}
+  .big-out .v{font-size:1.7rem;font-weight:800;color:#cde2fb;font-variant-numeric:tabular-nums}
+  .big-out .l{font-size:.76rem;text-transform:uppercase;letter-spacing:.08em;color:#dbeafd}
+  .mini-outs{display:flex;gap:9px;margin-top:9px;flex-wrap:wrap}
+  .mini-out{flex:1;min-width:96px;background:color-mix(in srgb,var(--c-blue) 9%,var(--surface));border-radius:10px;padding:8px 11px;text-align:center}
+  .mini-out .v{font-weight:800;color:var(--seq-550);font-variant-numeric:tabular-nums}
+  .mini-out .l{font-size:.7rem;color:var(--ink-2)}
+  .verdict-box{margin-top:12px;border-radius:12px;padding:13px 15px;border:1px solid var(--ring);background:var(--surface);font-size:.88rem}
+  .verdict-box b{color:var(--seq-550)}
+  svg text{font-family:var(--sans)}
+  .axis-lbl{font-size:11px;fill:var(--ink-3)}
+  .chart-legend{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;font-size:.78rem;margin-top:4px}
+  .chart-legend span{display:flex;align-items:center;gap:6px;font-weight:600;color:var(--ink-2)}
+  .chart-legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+  table.dt{width:100%;border-collapse:collapse;font-size:.82rem}
+  table.dt th{text-align:left;border-bottom:2px solid var(--seq-550);padding:7px 9px;color:var(--seq-650)}
+  table.dt td{border-bottom:1px solid var(--grid);padding:7px 9px}
+  table.dt td:last-child,table.dt th:last-child{text-align:right;font-variant-numeric:tabular-nums}
+
+  .quiz-q{background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+  .quiz-q h4{font-size:.96rem;margin-bottom:11px} .quiz-q h4 .qn{color:var(--seq-550)}
+  .qtype{display:inline-block;font-size:.66rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;background:color-mix(in srgb,var(--c-blue) 12%,var(--surface));color:var(--seq-550);border-radius:999px;padding:2px 9px;margin-left:8px;vertical-align:middle}
+  .opts{display:grid;gap:8px}
+  .opt{text-align:left;border:1.5px solid var(--ring);background:var(--surface);border-radius:10px;padding:9px 13px;font-size:.88rem;cursor:pointer;color:var(--ink);font-family:var(--sans)}
+  .opt:hover{border-color:var(--seq-450)}
+  .opt.correct{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--surface));font-weight:700}
+  .opt.wrong{border-color:var(--critical);background:color-mix(in srgb,var(--critical) 10%,var(--surface))}
+  .opt:disabled{cursor:default;opacity:.92}
+  .tf-row{display:flex;gap:10px}
+  .tf-row .opt{flex:1;text-align:center;font-weight:700}
+  .blank-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .blank-row input[type=text]{flex:1;min-width:160px;border:1.5px solid var(--ring);background:var(--surface);border-radius:10px;padding:9px 13px;font-size:.92rem;color:var(--ink);font-family:var(--sans)}
+  .blank-row input[type=text]:focus{outline:2px solid var(--seq-450);border-color:var(--seq-550)}
+  .blank-row input.correct{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--surface))}
+  .blank-row input.wrong{border-color:var(--critical);background:color-mix(in srgb,var(--critical) 10%,var(--surface))}
+  .blank-submit{border:none;background:var(--seq-550);color:#fff;border-radius:10px;padding:9px 18px;font-weight:700;font-size:.86rem;cursor:pointer}
+  .blank-submit:hover{background:var(--seq-650)} .blank-submit:disabled{opacity:.4;cursor:default}
+  .fb{margin-top:9px;font-size:.85rem;display:none;border-radius:8px;padding:9px 11px}
+  .fb.show{display:block}
+  .fb.good{background:color-mix(in srgb,var(--good) 12%,var(--surface));color:var(--good-text)}
+  .fb.bad{background:color-mix(in srgb,var(--critical) 10%,var(--surface));color:var(--critical)}
+  #quizscore{font-weight:800;color:var(--seq-550)}
+  .diag-note{font-size:.78rem;color:var(--ink-3);background:color-mix(in srgb,var(--c-blue) 10%,var(--surface));border-radius:8px;padding:8px 12px;margin-bottom:16px;display:inline-block}
+
+  .sum-list{list-style:none;display:grid;gap:9px}
+  .sum-list li{display:flex;gap:11px;align-items:flex-start;background:var(--card);border:1px solid var(--ring);border-radius:12px;padding:11px 15px;box-shadow:var(--shadow);font-size:.9rem}
+  .sum-list li .tick{color:var(--good-text);font-weight:800;flex:0 0 auto}
+  .refbox{background:var(--card);border:1px solid var(--ring);border-radius:12px;padding:13px 17px;font-size:.84rem;color:var(--ink-2);box-shadow:var(--shadow)}
+  .refbox p{margin:5px 0}
+  .copyright{margin-top:22px;font-size:.82rem;color:var(--ink-2);border-top:2px solid var(--seq-550);padding-top:14px;text-align:center;line-height:1.7}
+  .copyright a{color:var(--seq-550);font-weight:600}
+
+  .appfoot{flex:0 0 auto;padding:8px 14px;background:var(--surface);border-top:1px solid var(--ring);font-size:.72rem;color:var(--ink-3);text-align:center;line-height:1.55}
+  .appfoot a{color:var(--seq-550);font-weight:600;text-decoration:none}
+  .appfoot a:hover{text-decoration:underline}
+  @media (max-width:760px){
+    .app{height:auto;min-height:100vh;overflow:visible}
+    .stage{overflow:visible}
+    .appbar{position:sticky;top:0} .tabbar{position:sticky;top:var(--appbar-h)}
+    .appbar .ttl small{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#stage">Skip to content</a>
+<div class="app">
+  <div class="appbar">
+    <span class="code">🌍 RE 2026</span>
+    <span class="ttl">The Global State of Renewable Energy&nbsp;<small>IRENA data · Power Plant Engineering &amp; Renewable Energy</small></span>
+    <span class="spacer"></span>
+    <div class="prog-wrap"><span id="progLabel">Section 1 / 9</span><div class="prog-track"><div class="prog-fill" id="progFill"></div></div></div>
+    <button class="theme-btn" id="themeToggle" aria-pressed="false">🌙</button>
+  </div>
+  <nav class="tabbar" id="tabbar" aria-label="Sections"></nav>
+  <div class="stage" id="stage"><div id="panels">
+
+    <!-- ===== 1 START ===== -->
+    <section class="panel active" id="tab-start" data-title="Overview" data-emoji="🌍">
+      <div class="p-head"><span class="pn">1</span><h2>The Global State of Renewable Energy</h2><span class="tag">IRENA Statistics 2026</span></div>
+
+      <div class="callout quote">"In 2016 the world had 2 terawatts of renewable power. By the end of 2025 it has over 5. In a single decade, humanity has built more clean-power capacity than in all the years before it — and solar has quietly become the largest power technology on Earth. What does that transition actually look like in the numbers?"
+        <span class="src">🌉 This interactive dashboard turns IRENA's <i>Renewable Energy Statistics 2026</i> into charts you can explore — for students of Power Plant Engineering &amp; Renewable Energy, and for anyone curious about the energy transition.</span></div>
+
+      <h3 class="sh">The headline numbers</h3>
+      <div class="hero-stats">
+        <div class="hstat s1"><div class="v">5,155 GW</div><div class="l">World renewable power capacity, 2025</div><div class="sub">up from 2,021 GW in 2016 — ×2.55</div></div>
+        <div class="hstat s2"><div class="v">49.5%</div><div class="l">of world electricity <b>capacity</b> is renewable, 2025</div><div class="sub">nearly half, up from 30.8% in 2016</div></div>
+        <div class="hstat s3"><div class="v">31.7%</div><div class="l">of world electricity <b>generated</b> is renewable, 2024</div><div class="sub">up from 23.6% in 2016</div></div>
+        <div class="hstat s4"><div class="v">9,836 TWh</div><div class="l">Renewable electricity generated, 2024</div><div class="sub">up from 5,884 TWh in 2016</div></div>
+      </div>
+
+      <h3 class="sh">What you'll explore</h3>
+      <div class="grid g3">
+        <div class="icon-card"><div class="ic">📈</div><div><h4>The growth story</h4><p>Watch installed capacity and generation climb year by year — and see renewables approach half the grid.</p></div></div>
+        <div class="icon-card"><div class="ic">🔆</div><div><h4>The technology shift</h4><p>See solar overtake hydro and wind to become the world's #1 power technology, growing eightfold in nine years.</p></div></div>
+        <div class="icon-card"><div class="ic">🗺️</div><div><h4>Who leads</h4><p>Explore the regional map of the transition — and China's outsized role in it.</p></div></div>
+        <div class="icon-card"><div class="ic">⚡</div><div><h4>Capacity vs. generation</h4><p>Understand why renewables are half of capacity but a third of generation — the capacity-factor gap.</p></div></div>
+        <div class="icon-card"><div class="ic">⚖️</div><div><h4>Access &amp; equity</h4><p>The world averages 544 watts of renewables per person; Africa has just 46. See the gap and the finance that could close it.</p></div></div>
+        <div class="icon-card"><div class="ic">🎓</div><div><h4>Check yourself</h4><p>A quick self-test at the start and a 10-question review at the end.</p></div></div>
+      </div>
+      <p class="lead" style="margin-top:14px">Use the tabs, the <b>Next ▸</b> button, or the <b>← / →</b> arrow keys. Drag the year sliders and toggle the charts — the data comes alive when you move it.</p>
+    </section>
+
+    <!-- ===== 2 PRE-ASSESSMENT ===== -->
+    <section class="panel" id="tab-pre" data-title="Warm-Up" data-emoji="📝">
+      <div class="p-head"><span class="pn">2</span><h2>Warm-Up — Guess the Numbers</h2><span class="tag">Diagnostic · not graded</span></div>
+      <p class="lead">Before the charts, test your instincts about global renewables. There's no penalty for guessing, and this score counts toward nothing — it just makes the real numbers more memorable.</p>
+      <div class="diag-note">🔎 Diagnostic only — this score is <b>not</b> added to your final review.</div>
+      <div id="prebox"></div>
+      <div class="callout good" id="preSummary" style="display:none;margin-top:8px"></div>
+    </section>
+
+    <!-- ===== 3 GLOBAL GROWTH ===== -->
+    <section class="panel" id="tab-growth" data-title="Global Growth" data-emoji="📈">
+      <div class="p-head"><span class="pn">3</span><h2>The Growth Story</h2><span class="tag">World, 2016–2025</span></div>
+      <p class="lead">Global renewable power capacity has more than doubled in nine years, and the electricity it generates has risen with it. Drag the year to trace the climb.</p>
+
+      <div class="widget" style="margin-bottom:16px">
+        <h3>🗓️ Year Explorer</h3>
+        <p class="note">Move the slider to any year and watch the four headline figures update together.</p>
+        <div class="ctrl"><label>Year <output id="gyOut">2025</output></label><input type="range" id="gyR" min="2016" max="2025" step="1" value="2025"></div>
+        <div class="grid g4">
+          <div class="big-out"><div class="v" id="gyCap">5,155 GW</div><div class="l">Installed capacity</div></div>
+          <div class="big-out" style="background:var(--c-aqua)"><div class="v" id="gyGen">9,836 TWh</div><div class="l">Generation</div></div>
+          <div class="big-out" style="background:var(--c-yellow)"><div class="v" id="gyShareCap">49.5%</div><div class="l">Capacity share</div></div>
+          <div class="big-out" style="background:var(--c-orange)"><div class="v" id="gyShareGen">31.7%</div><div class="l">Generation share</div></div>
+        </div>
+        <div class="verdict-box" id="gyVerdict"></div>
+      </div>
+
+      <div class="grid g2">
+        <div class="widget">
+          <h3>📈 Installed renewable capacity (GW)</h3>
+          <p class="note">World total, end of year. The bar for your selected year is highlighted.</p>
+          <svg id="capChart" viewBox="0 0 460 260" width="100%" role="img" aria-label="World renewable capacity by year, 2016 to 2025"></svg>
+        </div>
+        <div class="widget">
+          <h3>⚡ Renewable electricity generated (TWh)</h3>
+          <p class="note">World total. Generation data runs to 2024 (the latest full year).</p>
+          <svg id="genChart" viewBox="0 0 460 260" width="100%" role="img" aria-label="World renewable generation by year, 2016 to 2024"></svg>
+        </div>
+      </div>
+      <div class="callout" style="margin-top:16px"><b>Read it like an engineer:</b> capacity (GW) is what's <i>installed</i>; generation (TWh) is what's actually <i>produced</i>. Both are rising, but capacity is rising faster — because the newest additions are solar and wind, which run fewer hours per year than hydro or thermal plants. That gap is the story of the "Capacity vs. Generation" tab.</div>
+    </section>
+
+    <!-- ===== 4 TECHNOLOGY MIX ===== -->
+    <section class="panel" id="tab-tech" data-title="Technology Mix" data-emoji="🔆">
+      <div class="p-head"><span class="pn">4</span><h2>The Technology Shift</h2><span class="tag">Capacity by technology</span></div>
+      <p class="lead">The renewable fleet used to be dominated by hydropower. Not anymore. Toggle between 2016 and 2025 to watch <b>solar surge past wind and hydro</b> to become the single largest power-generating technology on the planet.</p>
+
+      <div class="widget" style="margin-bottom:16px">
+        <h3>📊 Installed capacity by technology (GW)</h3>
+        <p class="note">Ranked, largest first. Switch the year to see the ranking flip.</p>
+        <div class="seg" id="techYear"><button data-v="2025" class="active">2025</button><button data-v="2016">2016</button></div>
+        <svg id="techChart" viewBox="0 0 460 250" width="100%" role="img" aria-label="Installed renewable capacity by technology"></svg>
+        <p class="note" style="margin-top:6px">Hydropower includes pumped storage. Marine energy (~0.5 GW) is present but too small to show at this scale.</p>
+      </div>
+
+      <div class="grid g2">
+        <div class="widget">
+          <h3>🚀 Growth Explorer (2016 → 2025)</h3>
+          <p class="note">Pick a technology and see how many times over it multiplied in nine years.</p>
+          <div class="seg" id="techPick">
+            <button data-t="Solar" class="active">🔆 Solar</button>
+            <button data-t="Wind">💨 Wind</button>
+            <button data-t="Hydropower">💧 Hydro</button>
+            <button data-t="Bioenergy">🌱 Bioenergy</button>
+            <button data-t="Geothermal">🌋 Geothermal</button>
+          </div>
+          <div class="big-out"><div class="v" id="techMult">×8.0</div><div class="l" id="techMultL">Solar capacity growth, 2016 → 2025</div></div>
+          <div class="mini-outs">
+            <div class="mini-out"><div class="v" id="tech2016">299 GW</div><div class="l">2016 capacity</div></div>
+            <div class="mini-out"><div class="v" id="tech2025">2,397 GW</div><div class="l">2025 capacity</div></div>
+          </div>
+          <div class="verdict-box" id="techVerdict"></div>
+        </div>
+        <div class="widget">
+          <h3>🥇 The 2025 podium</h3>
+          <p class="note">The order that will define the grid for decades.</p>
+          <table class="dt">
+            <tr><th>Rank</th><th>Technology</th><th>2025 (GW)</th></tr>
+            <tr><td>🥇 1</td><td>Solar</td><td>2,397</td></tr>
+            <tr><td>🥈 2</td><td>Hydropower</td><td>1,456</td></tr>
+            <tr><td>🥉 3</td><td>Wind</td><td>1,291</td></tr>
+            <tr><td>4</td><td>Bioenergy</td><td>155</td></tr>
+            <tr><td>5</td><td>Geothermal</td><td>16</td></tr>
+          </table>
+          <p class="note" style="margin-top:10px">In 2016 the order was Hydro (1,256) ≫ Wind (467) ≫ Solar (299). Solar has since leapfrogged both.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 5 REGIONS & LEADERS ===== -->
+    <section class="panel" id="tab-regions" data-title="Who Leads" data-emoji="🗺️">
+      <div class="p-head"><span class="pn">5</span><h2>Who Leads the Transition</h2><span class="tag">2025 capacity</span></div>
+      <p class="lead">The renewable build-out is not evenly spread. Toggle between world regions and top countries — <b>Asia holds more than half</b> of global renewable capacity, and <b>China alone accounts for over 40%</b> of the world total.</p>
+
+      <div class="widget" style="margin-bottom:16px">
+        <h3>📊 Renewable capacity ranking (GW), 2025</h3>
+        <div class="seg" id="rankMode"><button data-v="region" class="active">By region</button><button data-v="country">By country (top 10)</button></div>
+        <svg id="rankChart" viewBox="0 0 460 340" width="100%" role="img" aria-label="Renewable capacity ranking by region or country"></svg>
+      </div>
+
+      <div class="grid g3">
+        <div class="statmini"><div class="v">56%</div><div class="l">Asia's share of world renewable capacity</div></div>
+        <div class="statmini"><div class="v">44%</div><div class="l">China's share of the world total (2,258 GW)</div></div>
+        <div class="statmini"><div class="v">1.6%</div><div class="l">Africa's share — despite 18% of world population</div></div>
+      </div>
+      <div class="callout" style="margin-top:16px"><b>A concentrated transition.</b> China (2,258 GW), the United States (466 GW) and India (250 GW) together hold well over half of all renewable capacity. Europe as a whole adds 937 GW. The scale of Asia's lead — 2,895 GW — is larger than Europe, North America and South America combined. Where the panels and turbines get built is now one of the defining questions of global energy.</div>
+    </section>
+
+    <!-- ===== 6 SHARE OF ELECTRICITY ===== -->
+    <section class="panel" id="tab-share" data-title="Share of the Grid" data-emoji="⚡">
+      <div class="p-head"><span class="pn">6</span><h2>Renewables' Share of the Grid</h2><span class="tag">Capacity vs. generation</span></div>
+      <p class="lead">Two numbers, often confused. Renewables are now <b>49.5% of installed capacity</b> but only <b>31.7% of electricity generated</b>. Both are climbing — but the gap between them is a lesson in how power plants actually run.</p>
+
+      <div class="widget" style="margin-bottom:16px">
+        <h3>📈 Share of electricity — capacity vs. generation</h3>
+        <p class="note">Drag the year. The two lines rise together, but capacity share always leads generation share.</p>
+        <div class="ctrl"><label>Year <output id="shYearOut">2024</output></label><input type="range" id="shYearR" min="2016" max="2024" step="1" value="2024"></div>
+        <svg id="shareChart" viewBox="0 0 460 250" width="100%" role="img" aria-label="Renewable share of electricity capacity and generation over time"></svg>
+        <div class="chart-legend"><span><i style="background:var(--c-blue)"></i>Share of capacity</span><span><i style="background:var(--c-orange)"></i>Share of generation</span></div>
+        <div class="mini-outs">
+          <div class="mini-out"><div class="v" id="shCap">46.5%</div><div class="l">Capacity share (selected year)</div></div>
+          <div class="mini-out"><div class="v" id="shGen">31.7%</div><div class="l">Generation share (selected year)</div></div>
+          <div class="mini-out"><div class="v" id="shGap">14.8 pts</div><div class="l">The gap</div></div>
+        </div>
+      </div>
+
+      <div class="grid g2">
+        <div class="callout"><b>Why the gap? Capacity factor.</b> A solar farm's nameplate is its power on a bright noon; over a full year it produces perhaps 15–25% of that around the clock. Wind runs ~25–45%. Hydro, nuclear and thermal plants run far more hours. So a grid that is <i>half renewable by capacity</i> is only <i>about a third renewable by energy</i> — the same physics you meet as "load factor" and "capacity factor" in Power Plant Engineering.</div>
+        <div class="widget">
+          <h3>🌍 Capacity share by region, 2025</h3>
+          <p class="note">How much of each region's installed power is renewable.</p>
+          <svg id="regShareChart" viewBox="0 0 460 210" width="100%" role="img" aria-label="Renewable share of electricity capacity by region 2025"></svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 7 ACCESS & EQUITY ===== -->
+    <section class="panel" id="tab-equity" data-title="Access &amp; Equity" data-emoji="⚖️">
+      <div class="p-head"><span class="pn">7</span><h2>Access &amp; Equity</h2><span class="tag">SDG 7 indicators</span></div>
+      <p class="lead">The transition is real — but deeply unequal. Measured per person, the world installed <b>544 watts of renewable capacity each</b> by 2024. In Africa, the figure is just <b>46 watts</b> — about one-twelfth of the global average, for a continent with 18% of humanity.</p>
+
+      <div class="grid g2">
+        <div class="widget">
+          <h3>⚖️ Renewable capacity per person (watts/capita), 2024</h3>
+          <p class="note">SDG indicator 7.b.1. The bar for the world average is shown against Africa.</p>
+          <svg id="percapBar" viewBox="0 0 460 150" width="100%" role="img" aria-label="Renewable capacity per capita, world versus Africa"></svg>
+          <div class="ctrl" style="margin-top:6px"><label>See the world average climb — year <output id="pcYearOut">2024</output></label><input type="range" id="pcYearR" min="2015" max="2024" step="1" value="2024"></div>
+          <div class="big-out"><div class="v" id="pcVal">544 W</div><div class="l">World renewable capacity per person (selected year)</div></div>
+        </div>
+        <div class="widget">
+          <h3>💵 Clean-energy finance to developing countries (USD bn)</h3>
+          <p class="note">SDG 7.a.1 — international public financial flows for clean energy R&amp;D and renewable production. ~$24.6 bn in 2024.</p>
+          <svg id="finChart" viewBox="0 0 460 230" width="100%" role="img" aria-label="International clean energy finance flows to developing countries"></svg>
+        </div>
+      </div>
+      <div class="callout warn" style="margin-top:16px"><b>The equity challenge.</b> Closing the gap between 544 and 46 watts per person is the heart of a <i>just</i> energy transition — and the reason Sustainable Development Goal 7 pairs "affordable and clean energy" with international finance. For engineers, it is also an opportunity: the fastest-growing renewable markets of the coming decades are the ones that are barely on this chart today.</div>
+    </section>
+
+    <!-- ===== 8 POST-ASSESSMENT ===== -->
+    <section class="panel" id="tab-post" data-title="Review" data-emoji="✅">
+      <div class="p-head"><span class="pn">8</span><h2>Review — Check Yourself</h2><span class="tag">Score: <span id="quizscore">0 / 10</span></span></div>
+      <p class="lead">Ten questions on the global renewable picture — multiple-choice, fill-in-the-blank, and true/false. Instant feedback on each.</p>
+      <div id="quizbox"></div>
+    </section>
+
+    <!-- ===== 9 SUMMARY ===== -->
+    <section class="panel" id="tab-summary" data-title="Summary" data-emoji="📚">
+      <div class="p-head"><span class="pn">9</span><h2>Summary &amp; Sources</h2><span class="tag">Key takeaways</span></div>
+      <ul class="sum-list">
+        <li><span class="tick">✔</span><span>World renewable power capacity reached <b>5,155 GW in 2025</b> — up 2.55× from 2,021 GW in 2016 — and generated <b>9,836 TWh</b> of electricity in 2024.</span></li>
+        <li><span class="tick">✔</span><span>Renewables are now <b>49.5% of world electricity capacity</b> (2025) and <b>31.7% of generation</b> (2024) — the difference reflects the lower capacity factors of solar and wind.</span></li>
+        <li><span class="tick">✔</span><span><b>Solar is the world's #1 power technology</b> at 2,397 GW, having grown ~8× since 2016 and overtaken hydropower (1,456 GW) and wind (1,291 GW).</span></li>
+        <li><span class="tick">✔</span><span>The transition is <b>concentrated</b>: Asia holds ~56% of global capacity and China alone ~44% (2,258 GW); the USA (466 GW) and India (250 GW) follow.</span></li>
+        <li><span class="tick">✔</span><span>It is also <b>unequal</b>: the world averages 544 W of renewables per person (2024) but Africa just 46 W — while clean-energy finance to developing countries was ~$24.6 bn in 2024.</span></li>
+      </ul>
+
+      <h3 class="sh">Source</h3>
+      <div class="refbox">
+        <p><b>IRENA (2026).</b> <i>Renewable Energy Statistics 2026.</i> International Renewable Energy Agency, Abu Dhabi. ISBN 978-92-9260-758-6. Data at <a href="https://www.irena.org/Data">irena.org/Data</a>.</p>
+        <p>All figures in this dashboard are drawn from IRENA's published tables (world and regional rows). Capacity is in megawatts/gigawatts at end of year; generation in gigawatt-/terawatt-hours. Hydropower capacity includes pumped storage. Made for the "Power Plant Engineering" and "Renewable Energy" courses and for the general public; not affiliated with or endorsed by IRENA.</p>
+      </div>
+      <div class="copyright">
+        © 2026 Prof. Mazharul Islam (<a href="https://mazhar17.github.io/MI">https://mazhar17.github.io/MI</a>) · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution (CC BY) 4.0 International License</a>
+      </div>
+    </section>
+
+  </div></div>
+  <div class="appfoot">© 2026 Prof. Mazharul Islam (<a href="https://mazhar17.github.io/MI" target="_blank" rel="noopener">https://mazhar17.github.io/MI</a>) · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">Creative Commons Attribution (CC BY) 4.0 International License</a></div>
+</div>
+<script id="mainjs">
+(function(){
+"use strict";
+const $=(s,c)=>(c||document).querySelector(s);
+const $$=(s,c)=>Array.from((c||document).querySelectorAll(s));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const norm=s=>String(s).toLowerCase().trim().replace(/[$,°.;:!?'"()%]/g,"").replace(/\s+/g," ");
+const N=(n,d)=>n.toLocaleString("en-US",{maximumFractionDigits:d==null?0:d,minimumFractionDigits:d==null?0:d});
+
+/* ===== DATA (IRENA Renewable Energy Statistics 2026) ===== */
+const CY=[2016,2017,2018,2019,2020,2021,2022,2023,2024,2025];
+const CAP=[2021302,2187566,2358148,2541904,2811106,3077116,3379238,3875756,4461632,5155007]; // MW
+const GY=[2016,2017,2018,2019,2020,2021,2022,2023,2024];
+const GEN=[5883549,6248491,6645584,7013062,7480215,7896724,8473709,8956917,9836128]; // GWh
+const SCAP=[30.8,32.1,33.3,34.5,36.6,38.4,40.2,43.2,46.5,49.5]; // % cap share 2016-2025
+const SGEN=[23.6,24.4,25.0,26.0,27.8,27.9,29.3,30.0,31.7]; // % gen share 2016-2024
+const TECH={Solar:[298507,2396709],Hydropower:[1255913,1455684],Wind:[467316,1291015],Bioenergy:[103867,155364],Geothermal:[12169,15624]};
+const TCOL={Solar:"var(--c-yellow)",Hydropower:"var(--c-blue)",Wind:"var(--c-aqua)",Bioenergy:"var(--c-green)",Geothermal:"var(--c-orange)"};
+const TEMO={Solar:"🔆",Wind:"💨",Hydropower:"💧",Bioenergy:"🌱",Geothermal:"🌋"};
+const REGIONS=[["Asia",2895405],["Europe",937208],["N. America",612098],["S. America",332644],["Eurasia",141409],["Africa",82397],["Oceania",75956],["Middle East",56541],["C. Am.+Carib.",21349]];
+const COUNTRIES=[["China",2258016],["United States",466447],["India",250498],["Brazil",228197],["Germany",200901],["Japan",134949],["Canada",110331],["Spain",98614],["France",83848],["Italy",78278]];
+const REGSHARE=[["Asia",51.4],["World",49.5],["C. Am.+Carib.",40.4],["Eurasia",35.8],["Africa",29.1]];
+const PCY=[2015,2016,2017,2018,2019,2020,2021,2022,2023,2024];
+const PC=[247.6,267.0,285.7,304.6,325.0,356.1,386.4,420.9,477.2,544.4]; // W/capita world
+const AFR_PC=46.2;
+const FIN=[14261,31414,23962,19537,15450,13990,14427,19344,24380,24559]; // USD million 2015-2024
+
+/* ===== theme ===== */
+const themeBtn=$("#themeToggle");
+function setTheme(t){document.documentElement.setAttribute("data-theme",t);themeBtn.textContent=t==="dark"?"☀️":"🌙";themeBtn.setAttribute("aria-pressed",t==="dark"?"true":"false");renderAll();}
+themeBtn.addEventListener("click",()=>setTheme(document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark"));
+
+/* ===== tab shell ===== */
+const panels=$$("#panels .panel");
+const tabbar=$("#tabbar");
+let activeIdx=Math.max(0,panels.findIndex(p=>p.classList.contains("active")));
+panels.forEach((p,i)=>{
+  const b=document.createElement("button");
+  b.innerHTML="<span class='tnum'>"+(i+1)+"</span><span>"+p.dataset.emoji+" "+p.dataset.title+"</span>";
+  b.addEventListener("click",()=>goTo(i));
+  tabbar.appendChild(b);
+  const nav=document.createElement("div");nav.className="panel-nav";
+  nav.innerHTML="<button class='pn-btn' data-dir='-1'>◂ Previous</button><button class='pn-btn primary' data-dir='1'>Next ▸</button>";
+  nav.querySelectorAll("button").forEach(bt=>bt.addEventListener("click",()=>goTo(i+ +bt.dataset.dir)));
+  p.appendChild(nav);
+});
+const tabBtns=$$("#tabbar button");
+function goTo(i){
+  i=clamp(i,0,panels.length-1);
+  panels.forEach((p,k)=>p.classList.toggle("active",k===i));
+  tabBtns.forEach((b,k)=>b.classList.toggle("active",k===i));
+  activeIdx=i;
+  $("#progFill").style.width=Math.round((i+1)/panels.length*100)+"%";
+  $("#progLabel").textContent="Section "+(i+1)+" / "+panels.length;
+  $("#stage").scrollTop=0;
+  const nav=panels[i].querySelector(".panel-nav");
+  if(nav){const bs=nav.querySelectorAll("button");bs[0].disabled=(i===0);bs[1].disabled=(i===panels.length-1);}
+  renderAll();
+  tabBtns[i].scrollIntoView({inline:"center",block:"nearest"});
+}
+document.addEventListener("keydown",e=>{
+  const t=document.activeElement?document.activeElement.tagName:"";
+  if(/INPUT|TEXTAREA|SELECT|BUTTON/.test(t))return;
+  if(e.key==="ArrowRight")goTo(activeIdx+1);
+  else if(e.key==="ArrowLeft")goTo(activeIdx-1);
+});
+function seg(id,cb){const g=$("#"+id);if(!g)return;$$("button",g).forEach(b=>b.addEventListener("click",()=>{$$("button",g).forEach(x=>x.classList.remove("active"));b.classList.add("active");cb(b.dataset.v||b.dataset.t);}));}
+
+/* ===== chart helpers ===== */
+function esc(s){return String(s).replace(/&/g,"&amp;");}
+function vbar(host,years,vals,sel,color,unitFmt){ // vertical bars, highlight sel index
+  if(!host)return;const x0=46,x1=450,y0=20,y1=222;const max=Math.max(...vals)*1.1;
+  const bw=(x1-x0)/years.length*0.62;const step=(x1-x0)/years.length;
+  let g="";
+  [0,.25,.5,.75,1].forEach(f=>{const y=y1-(y1-y0)*f;g+="<line x1='"+x0+"' y1='"+y+"' x2='"+x1+"' y2='"+y+"' stroke='var(--grid)' stroke-width='1'/>";g+="<text x='"+(x0-4)+"' y='"+(y+3)+"' text-anchor='end' class='axis-lbl'>"+unitFmt(max*f)+"</text>";});
+  years.forEach((yr,i)=>{
+    const cx=x0+step*i+step/2, h=(vals[i]/max)*(y1-y0), y=y1-h;
+    const hot=(yr===sel);
+    g+="<rect x='"+(cx-bw/2).toFixed(1)+"' y='"+y.toFixed(1)+"' width='"+bw.toFixed(1)+"' height='"+h.toFixed(1)+"' rx='3' fill='"+(hot?"var(--seq-650)":color)+"' opacity='"+(hot?1:.82)+"'/>";
+    if(hot)g+="<text x='"+cx.toFixed(1)+"' y='"+(y-5).toFixed(1)+"' text-anchor='middle' style='font-size:11px;font-weight:800;fill:var(--seq-650)'>"+unitFmt(vals[i])+"</text>";
+    if(i%2===0||hot)g+="<text x='"+cx.toFixed(1)+"' y='"+(y1+14)+"' text-anchor='middle' class='axis-lbl'>"+yr+"</text>";
+  });
+  g+="<line x1='"+x0+"' y1='"+y1+"' x2='"+x1+"' y2='"+y1+"' stroke='var(--axis)' stroke-width='1.2'/>";
+  host.innerHTML=g;
+}
+function lineC(host,years,vals,sel,color,unitFmt){
+  if(!host)return;const x0=52,x1=450,y0=20,y1=222;const max=Math.max(...vals)*1.1,min=Math.min(...vals)*0.85;
+  const PX=i=>x0+(x1-x0)*i/(years.length-1);const PY=v=>y1-(y1-y0)*(v-min)/(max-min);
+  let g="";
+  [0,.25,.5,.75,1].forEach(f=>{const y=y1-(y1-y0)*f;g+="<line x1='"+x0+"' y1='"+y+"' x2='"+x1+"' y2='"+y+"' stroke='var(--grid)' stroke-width='1'/>";g+="<text x='"+(x0-4)+"' y='"+(y+3)+"' text-anchor='end' class='axis-lbl'>"+unitFmt(min+(max-min)*f)+"</text>";});
+  let d="",area="";years.forEach((yr,i)=>{const x=PX(i),y=PY(vals[i]);d+=(d?" L":"M")+x.toFixed(1)+" "+y.toFixed(1);area+=(area?" L":"M")+x.toFixed(1)+" "+y.toFixed(1);});
+  area+=" L"+PX(years.length-1)+" "+y1+" L"+PX(0)+" "+y1+" Z";
+  g+="<path d='"+area+"' fill='"+color+"' opacity='0.12'/>";
+  g+="<path d='"+d+"' fill='none' stroke='"+color+"' stroke-width='2.5'/>";
+  years.forEach((yr,i)=>{const x=PX(i),y=PY(vals[i]);const hot=(yr===sel);g+="<circle cx='"+x.toFixed(1)+"' cy='"+y.toFixed(1)+"' r='"+(hot?6:3)+"' fill='"+(hot?"var(--seq-650)":color)+"' stroke='var(--surface)' stroke-width='"+(hot?2:0)+"'/>";
+    if(hot)g+="<text x='"+clamp(x,40,410).toFixed(1)+"' y='"+(y-10).toFixed(1)+"' text-anchor='middle' style='font-size:11px;font-weight:800;fill:var(--seq-650)'>"+unitFmt(vals[i])+"</text>";
+    if(i%2===0||hot)g+="<text x='"+x.toFixed(1)+"' y='"+(y1+14)+"' text-anchor='middle' class='axis-lbl'>"+yr+"</text>";});
+  g+="<line x1='"+x0+"' y1='"+y1+"' x2='"+x1+"' y2='"+y1+"' stroke='var(--axis)' stroke-width='1.2'/>";
+  host.innerHTML=g;
+}
+function hbars(host,items,opts){ // items [[label,val,color?]]
+  if(!host)return;const o=opts||{};const x0=o.x0||150,x1=448,y0=14,dy=o.dy||30;const max=(o.max||Math.max(...items.map(d=>d[1])))*1.02;
+  const fmt=o.fmt||(v=>N(v));let g="";
+  items.forEach((d,i)=>{const y=y0+i*dy;const w=(d[1]/max)*(x1-x0);const col=d[2]||o.color||"var(--seq-450)";
+    g+="<text x='"+(x0-7)+"' y='"+(y+15)+"' text-anchor='end' style='font-size:11px;font-weight:600;fill:var(--ink-2)'>"+esc(d[0])+"</text>";
+    g+="<rect x='"+x0+"' y='"+y+"' width='"+Math.max(1,w).toFixed(1)+"' height='21' rx='4' fill='"+col+"'/>";
+    g+="<text x='"+(x0+w+5).toFixed(1)+"' y='"+(y+15)+"' style='font-size:10.5px;font-weight:700;fill:var(--ink)'>"+fmt(d[1])+"</text>";});
+  host.innerHTML=g;
+}
+
+/* ===== Global Growth ===== */
+const gyR=$("#gyR");
+function updGrowth(){
+  const yr=+gyR.value, ci=CY.indexOf(yr), gi=Math.min(ci,GEN.length-1);
+  $("#gyOut").textContent=yr;
+  $("#gyCap").textContent=N(CAP[ci]/1000)+" GW";
+  $("#gyGen").textContent=N(GEN[gi]/1000)+" TWh"+(yr>2024?"*":"");
+  $("#gyShareCap").textContent=SCAP[ci].toFixed(1)+"%";
+  $("#gyShareGen").textContent=SGEN[gi].toFixed(1)+"%"+(yr>2024?"*":"");
+  const mult=CAP[ci]/CAP[0];
+  $("#gyVerdict").innerHTML="In <b>"+yr+"</b>, the world had <b>"+N(CAP[ci]/1000)+" GW</b> of renewable capacity — "+(mult>1.02?"<b>"+mult.toFixed(2)+"×</b> the 2016 level":"the baseline year")+". Renewables were <b>"+SCAP[ci].toFixed(1)+"%</b> of installed power capacity."+(yr>2024?" <span style='color:var(--ink-3)'>(*generation figures shown for 2024, the latest year.)</span>":"");
+  renderGrowthCharts(yr);
+}
+function renderGrowthCharts(yr){
+  vbar($("#capChart"),CY,CAP.map(v=>v/1000),yr,"var(--c-blue)",v=>N(v/1000,1)+"k");
+  lineC($("#genChart"),GY,GEN.map(v=>v/1000),Math.min(yr,2024),"var(--c-aqua)",v=>N(v/1000,1)+"k");
+}
+gyR.addEventListener("input",updGrowth);
+
+/* ===== Technology Mix ===== */
+let techYear="2025";
+seg("techYear",v=>{techYear=v;renderTech();});
+let techPick="Solar";
+seg("techPick",t=>{techPick=t;updTechPick();});
+function renderTech(){
+  const idx=techYear==="2025"?1:0;
+  const items=Object.entries(TECH).map(([k,v])=>[TEMO[k]+" "+k, v[idx]/1000, TCOL[k]]).sort((a,b)=>b[1]-a[1]);
+  hbars($("#techChart"),items,{fmt:v=>N(v)+" GW",max:2500,x0:150,dy:34});
+}
+function updTechPick(){
+  const v=TECH[techPick], mult=v[1]/v[0];
+  $("#techMult").textContent="×"+mult.toFixed(1);
+  $("#techMultL").textContent=techPick+" capacity growth, 2016 → 2025";
+  $("#tech2016").textContent=N(v[0]/1000)+" GW";
+  $("#tech2025").textContent=N(v[1]/1000)+" GW";
+  const msg={Solar:"Solar's eightfold rise is the single biggest story in the data — from a niche to the world's largest power technology.",Wind:"Wind nearly tripled, the second-fastest grower, and remains a backbone of the transition.",Hydropower:"Hydropower grew modestly — most of the best sites are already developed — yet it is still a massive base of firm, dispatchable renewable power.",Bioenergy:"Bioenergy grew steadily by half, providing dispatchable renewable power from waste and biomass.",Geothermal:"Geothermal grew slowly — it is geographically limited — but offers valuable round-the-clock baseload where it exists."};
+  $("#techVerdict").innerHTML="📌 "+msg[techPick]+" ("+N(v[0]/1000)+" → "+N(v[1]/1000)+" GW.)";
+}
+
+/* ===== Regions & Leaders ===== */
+let rankMode="region";
+seg("rankMode",v=>{rankMode=v;renderRank();});
+function renderRank(){
+  const src=rankMode==="region"?REGIONS:COUNTRIES;
+  const items=src.map((d,i)=>{const t=i/(src.length-1);const col=t<0.15?"var(--seq-650)":t<0.4?"var(--seq-550)":t<0.7?"var(--seq-450)":"var(--seq-250)";return [d[0],d[1]/1000,col];});
+  hbars($("#rankChart"),items,{fmt:v=>N(v)+" GW",max:(rankMode==="region"?3000:2400),x0:120,dy:32});
+}
+
+/* ===== Share of grid ===== */
+const shYearR=$("#shYearR");
+function updShare(){
+  const yr=+shYearR.value, i=yr-2016;
+  $("#shYearOut").textContent=yr;
+  $("#shCap").textContent=SCAP[i].toFixed(1)+"%";
+  $("#shGen").textContent=SGEN[i].toFixed(1)+"%";
+  $("#shGap").textContent=(SCAP[i]-SGEN[i]).toFixed(1)+" pts";
+  renderShareChart(yr);
+}
+function renderShareChart(yr){
+  const host=$("#shareChart");if(!host)return;const x0=44,x1=450,y0=18,y1=220;const max=55;
+  const PX=i=>x0+(x1-x0)*i/(GY.length-1);const PY=v=>y1-(y1-y0)*v/max;
+  let g="";
+  [0,10,20,30,40,50].forEach(v=>{const y=PY(v);g+="<line x1='"+x0+"' y1='"+y+"' x2='"+x1+"' y2='"+y+"' stroke='var(--grid)' stroke-width='1'/><text x='"+(x0-4)+"' y='"+(y+3)+"' text-anchor='end' class='axis-lbl'>"+v+"%</text>";});
+  function series(arr,color){let d="";arr.forEach((v,i)=>{d+=(d?" L":"M")+PX(i).toFixed(1)+" "+PY(v).toFixed(1);});g+="<path d='"+d+"' fill='none' stroke='"+color+"' stroke-width='2.5'/>";arr.forEach((v,i)=>{const hot=(GY[i]===yr);g+="<circle cx='"+PX(i).toFixed(1)+"' cy='"+PY(v).toFixed(1)+"' r='"+(hot?6:3)+"' fill='"+color+"' stroke='var(--surface)' stroke-width='"+(hot?2:0)+"'/>";if(hot)g+="<text x='"+PX(i).toFixed(1)+"' y='"+(PY(v)-9).toFixed(1)+"' text-anchor='middle' style='font-size:10.5px;font-weight:800;fill:"+color+"'>"+v.toFixed(1)+"%</text>";});}
+  series(SCAP.slice(0,GY.length),"var(--c-blue)");
+  series(SGEN,"var(--c-orange)");
+  GY.forEach((yy,i)=>{if(i%2===0||yy===yr)g+="<text x='"+PX(i).toFixed(1)+"' y='"+(y1+14)+"' text-anchor='middle' class='axis-lbl'>"+yy+"</text>";});
+  g+="<line x1='"+x0+"' y1='"+y1+"' x2='"+x1+"' y2='"+y1+"' stroke='var(--axis)' stroke-width='1.2'/>";
+  host.innerHTML=g;
+}
+function renderRegShare(){
+  const items=REGSHARE.map(d=>[d[0],d[1], d[0]==="World"?"var(--c-orange)":"var(--seq-450)"]);
+  hbars($("#regShareChart"),items,{fmt:v=>v.toFixed(1)+"%",max:60,x0:120,dy:34});
+}
+
+/* ===== Equity ===== */
+const pcYearR=$("#pcYearR");
+function updEquity(){
+  const yr=+pcYearR.value,i=yr-2015;
+  $("#pcYearOut").textContent=yr;
+  $("#pcVal").textContent=N(PC[i])+" W";
+  renderPercap(yr);
+}
+function renderPercap(yr){
+  const i=yr-2015;const world=PC[i];
+  const items=[["🌍 World ("+yr+")",world,"var(--c-blue)"],["🌍 Africa (2024)",AFR_PC,"var(--c-orange)"]];
+  hbars($("#percapBar"),items,{fmt:v=>N(v)+" W",max:600,x0:130,dy:40});
+}
+function renderFin(){
+  const host=$("#finChart");if(!host)return;const x0=44,x1=450,y0=18,y1=195;const max=Math.max(...FIN)*1.1;
+  const PX=i=>x0+(x1-x0)*i/(FIN.length-1);const PY=v=>y1-(y1-y0)*v/max;
+  let g="";
+  [0,10000,20000,30000].forEach(v=>{const y=PY(v);g+="<line x1='"+x0+"' y1='"+y+"' x2='"+x1+"' y2='"+y+"' stroke='var(--grid)' stroke-width='1'/><text x='"+(x0-4)+"' y='"+(y+3)+"' text-anchor='end' class='axis-lbl'>"+(v/1000)+"</text>";});
+  let d="";FIN.forEach((v,i)=>{d+=(d?" L":"M")+PX(i).toFixed(1)+" "+PY(v).toFixed(1);});
+  g+="<path d='"+d+"' fill='none' stroke='var(--c-green)' stroke-width='2.5'/>";
+  FIN.forEach((v,i)=>{const last=(i===FIN.length-1);g+="<circle cx='"+PX(i).toFixed(1)+"' cy='"+PY(v).toFixed(1)+"' r='"+(last?6:3)+"' fill='var(--c-green)' stroke='var(--surface)' stroke-width='"+(last?2:0)+"'/>";if(last)g+="<text x='"+PX(i).toFixed(1)+"' y='"+(PY(v)-9).toFixed(1)+"' text-anchor='end' style='font-size:10.5px;font-weight:800;fill:var(--c-green)'>$"+N(v/1000,1)+"bn</text>";});
+  PCY.forEach((yy,i)=>{if(i%2===0)g+="<text x='"+PX(i).toFixed(1)+"' y='"+(y1+14)+"' text-anchor='middle' class='axis-lbl'>"+yy+"</text>";});
+  g+="<line x1='"+x0+"' y1='"+y1+"' x2='"+x1+"' y2='"+y1+"' stroke='var(--axis)' stroke-width='1.2'/>";
+  host.innerHTML=g;
+}
+
+/* render everything visible */
+function renderAll(){
+  renderGrowthCharts(+gyR.value); renderTech(); renderRank();
+  renderShareChart(+shYearR.value); renderRegShare(); renderPercap(+pcYearR.value); renderFin();
+}
+[shYearR].forEach(el=>el.addEventListener("input",updShare));
+pcYearR.addEventListener("input",updEquity);
+
+/* ===================================================================
+   QUIZ ENGINE
+   =================================================================== */
+function buildQuestion(item,qi,onAnswered){
+  const div=document.createElement("div");div.className="quiz-q";
+  const typeLbl=item.type==="mcq"?"Multiple choice":item.type==="tf"?"True / False":"Fill in the blank";
+  div.innerHTML="<h4><span class='qn'>Q"+(qi+1)+".</span> "+item.q+"<span class='qtype'>"+typeLbl+"</span></h4><div class='qbody'></div><div class='fb'></div>";
+  const body=$(".qbody",div),fb=$(".fb",div);
+  function finish(ok,ex){if(div.dataset.done)return;div.dataset.done="1";fb.className="fb show "+(ok?"good":"bad");fb.innerHTML=(ok?"✅ Correct! ":"❌ Not quite. ")+ex;onAnswered(ok);}
+  if(item.type==="mcq"){
+    const opts=document.createElement("div");opts.className="opts";
+    item.o.forEach((op,oi)=>{const b=document.createElement("button");b.className="opt";b.innerHTML=op;
+      b.addEventListener("click",()=>{if(div.dataset.done)return;$$(".opt",opts).forEach((x,xi)=>{x.disabled=true;if(xi===item.a)x.classList.add("correct");});if(oi!==item.a)b.classList.add("wrong");finish(oi===item.a,item.fb);});
+      opts.appendChild(b);});
+    body.appendChild(opts);
+  } else if(item.type==="tf"){
+    const row=document.createElement("div");row.className="opts tf-row";
+    [["True",true],["False",false]].forEach(([label,val])=>{const b=document.createElement("button");b.className="opt";b.textContent=label;
+      b.addEventListener("click",()=>{if(div.dataset.done)return;$$(".opt",row).forEach(x=>{x.disabled=true;if((x.textContent==="True")===item.a)x.classList.add("correct");});if(val!==item.a)b.classList.add("wrong");finish(val===item.a,item.fb);});
+      row.appendChild(b);});
+    body.appendChild(row);
+  } else {
+    const row=document.createElement("div");row.className="blank-row";
+    const inp=document.createElement("input");inp.type="text";inp.placeholder="Type your answer…";inp.autocomplete="off";
+    const btn=document.createElement("button");btn.className="blank-submit";btn.textContent="Check";
+    function check(){if(div.dataset.done)return;const val=norm(inp.value);const ok=val.length>0&&item.accept.some(a=>norm(a)===val);inp.disabled=true;btn.disabled=true;inp.classList.add(ok?"correct":"wrong");finish(ok,"Accepted answer: <b>"+item.accept[0]+"</b>. "+item.fb);}
+    btn.addEventListener("click",check);
+    inp.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();check();}});
+    row.appendChild(inp);row.appendChild(btn);body.appendChild(row);
+  }
+  return div;
+}
+
+/* PRE-ASSESSMENT */
+const PRE=[
+ {type:"mcq",q:"Roughly what share of the world's electricity <b>generating capacity</b> was renewable by 2025?",
+  o:["About 10%","About a quarter","About half","Over 90%"],a:2,
+  fb:"About half — 49.5% of installed power capacity was renewable in 2025, up from 30.8% in 2016."},
+ {type:"tf",q:"Hydropower is still the single largest renewable power technology in the world by installed capacity.",a:false,
+  fb:"Not any more — solar (2,397 GW) overtook hydropower (1,456 GW) and wind (1,291 GW) to become #1."},
+ {type:"mcq",q:"Which region holds the largest share of the world's renewable capacity?",
+  o:["Europe","North America","Asia","Africa"],a:2,
+  fb:"Asia — with ~2,895 GW it holds about 56% of the world total, driven largely by China."},
+ {type:"tf",q:"Because renewables are about half of installed capacity, they must also produce about half of the world's electricity.",a:false,
+  fb:"No — they generate ~31.7% of electricity. Solar and wind have lower capacity factors, so capacity share always leads generation share."},
+ {type:"blank",q:"Measured per person, the world installed about 544 watts of renewable capacity each by 2024; Africa's figure is only about ____ watts.",
+  accept:["46","46.2","46 w"],
+  fb:"Africa is at ~46 W/capita — roughly one-twelfth the world average, a stark equity gap."}
+];
+let preAnswered=0;const prebox=$("#prebox");
+PRE.forEach((item,qi)=>{prebox.appendChild(buildQuestion(item,qi,()=>{preAnswered++;if(preAnswered===PRE.length){const s=$("#preSummary");s.style.display="block";s.innerHTML="🌟 <b>Nicely done!</b> You've set your priors on the scale, the technology shift, geography and equity of global renewables — now explore the charts and see how close your instincts were.";}}));});
+
+/* POST-ASSESSMENT */
+const POST=[
+ {type:"mcq",q:"World renewable power capacity in 2025 was closest to:",
+  o:["1,000 GW","5,155 GW","500 GW","50,000 GW"],a:1,
+  fb:"5,155 GW (5,155,007 MW) at end of 2025 — up from 2,021 GW in 2016, a factor of 2.55."},
+ {type:"blank",q:"By 2025, renewables reached about ____% of the world's electricity generating capacity (whole number).",
+  accept:["50","49","49.5","50%"],
+  fb:"49.5% — nearly half. It was 30.8% in 2016."},
+ {type:"mcq",q:"Which technology became the world's largest by installed capacity, at ~2,397 GW in 2025?",
+  o:["Wind","Hydropower","Solar","Geothermal"],a:2,
+  fb:"Solar — it grew about 8× from 299 GW (2016) to 2,397 GW (2025), overtaking hydro and wind."},
+ {type:"tf",q:"Renewables generated a larger share of the world's electricity (≈32%) than their share of capacity (≈50%).",a:false,
+  fb:"The reverse — capacity share (49.5%) exceeds generation share (31.7%) because solar and wind run fewer hours per year (lower capacity factor)."},
+ {type:"mcq",q:"Which single country holds roughly 44% of the world's renewable capacity?",
+  o:["United States","India","Germany","China"],a:3,
+  fb:"China — about 2,258 GW, some 44% of the global total. The USA (466 GW) and India (250 GW) are next."},
+ {type:"blank",q:"The gap between renewables' capacity share and generation share is explained by their lower ______ factor.",
+  accept:["capacity","capacity factor","load","load factor"],
+  fb:"Capacity factor — solar ~15–25%, wind ~25–45%, versus much higher for hydro, nuclear and thermal plants."},
+ {type:"tf",q:"Asia holds more renewable capacity than Europe, North America and South America combined.",a:true,
+  fb:"True — Asia's ~2,895 GW exceeds the sum of Europe (937), North America (612) and South America (333) GW."},
+ {type:"mcq",q:"How much renewable electricity did the world generate in 2024?",
+  o:["≈980 TWh","≈9,836 TWh","≈98,000 TWh","≈490 TWh"],a:1,
+  fb:"≈9,836 TWh (9,836,128 GWh) in 2024, up from 5,884 TWh in 2016."},
+ {type:"tf",q:"Renewable capacity per person is roughly equal across world regions.",a:false,
+  fb:"Far from it — the world averages 544 W/capita (2024) while Africa has just ~46 W/capita, about one-twelfth."},
+ {type:"mcq",q:"About how much international public finance flowed to developing countries for clean energy in 2024?",
+  o:["≈$2.5 billion","≈$24.6 billion","≈$250 billion","≈$2.5 trillion"],a:1,
+  fb:"≈$24.6 billion (SDG indicator 7.a.1) — significant, but small against the scale of the transition needed."}
+];
+let score=0,answered=0;const qbox=$("#quizbox");
+POST.forEach((item,qi)=>{qbox.appendChild(buildQuestion(item,qi,(ok)=>{answered++;if(ok)score++;$("#quizscore").textContent=score+" / "+POST.length+(answered===POST.length?(score===POST.length?" 🏆":(score>=7?" — well done!":" — revisit the charts!")):"");}));});
+
+/* init */
+updGrowth();updTechPick();updShare();updEquity();renderTech();renderRank();
+if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)setTheme("dark");
+goTo(activeIdx);
+})();
+</script>
+</body>
+</html>
